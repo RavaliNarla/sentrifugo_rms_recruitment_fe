@@ -1,0 +1,73 @@
+{
+  "position_wise_cutoff_configuration": "पदवार कटऑफ कॉन्फ़िगरेशन",
+  "position": "पद",
+  "total_marks": "कुल अंक",
+  "number_of_sections": "अनुभागों की संख्या",
+  "weightage": "वेटेज",
+  "status": "स्थिति",
+  "actions": "कार्य",
+
+  "no_configurations_found": "कोई कॉन्फ़िगरेशन नहीं मिला",
+
+  "written_exam_section_cutoff_configuration": "लिखित परीक्षा — अनुभाग एवं कटऑफ कॉन्फ़िगरेशन",
+
+  "configure_written_exam_parameters": "उम्मीदवारों की शॉर्टलिस्टिंग के लिए लिखित परीक्षा के मानकों और श्रेणीवार कटऑफ अंकों को कॉन्फ़िगर करें।",
+
+  "add_configuration": "कॉन्फ़िगरेशन जोड़ें",
+
+  "please_select_requisition_first": "कृपया पहले रिक्विज़िशन चुनें",
+
+  "please_select_position_first": "कृपया पहले पद चुनें",
+
+  "interview_process_started": "इस पद के लिए साक्षात्कार प्रक्रिया पहले ही शुरू हो चुकी है। परीक्षा कॉन्फ़िगरेशन नहीं जोड़ा जा सकता।",
+  "configure_sections_marks": "अनुभागों और कटऑफ अंकों को कॉन्फ़िगर करें",
+  "total_section_marks": "कुल अनुभाग अंक",
+  "section_consideration_for_combined_score": "संयुक्त स्कोर हेतु अनुभाग चयन",
+  "written_exam_weightage": "लिखित परीक्षा वेटेज",
+  "national_wise_cutoff_configuration": "राष्ट्रीय स्तर कटऑफ कॉन्फ़िगरेशन",
+  "state_wise_cutoff_configuration": "राज्यवार कटऑफ कॉन्फ़िगरेशन",
+  "add": "जोड़ें",
+  "save": "सहेजें",
+  "update": "अपडेट करें",
+  "saving": "सहेजा जा रहा है...",
+  "updating": "अपडेट किया जा रहा है...",
+  "cancel": "रद्द करें",
+  "accept": "स्वीकार करें",
+  "reject": "अस्वीकार करें",
+  "comments": "टिप्पणियाँ",
+  "enter_comments": "टिप्पणियाँ दर्ज करें",
+  "view_cutoff_configuration": "कटऑफ कॉन्फ़िगरेशन देखें",
+  "edit_cutoff_configuration": "कटऑफ कॉन्फ़िगरेशन संपादित करें",
+  "add_cutoff_configuration": "कटऑफ कॉन्फ़िगरेशन जोड़ें",
+  "sum_of_all_sections": "सभी अनुभागों के अंकों का योग",
+  "example_sections": "उदा. 4",
+   "enter_percentage": "प्रतिशत दर्ज करें",
+    "section_placeholder": "अनुभाग {{number}}",
+     "metric": "मापदंड",
+  "appeared": "उपस्थित",
+  "vacancies": "रिक्तियां",
+  "qualified_without_relaxation": "बिना छूट के योग्य",
+  "qualified_with_relaxation": "छूट के साथ योग्य",
+
+  "total": "कुल",
+
+  "start": "प्रारंभ",
+  "end": "समाप्त",
+
+  "edit": "संपादित करें",
+  "finalize": "अंतिम रूप दें",
+
+  "position_finalized_successfully": "पद सफलतापूर्वक अंतिम रूप से स्वीकृत किया गया",
+  "failed_to_finalize": "अंतिम रूप देने में विफल",
+
+  "category_wise_reservation_state": "श्रेणीवार आरक्षण (राज्यवार)",
+  "no_state_wise_summary_found": "कोई राज्यवार सारांश उपलब्ध नहीं है",
+
+  "pending": "लंबित",
+  "l1_pending": "एल1 लंबित",
+  "l2_pending": "एल2 लंबित",
+  "l1_rejected": "एल1 अस्वीकृत",
+  "l2_rejected": "एल2 अस्वीकृत",
+  "approved": "स्वीकृत",
+  "finalized": "अंतिम रूप से स्वीकृत"
+}

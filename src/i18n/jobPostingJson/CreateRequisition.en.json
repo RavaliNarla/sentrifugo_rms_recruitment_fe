@@ -1,0 +1,20 @@
+{
+  "create_requisition": "Create New Requisition",
+  "edit_requisition": "Edit Requisition",
+  "reinitialize_requisition": "Reinitialize Requisition",
+  "view_requisition": "View Requisition",
+  "requisition_title": "Requisition Title",
+  "enter_requisition_title": "Enter Requisition Title",
+  "title_help": "Use a clear, searchable title used across the portal and job boards.",
+  "description": "Description",
+  "enter_description": "Enter Requisition Description",
+  "start_date": "Start Date",
+  "start_date_help": "Date from which the candidates can start applying.",
+  "end_date": "End Date",
+  "end_date_help": "ⓘ Standard duration: 21 days.",
+  "loading": "Loading Requisition...",
+  "create_success": "Requisition created successfully",
+  "update_success": "Requisition updated successfully",
+  "cut_off_date": "Cutoff Date",
+  "select_positions_to_edit": "Select Positions to Edit"
+}

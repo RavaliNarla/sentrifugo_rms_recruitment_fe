@@ -1,0 +1,59 @@
+.add-panels-btn {
+  font-size: 13px;
+  height: 34px; /* ✅ match dropdown */
+  min-width: 110px;
+  padding: 0 12px;
+  border-radius: 6px;
+  font-weight: 500;
+  margin-bottom: 6px;
+  margin-right: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  background-color: var(--app-primary-color); /* dynamic primary */
+  border: none;
+  color: #fff;
+
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  transition: all 0.2s ease;
+}
+
+.add-panels-btn:hover {
+  background-color: var(--app-primary-color);
+  filter: brightness(0.92);
+}
+
+.add-panels-btn:active {
+  transform: scale(0.98);
+}
+
+.add-panels-btn svg {
+  font-size: 14px;
+}
+
+/* Scroll container */
+.error-scroll {
+  max-height: 120px;
+  overflow-y: auto;
+  padding-right: 6px;
+
+  /* Firefox support */
+  scrollbar-width: thin;
+  scrollbar-color: #b36b6b transparent;
+}
+
+/* Chrome, Edge, Safari */
+.error-scroll::-webkit-scrollbar {
+  width: 4px; /* 🔥 thinner like screenshot 1 */
+}
+
+.error-scroll::-webkit-scrollbar-thumb {
+  background-color: #b36b6b;
+  border-radius: 10px;
+}
+
+.error-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}

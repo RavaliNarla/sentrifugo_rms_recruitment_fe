@@ -1,0 +1,60 @@
+{
+  "locations": "Location",
+  "search_placeholder": "Search by city or location",
+  "sno": "S. No.",
+  "view": "View Location",
+  "cityy": "City",
+  "add": "Add ",
+  "addd": "Add Location",
+  "edit": "Edit Location",
+  "s_no": "S. No.",
+  "city_name": "City",
+  "location_name": "Location Name",
+  "actions": "Actions",
+  "choose_add_method": "Choose to add manually or import from XLSX file.",
+  "manual_entry": "Manual Entry",
+  "page_size": "Page size :",
+  "import_file": "Import File",
+  "select_city": "Select city",
+  "enter_location_name": "Enter location name",
+  "upload_file": "Upload File",
+  "support_csv_xlsx": "Support for CSV and XLSX formats",
+  "upload_csv": "Upload CSV",
+  "upload_xlsx": "Upload XLSX",
+  "download_template": "Download Template",
+  "cancel": "Cancel",
+  "save": "Save",
+  "update": "Update",
+  "import": "Import",
+  "confirm_delete": "Confirm Delete",
+  "delete_message": "Are you sure you want to delete this location?",
+  "delete": "Delete",
+  "add_success": "Location added successfully",
+  "update_success": "Location updated successfully",
+  "delete_success": "Location deleted successfully",
+  "upload_locations": "Upload File",
+  "support_xlsx": "Support for XLSX formats",
+  "invalid_file": "Please upload a valid Excel file (.xlsx)",
+  "no_file_selected": "Please select a file to upload",
+
+  "reupload_xlsx": "Reupload XLSX",
+  "remove": "Remove",
+
+  "importing": "Importing...",
+  "import_error": "Failed to import Locations",
+
+  "location_names": {
+    "whitefield": "Whitefield",
+    "electronic_city": "Electronic City",
+    "andheri": "Andheri",
+    "connaught_place": "Connaught Place"
+  },
+
+  "city": {
+    "bengaluru": "Bengaluru",
+    "mumbai": "Mumbai",
+    "delhi": "Delhi",
+    "hyderabad": "Hyderabad",
+    "chennai": "Chennai"
+  }
+}

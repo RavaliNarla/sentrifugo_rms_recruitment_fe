@@ -1,0 +1,264 @@
+.edu-modal-header {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+.edu-modal-footer {
+  padding-top: 0;
+  border-top: none;
+}
+.edu-btn {
+  background-color: #fff;
+  border: 1px solid #f26522;
+  color: #f26522;
+  font-weight: 400;
+  font-size: 0.75em;
+}
+.edu-modal .form-control,
+.edu-modal .form-select {
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: 0.785em;
+}
+/* Fix long text overlapping select arrow */
+.edu-modal .form-select {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  /* IMPORTANT: give space for the arrow */
+  padding-right: 2.5rem;
+}
+.result pre {
+  white-space: pre-wrap; /* preserve line breaks but allow wrapping */
+  word-break: break-word; /* break long words */
+  overflow-x: hidden; /* kill horizontal scroll */
+  overflow-y: auto; /* allow vertical scroll */
+  max-height: 200px; /* adjust as needed */
+}
+
+.edu-btn:hover {
+  background: #fff;
+  border: 1px solid #f26522;
+  color: #f26522;
+}
+.edu-error-space {
+  min-height: 18px; /* match ErrorMessage height */
+}
+
+.f14 {
+  font-size: 0.875em;
+}
+.bluecol {
+  color: var(--app-secondary-color);
+}
+.f16 {
+  font-size: 1em;
+}
+.f12 {
+  font-size: 0.75em;
+}
+
+.result .f14 {
+  color: #333333;
+  font-weight: 600;
+}
+.edu-modal .react-select__single-value {
+  font-size: 13px;
+}
+.edu-modal .react-select__option {
+  font-size: 13px;
+}
+
+.modal-dialog-scrollable .modal-body {
+  overflow-y: auto;
+  max-height: 600px;
+}
+
+/* Education Modal Group Styling */
+.group-box {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 10px 15px;
+  margin-bottom: 16px;
+  position: relative;
+  animation: slideIn 0.3s ease-out;
+}
+
+.group-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #007bff;
+}
+.edugrp-header {
+  margin-bottom: 0px !important;
+  border-bottom: none !important;
+}
+.group-header strong {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.group-header .btn {
+  color: white;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.group-header .btn:hover {
+  transform: translateY(-1px);
+}
+
+.or-divider:before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  z-index: 1;
+}
+
+.or-divider {
+  padding: 0 16px;
+  position: relative;
+  z-index: 2;
+}
+
+/* Row styling for education items */
+.group-box .row {
+  background: white;
+  border-radius: 6px;
+  padding: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e9ecef;
+  transition: all 0.2s ease;
+  margin: 0px;
+}
+
+/* .group-box .row:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+} */
+
+/* Delete button styling */
+.group-box .btn-danger {
+  background: #dc3545;
+  border-color: #dc3545;
+  color: white;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  min-width: 32px;
+  transition: all 0.2s ease;
+}
+
+.group-box .btn-danger:hover {
+  background: #c82333;
+  border-color: #c82333;
+  transform: scale(1.05);
+}
+
+/* Main add group button */
+.modal-body > .btn:not(.group-box .btn) {
+  background: #17a2b8;
+  border-color: #17a2b8;
+  color: white;
+  font-size: 14px;
+  padding: 5px 16px;
+  border-radius: 6px;
+  margin-top: 6px;
+  transition: all 0.2s ease;
+}
+
+.modal-body > .btn:not(.group-box .btn):hover {
+  background: #138496;
+  border-color: #138496;
+  transform: translateY(-1px);
+}
+
+/* Column spacing adjustments */
+.group-box .col-md-1,
+.group-box .col-md-2 {
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+/* Animation for new groups */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.btn-header {
+  border: 1px solid rgb(22, 43, 117) !important;
+  background: rgb(22, 43, 117) !important;
+  color: #fff !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .group-box {
+    padding: 12px;
+    margin-bottom: 12px;
+  }
+
+  .group-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .group-box .row {
+    padding: 8px;
+  }
+
+  .group-box .col-md-1,
+  .group-box .col-md-2 {
+    margin-bottom: 8px;
+    padding-left: 4px;
+    padding-right: 4px;
+  }
+
+  .group-header .btn {
+    align-self: flex-end;
+  }
+
+  .or-divider {
+    margin: 16px 0;
+    font-size: 12px;
+  }
+}
+.react-select-wrapper {
+  min-height: 60px; /* adjust based on your UI */
+}
+
+.error-space {
+  min-height: 18px;
+}
+.error-message {
+  margin-top: 4px !important;
+}
+.delbtn {
+  margin-top: -15px !important;
+}
+.edu-modal .react-select__control {
+  min-height: 41px;
+}
+
+.tglswt input {
+  width: 40px !important;
+}

@@ -1,0 +1,421 @@
+/* Main App Styles */
+body {
+  margin: 0;
+  padding: 0;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu",
+    "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  height: 100vh;
+  min-height: 100vh;
+
+  overflow: hidden;
+
+  display: flex;
+  flex-direction: column;
+}
+
+:root {
+  --app-primary-color: #ff6a00;
+  --app-secondary-color: #162b75;
+  --app-link-color: #ff6a00;
+  --app-focus-color: rgba(255, 106, 0, 0.12);
+}
+
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: #f8f9fa;
+}
+
+.main-content {
+  flex: 1;
+  overflow-y: auto;
+  margin-top: 91px;
+  background-color: #f8f9fa;
+}
+
+/* For pages where header is hidden (login, forgot-password, etc) */
+.app-container:has(.main-content:only-child) .main-content {
+  margin-top: 0;
+  height: 100vh;
+}
+
+#main-navbar-nav {
+  font-size: 14px;
+  font-weight: 300;
+}
+
+/* Header styles */
+.navbar-toggler {
+  border: none;
+  padding: 0.5rem 0.75rem;
+  margin-right: -0.5rem;
+}
+
+/* Top bar styles */
+.top-bar {
+  background: linear-gradient(90deg, #ff7043, #ff5722) !important;
+  transition: all 0.3s ease;
+}
+
+/* Responsive adjustments */
+@media (max-width: 991.98px) {
+  .top-bar {
+    padding: 0.5rem 0 !important;
+  }
+
+  .navbar {
+    padding: 0.5rem 1rem;
+  }
+
+  .navbar-nav .nav-link {
+    padding: 0.75rem 1rem;
+    margin: 0;
+  }
+}
+
+/* Mobile menu styles */
+.navbar-custom .navbar-toggler:focus {
+  box-shadow: 0 0 0 0.15rem rgba(255, 255, 255, 0.25);
+}
+
+.navbar-custom .navbar-toggler-icon {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.8%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
+}
+
+/* Ensure dropdowns are accessible on mobile */
+.navbar-custom .dropdown-menu {
+  position: static !important;
+  margin-top: 0.5rem;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+}
+
+/* Adjust main content padding for mobile */
+@media (max-width: 767.98px) {
+  .imgbob {
+    width: 80px;
+  }
+
+  .main-content {
+    margin-top: 91px;
+    /* Height of the header on mobile */
+
+    margin-bottom: 35px;
+  }
+
+  .app-container:has(.main-content:only-child) .main-content {
+    margin-top: 0;
+  }
+}
+
+.navbar-toggler:focus {
+  box-shadow: none;
+}
+
+/* Add spacing between navigation items */
+.navbar-nav .nav-link {
+  margin: 0 2px;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+/* Hover effect */
+.navbar-nav .nav-link:hover {
+  background-color: #f8f9fa;
+  border-radius: 4px;
+}
+
+/* Dropdown menu styling */
+.navbar .dropdown-menu {
+  margin-top: 0;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 0 0 4px 4px;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
+  font-size: 14px;
+  font-weight: 400;
+}
+
+/* Dropdown items */
+.navbar .dropdown-item {
+  padding: 0.5rem 1.5rem;
+}
+
+/* Add a subtle separator between main nav items */
+.navbar-nav > li:not(:last-child) .nav-link::after {
+  content: "";
+  position: absolute;
+  right: -2px;
+  top: 25%;
+  height: 50%;
+  width: 1px;
+  background-color: #dee2e6;
+}
+
+/* Mobile menu adjustments */
+@media (max-width: 991.98px) {
+  .navbar-nav .nav-link {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .navbar-nav > li:not(:last-child) .nav-link::after {
+    display: none;
+  }
+
+  .dropdown-menu {
+    border: none;
+    box-shadow: none;
+    padding-left: 1.5rem;
+  }
+}
+
+/* Add some space around the navbar brand/logo */
+.navbar-brand {
+  margin-right: 2rem;
+}
+
+/* Ensure the navbar doesn't collapse too early */
+@media (min-width: 992px) {
+  .navbar-expand-lg .navbar-nav .nav-link {
+    padding-right: 1rem;
+    padding-left: 1.25rem;
+  }
+}
+
+/* Notification badge */
+.badge {
+  font-size: 0.6rem;
+  padding: 0.25em 0.4em;
+  border: 1px solid #ddd !important;
+}
+
+/* Top bar styles */
+.background-header {
+  background: var(--app-primary-color) !important;
+}
+
+/* Ensure the header is sticky on mobile */
+@media (max-width: 991.98px) {
+  .navbar {
+    position: sticky;
+    top: 0;
+    z-index: 1020;
+    background-color: white;
+  }
+
+  .navbar-nav .nav-link {
+    padding: 0.75rem 1.25rem;
+  }
+
+  .navbar-nav .dropdown-menu {
+    position: static;
+    float: none;
+    width: auto;
+    margin-top: 0;
+    box-shadow: none;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+  }
+
+  .navbar-nav .dropdown-item {
+    padding: 0.5rem 2rem;
+  }
+}
+
+.fonnav {
+  font-size: 12px;
+}
+
+.fonnav .dropdown-item {
+  font-size: 12px;
+}
+
+.app-footer {
+  position: fixed;
+  bottom: 0;
+  background: #fff;
+  z-index: 10;
+  font-size: 0.875rem;
+  color: #7b91b0;
+  box-shadow: 0 -4px 12px #00000014;
+  width: 100%;
+}
+
+/* Make sure main content pushes the footer down */
+main {
+  flex: 1;
+}
+
+.cursor-pointer {
+  cursor: pointer !important;
+}
+
+.round_badge {
+  border-radius: 20px !important;
+}
+
+.criteria-disabled {
+  pointer-events: none;
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.criteria-disabled * {
+  cursor: not-allowed;
+}
+
+.navbar-nav .nav-link.active {
+  font-weight: 500; /* from first */
+  color: var(--app-secondary-color); /* latest applied */
+  position: relative; /* from second */
+}
+
+.navbar-nav .nav-link.active::after {
+  background-color: var(--app-secondary-color);
+  bottom: -1px;
+  content: "";
+  height: 3px;
+  left: 0;
+  position: absolute;
+  width: 100%;
+}
+.active-admin > .nav-link::after {
+  background-color: var(--app-secondary-color);
+  bottom: -1px;
+  content: "";
+  height: 3px;
+  left: 0;
+  position: absolute;
+  width: 100%;
+  color: var(--app-secondary-color) !important;
+}
+.dropdown-toggle::after {
+  border-top: 0;
+}
+
+/* Admin dropdown active state */
+.nav-link.active,
+.active-admin > .nav-link {
+  position: relative;
+  color: var(--app-secondary-color);
+  font-weight: 500;
+}
+
+.nav-link.active::before,
+.active-admin > .nav-link::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 2px;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-bottom: 6px solid var(--app-secondary-color);
+}
+.nav-link {
+  position: relative;
+}
+
+/* kill underline everywhere */
+
+.dropdown-item.active,
+.dropdown-item:active {
+  background-color: var(--app-secondary-color);
+}
+
+.fw-500 {
+  font-weight: 500;
+}
+
+.fw-600 {
+  font-weight: 600;
+}
+
+.fs-13 {
+  font-size: 13px;
+}
+
+.light_font {
+  color: #6c757d !important;
+}
+
+.search_input {
+  outline: none !important;
+  box-shadow: none !important;
+  border-color: #dee2e6 !important;
+}
+
+.btn-light-grey {
+  background-color: #f5f7fa !important;
+}
+
+.approvals-dropdown .dropdown-item {
+  background-color: white;
+  font-size: 1em; /* 13px */
+  color: #333333;
+  font-weight: 400;
+}
+
+/* Active item (orange background) */
+.approvals-dropdown .dropdown-item.active,
+.approvals-dropdown .dropdown-item:active {
+  background-color: var(--app-secondary-color) !important;
+  color: #fff !important;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.bob-doc-table {
+  width: 100%;
+  table-layout: fixed; /* CRITICAL */
+}
+
+.bob-doc-table td {
+  word-break: break-word;
+  white-space: normal;
+}
+
+.bob-doc-table .action-cell {
+  width: 10%;
+  text-align: center;
+}
+
+.bob-doc-table td:first-child,
+.bob-doc-table td:nth-child(3) {
+  width: 40%;
+}
+
+.custom_checkbox .form-check-input {
+  width: 15px !important;
+  height: 15px !important;
+}
+
+.custom_checkbox .form-check-label {
+  font-size: 0.875rem !important;
+}
+
+.department-select {
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-right: 30px !important; /* space for arrow */
+}
+
+.custom-disabled-bg1 {
+  background-color: #f36f21 !important;
+  color: #ffffff; /* optional for contrast */
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+}
+.text-orange {
+  color: #f97316; /* or your theme orange */
+}

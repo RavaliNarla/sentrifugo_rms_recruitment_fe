@@ -1,0 +1,958 @@
+.user-container {
+  padding: 24px;
+  min-height: calc(100vh - 80px);
+  background-color: #f8f9fa;
+}
+
+.user-content {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  padding: 24px;
+  margin-bottom: 20px;
+}
+
+/* ---------- Header / Actions ---------- */
+.user-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.user-actions .fw-semibold {
+  color: var(--app-secondary-color) !important;
+}
+.page-link:focus {
+  box-shadow: none;
+}
+.user-header h2 {
+  color: var(--app-secondary-color);
+  margin: 0;
+  font-weight: 500;
+  font-size: 1em;
+}
+
+.user-actions {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Search box */
+.search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background-color: #fff;
+  border-radius: 4px;
+  border: 1px solid #ced4da;
+  padding: 0 10px;
+  height: 38px;
+  transition: all 0.2s;
+}
+
+.search-box:focus-within {
+  border-color: #80bdff;
+  box-shadow: 0 0 0 0.15rem rgba(13, 110, 253, 0.08);
+}
+
+.search-icon {
+  color: #6c757d;
+  margin-right: 8px;
+}
+
+.search-input {
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 0.375rem 0;
+  font-size: 0.75em;
+  transition: background-color 0.2s ease;
+}
+
+.search-input:focus {
+  outline: none !important;
+  box-shadow: none !important;
+  border-color: transparent !important;
+  background-color: transparent !important;
+}
+
+.search-input:hover {
+  border: none !important;
+  background-color: transparent !important;
+}
+
+.search-box:hover .search-input {
+  background-color: transparent !important;
+}
+
+/* Add button */
+.add-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  padding: 8px 16px;
+  border-radius: 4px;
+  background-color: #f26522;
+  border: none;
+  color: #fff;
+}
+
+.add-button:hover {
+  transform: translateY(-1px);
+}
+.buttonnonebg {
+  /* base reset */
+  background: none;
+  color: #0d6efd;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  outline: inherit;
+
+  /* overridden style (latest behavior) */
+  background-color: #fff !important;
+  border: 1px solid #ced4da !important;
+}
+
+/* View Mode Styles */
+.form-control-view {
+  padding: 0.375rem 0.75rem;
+  margin-bottom: 0;
+  line-height: 1.5;
+  color: #212529;
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 0.25rem;
+  min-height: calc(1.5em + 0.75rem + 2px);
+}
+
+.form-group .form-label.fw-bold {
+  color: #495057;
+  margin-bottom: 0.25rem;
+}
+
+/* View mode container styles */
+.view-mode-container .form-control-view {
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 0.25rem;
+  padding: 0.5rem 0.75rem;
+  min-height: 38px;
+}
+
+/* Description field in view mode */
+.view-mode-container .form-control-view[data-field="description"] {
+  white-space: pre-line;
+}
+
+/* ---------- Table ---------- */
+.table-responsive {
+  background-color: #fff;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+  overflow: hidden;
+  margin: 20px 0;
+}
+
+.user-table {
+  margin-bottom: 0;
+}
+
+.user-table thead th {
+  background-color: #42579f;
+  border-bottom: 2px solid #42579f;
+  color: #fff;
+  font-weight: 500;
+  padding: 12px 16px;
+  white-space: nowrap;
+  font-size: 0.875em;
+}
+
+.user-table tbody td {
+  vertical-align: middle;
+  padding: 12px 16px;
+  border-top: 1px solid #dedede;
+  color: #495057;
+  font-size: 0.875em;
+  font-weight: 300;
+}
+
+.user-table tbody tr:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* Dialog sizing */
+.user-modal .modal-dialog {
+  max-width: 500px;
+  margin: 1.75rem auto;
+  width: 100%;
+}
+
+.pos.user-modal .modal-dialog {
+  max-width: 750px !important;
+}
+
+/* Medium screens */
+@media (min-width: 992px) and (max-width: 1399px) {
+  .user-modal .modal-dialog {
+    max-width: 860px;
+  }
+}
+
+/* Tablets / small laptops */
+@media (max-width: 991.98px) {
+  .user-modal .modal-dialog {
+    max-width: 720px;
+    margin: 1rem auto;
+  }
+
+  /* Keep the modal content scrollable & limited height */
+  .user-modal .modal-content {
+    max-height: calc(100vh - 80px);
+  }
+}
+
+/* Small screens: allow Bootstrap fullscreen behavior but keep radius and sticky header/footer */
+@media (max-width: 768px) {
+  .user-content {
+    margin-top: 30px;
+  }
+
+  .user-modal .modal-dialog {
+    max-width: calc(100% - 1rem);
+    /* leave small gutters */
+    margin: 0.5rem;
+  }
+
+  .user-modal .modal-content {
+    max-height: calc(100vh - 120px);
+    /* header + footer reserve space */
+    border-radius: 12px;
+  }
+}
+
+/* Content styling */
+.user-modal .modal-content {
+  border-radius: 8px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+  max-height: calc(100vh - 48px);
+  height: auto;
+}
+
+/* Header & Title */
+.modal-header-custom {
+  padding: 1rem 1.5rem;
+  border-bottom: none;
+  background: #fff;
+}
+
+.modal-header-custom .modal-title {
+  color: var(--app-secondary-color);
+  font-weight: 500;
+  font-size: 1em;
+  margin: 0;
+}
+
+/* Body & Footer */
+.user-modal .modal-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.modal-footer-custom {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  align-items: center;
+  border-top: none;
+  background: transparent;
+}
+
+.modal-footer-custom .btn {
+  font-size: 0.875em;
+  font-weight: 500;
+}
+
+/* Sticky header/footer in fullscreen mobile (Bootstrap adds .modal-fullscreen-sm-down to body) */
+body.modal-open .modal-fullscreen-sm-down .modal-content {
+  border-radius: 12px;
+}
+
+body.modal-open .modal-fullscreen-sm-down .modal-header {
+  position: sticky;
+  top: 0;
+  z-index: 6;
+  background: #fff;
+}
+
+body.modal-open .modal-fullscreen-sm-down .modal-footer {
+  z-index: 6;
+  background: #fff;
+}
+
+body.modal-open .modal-fullscreen-sm-down .modal-body {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  max-height: calc(100vh - 120px);
+}
+
+/* Reduce layout jump when modal opens (optional):
+   Bootstrap may add padding-right to <body> to account for scrollbar removal.
+   Overriding here prevents page shift; remove if you notice horizontal shift in some browsers. */
+body.modal-open {
+  padding-right: 0 !important;
+}
+
+/* ---------- Form controls ---------- */
+.form-label {
+  font-weight: 500;
+  color: #495057;
+  margin-bottom: 0.5rem;
+  font-size: 0.875em;
+}
+
+.form-control-custom {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875em;
+  border: 1px solid #ced4da;
+  border-radius: 20px;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+  color: #64748b;
+}
+
+.form-control-custom:focus {
+  border-color: #80bdff;
+  box-shadow: 0 0 0 0.15rem rgba(13, 110, 253, 0.08);
+  outline: 0;
+}
+
+/* Buttons */
+.btn-secondary {
+  background-color: #6c757d;
+  border: none;
+  padding: 0.5rem 1.25rem;
+  font-weight: 500;
+}
+.btn-primary {
+  background-color: var(--app-primary-color) !important;
+  border-color: var(--app-primary-color) !important;
+  color: #fff !important;
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active {
+  background-color: var(--app-primary-color) !important;
+  border-color: var(--app-primary-color) !important;
+  color: #fff !important;
+}
+
+/* Danger text */
+.text-danger {
+  color: #dc3545 !important;
+  margin-left: 2px;
+}
+
+/* ---------- Action Buttons ---------- */
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.action-btn {
+  padding: 4px;
+  border-radius: 4px;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #6c757d;
+}
+
+.action-btn:hover {
+  color: #fff;
+}
+
+.view-btn:hover {
+  background: #ced4da;
+}
+
+.edit-btn:hover {
+  background: #ced4da;
+}
+
+.delete-btn:hover {
+  background: #ced4da;
+}
+
+/* ---------- Tab buttons (Manual / Import) ---------- */
+.tab-buttons {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  align-items: center;
+  background-color: #f2f3f5;
+  border-radius: 15px;
+}
+
+.tab-button {
+  flex: 1 1;
+  min-width: 0;
+  text-align: center;
+  border-radius: 8px;
+  white-space: nowrap;
+  color: #1e1e2d;
+  font-size: 0.875em;
+  font-weight: 500;
+}
+
+.tab-button.active {
+  background: #fff;
+  border-color: #e0e0e0;
+  border-radius: 15px;
+}
+
+/* ---------- Import area ---------- */
+.import-area {
+  padding: 1rem;
+  margin: 1rem 0;
+  border-radius: 8px;
+  background-color: #fceee9;
+}
+
+.import-area .d-flex.justify-content-center {
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* File input labels */
+.user-modal input[type="file"] {
+  display: none;
+}
+
+/* Download links area */
+.import-area .small {
+  font-size: 0.875em;
+  color: #64748b;
+}
+
+/* ---------- Pagination ---------- */
+.pagination-container {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.page-item .page-link {
+  color: #303030;
+  border: 1px solid #dee2e6;
+  padding: 6px 12px;
+  border-radius: 4px;
+  min-width: 38px;
+  text-align: center;
+}
+
+.page-item.active .page-link {
+  background-color: #f26522 !important;
+  color: #fff !important;
+  border-color: #f26522 !important;
+}
+.page-item:hover .page-link {
+  background-color: #f26522 !important;
+  color: #fff !important;
+  border-color: #f26522 !important;
+}
+
+.page-item.disabled .page-link {
+  color: #6c757d;
+  pointer-events: none;
+  background: #fff;
+}
+
+/* ===== Delete Confirmation Modal ===== */
+.delete-confirm-modal .modal-dialog {
+  max-width: 420px;
+  margin: 1.75rem auto;
+  width: auto;
+}
+
+.delete-confirm-modal .modal-content {
+  border: none;
+  border-radius: 8px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15);
+  width: 100%;
+}
+
+.delete-confirm-modal .modal-header {
+  border-bottom: 1px solid #f0f0f0;
+  padding: 1rem 1.5rem;
+  background-color: #fff;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+
+.delete-confirm-modal .modal-title {
+  color: #dc3545;
+  font-weight: 600;
+  font-size: 1.25rem;
+  margin: 0;
+}
+
+.delete-confirm-modal .modal-body {
+  padding: 1.5rem;
+  color: #495057;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.delete-confirm-modal .modal-footer {
+  border-top: 1px solid #f0f0f0;
+  padding: 1rem 1.5rem;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  background-color: #f8f9fa;
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
+.delete-confirm-modal .btn {
+  min-width: 90px;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.delete-confirm-modal .btn-outline-secondary {
+  border-color: #6c757d;
+  color: #6c757d;
+}
+
+.delete-confirm-modal .btn-outline-secondary:hover {
+  background-color: #6c757d;
+  color: #fff;
+}
+
+.delete-confirm-modal .btn-danger {
+  background-color: #dc3545;
+  border-color: #dc3545;
+}
+
+.delete-confirm-modal .btn-danger:hover {
+  background-color: #c82333;
+  border-color: #bd2130;
+}
+
+/* Delete confirmation content */
+.delete-confirm-content {
+  margin-bottom: 1.5rem;
+}
+
+.delete-confirm-content p {
+  margin-bottom: 0.5rem;
+}
+
+.delete-confirm-user {
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  padding: 1rem;
+  margin-top: 1rem;
+  border-left: 3px solid #dc3545;
+}
+
+.delete-confirm-user strong {
+  display: block;
+  color: #212529;
+  margin-bottom: 0.25rem;
+}
+
+.delete-confirm-user .text-muted {
+  font-size: 0.9em;
+  color: #6c757d !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+  .delete-confirm-modal .modal-dialog {
+    margin: 0.5rem;
+    max-width: calc(100% - 1rem);
+  }
+
+  .delete-confirm-modal .modal-body {
+    padding: 1.25rem;
+  }
+
+  .delete-confirm-modal .modal-footer {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .delete-confirm-modal .btn {
+    width: 100%;
+    margin: 0;
+  }
+
+  .delete-confirm-user {
+    padding: 0.75rem;
+  }
+}
+
+/* ---------- Utilities and spacing ---------- */
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.mb-3 {
+  margin-bottom: 1rem !important;
+}
+
+/* ---------- Responsive Breakpoints ---------- */
+
+/* <= 992px: make table stacked and header wrap */
+@media (max-width: 992px) {
+  .user-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .user-actions {
+    width: 100%;
+  }
+
+  .search-box {
+    flex: 1;
+  }
+
+  .table-responsive {
+    border-radius: 0;
+  }
+
+  .user-table {
+    font-size: 0.9rem;
+  }
+
+  .user-table thead {
+    display: none;
+  }
+
+  .user-table tbody tr {
+    display: block;
+    margin-bottom: 1rem;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+  }
+
+  .user-table tbody td {
+    display: flex;
+    padding: 0.5rem 1rem;
+    border-top: none;
+    border-bottom: 1px solid #e9ecef;
+  }
+
+  .user-table tbody td:before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: #495057;
+  }
+
+  .action-buttons {
+    justify-content: flex-end;
+  }
+}
+
+/* <= 768px: modal layout adjustments, stack form columns */
+@media (max-width: 768px) {
+  .user-modal .modal-dialog {
+    margin: 0.5rem;
+    width: auto;
+  }
+
+  .user-modal .modal-body {
+    padding: 1rem;
+    max-height: calc(100vh - 140px);
+  }
+
+  .form-control-custom {
+    font-size: 1rem;
+  }
+
+  .row > [class*="col-"] {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+
+  .tab-buttons {
+    gap: 0.5rem;
+  }
+
+  .tab-button {
+    flex: 1 1 48%;
+    min-width: 0;
+  }
+
+  .import-area {
+    margin: 0.75rem 0;
+  }
+}
+
+/* <= 576px: small-screen button stacking */
+@media (max-width: 576px) {
+  .pagination {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .page-item .page-link {
+    padding: 4px 8px;
+    min-width: 32px;
+  }
+
+  .user-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .search-box,
+  .add-button {
+    width: 100%;
+  }
+
+  .add-button {
+    justify-content: center;
+  }
+
+  /* Footer buttons stack and full width */
+  .modal-footer-custom {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .modal-footer-custom .btn {
+    width: 100%;
+  }
+
+  /* Reduce padding to fit small screens */
+  .modal-body {
+    padding-left: 0.8rem;
+    padding-right: 0.8rem;
+  }
+}
+
+/* ---------- Final safe helpers ---------- */
+/* Prevent unexpected left offsets */
+.modal-dialog[style] {
+  left: auto !important;
+  right: auto !important;
+}
+
+/* Keep buttons from wrapping weirdly */
+.btn {
+  white-space: nowrap;
+}
+
+.btnfont {
+  font-size: 1.1em;
+  font-weight: 500;
+  color: var(--app-secondary-color) !important;
+}
+
+.btnupload {
+  font-size: 0.875em;
+  font-weight: 500;
+  color: #fff !important;
+}
+
+.icon-16 {
+  width: 24px;
+  height: 24px;
+}
+
+.para {
+  color: #6a7282 !important;
+  font-size: 0.8125rem;
+}
+
+.uploadfile {
+  font-size: 0.875em;
+  font-weight: 500;
+  color: #000;
+}
+
+/* Strong modal/backdrop overrides - put at END of user.css */
+
+/* Make sure the backdrop covers the whole viewport */
+.modal-backdrop,
+.modal-backdrop.show {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  opacity: 0.5;
+  /* adjust if you want darker/lighter */
+  background-color: rgba(0, 0, 0, 0.45) !important;
+  z-index: 1040 !important;
+  /* sit above page content */
+}
+
+/* Ensure the modal dialog is above backdrop */
+.user-modal,
+.user-modal .modal,
+.user-modal .modal-dialog,
+.user-modal-dialog {
+  z-index: 1050 !important;
+}
+
+/* If you used delete-confirm modal class */
+.delete-confirm-modal,
+.delete-modal-dialog {
+  z-index: 1050 !important;
+}
+
+.modal,
+.modal-backdrop {
+  position: fixed !important;
+}
+
+.buttonnonebg:hover {
+  background-color: #fff !important;
+  border: 1px solid #ced4da !important;
+}
+
+.hovbg:hover {
+  background-color: #ced4da !important;
+}
+
+.multipleselect {
+  position: relative;
+  top: -1px;
+  font-size: 1em;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.view-only-members {
+  background-color: var(--bs-secondary-bg);
+  opacity: 1;
+}
+
+/* Base checkbox */
+.form-check-input {
+  width: 1.1em;
+  height: 1.1em;
+  border: 2px solid #f26522 !important;
+  cursor: pointer;
+}
+
+/* Checked state */
+.form-check-input:checked {
+  background-color: #f26522 !important;
+  border-color: #f26522 !important;
+}
+
+/* 
+/* Focus state (remove blue ring, add orange glow) */
+.form-check-input:focus {
+  border-color: #f26522 !important;
+  box-shadow: 0 0 0 0.15rem rgba(242, 101, 34, 0.35) !important;
+}
+
+.import-scroll-wrapper::-webkit-scrollbar,
+.error-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.import-scroll-wrapper::-webkit-scrollbar-thumb,
+.error-scroll::-webkit-scrollbar-thumb {
+  background-color: #dc3545;
+  border-radius: 4px;
+}
+.manscroll {
+  overflow-y: auto;
+  max-height: 200px;
+  height: auto;
+}
+
+.doc-label {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  display: block;
+  color: #4b5563;
+}
+
+.doc-upload-box {
+  border: 1.5px solid #b7c2d9;
+  border-radius: 10px;
+  background: #f5f7fb;
+  padding: 14px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.doc-upload-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.doc-check {
+  color: #22c55e;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.doc-file-name {
+  color: #3b5bcc;
+  font-weight: 500;
+}
+
+.doc-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.doc-icon-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid #c7d2e5;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.doc-icon-btn:hover {
+  background: #eef2ff;
+}
+
+.orange_text {
+  color: rgb(255, 112, 67);
+  font-size: 0.875rem;
+  font-weight: 400; /* normal weight */
+}
+
+.grey-label {
+  font-size: 0.875rem;
+  color: #6e6e6e;
+  font-weight: 500;
+}
+

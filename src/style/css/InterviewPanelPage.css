@@ -1,0 +1,604 @@
+/* Main Container */
+.interview-panel-container {
+  padding: 24px;
+  min-height: 100vh;
+}
+
+/* Panel Card */
+.interview-panel-container .panel-card {
+  border-radius: 0; /* optional */
+  box-shadow: none !important; /* remove shadow */
+  overflow: visible; /* remove clipping */
+}
+
+/* Remove any box-shadow from panel-card */
+.interview-panel-container .panel-card * {
+  box-shadow: none !important;
+}
+
+.interview-panel-container .panel-header h2 {
+  color: var(--app-secondary-color);
+  font-size: 1.25rem;
+  font-weight: 500;
+}
+
+.interview-panel-container .page-subtitle {
+  margin: 0 0 20px 0;
+  color: var(--bs-secondary-color) !important;
+  font-size: 0.875rem;
+  font-weight: 400;
+}
+/* Tabs Container */
+.interview-panel-container .tabs-container {
+  margin-top: 20px;
+}
+
+.interview-panel-container .tabs {
+  display: flex;
+  gap: 30px;
+  padding: 0 30px;
+  margin: 0;
+}
+
+/* Tab Styles */
+.interview-panel-container .tab {
+  background: none;
+  border: none;
+  padding: 12px 0;
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: #6a7282;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+}
+
+.interview-panel-container .tab .tab-icon {
+  font-size: 18px;
+}
+
+.interview-panel-container .tab:hover {
+  color: #6a7282;
+}
+
+.interview-panel-container .tab.active {
+  color: #f26522;
+  font-weight: 400;
+  font-size: 0.875rem;
+}
+
+.interview-panel-container .tab.active::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background-color: #f26522;
+  border-radius: 3px 3px 0 0;
+}
+
+/* Panel Content */
+.interview-panel-container .panel-content {
+  padding: 20px 1px;
+}
+
+/* Panel Layout */
+.interview-panel-container .panel-layout {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 24px;
+}
+
+/* Form Section */
+.interview-panel-container .panel-form-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.interview-panel-container .panel-form-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  height: fit-content;
+}
+
+.interview-panel-container .panel-form-card h3 {
+  margin: 0 0 5px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.interview-panel-container .card-title {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #42579f;
+  margin: 0 0 5px 0;
+}
+
+.interview-panel-container .card-subtitle {
+  font-size: 0.75rem;
+  color: #717182;
+  font-weight: 400;
+  margin: 0 0 20px 0;
+}
+
+.interview-panel-container .form-group {
+  margin-bottom: 20px;
+}
+
+.interview-panel-container .form-group label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: #404040;
+  margin-bottom: 8px;
+}
+
+.interview-panel-container .form-control {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  appearance: auto !important;
+}
+
+/* Table Card */
+.interview-panel-container .panel-table-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.interview-panel-container .panel-table-card h3 {
+  margin: 0 0 20px 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+.interview-panel-container .panel-form-actions {
+  display: flex;
+  justify-content: end; /* center like the design */
+  gap: 16px;
+  margin-top: 24px;
+  padding-top: 16px;
+}
+.table-title {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #42579f;
+}
+
+/* group icons horizontally */
+.icon-group {
+  display: flex;
+  gap: 10px;
+}
+
+.interview-panel-container .table-icon-btn {
+  border: none; /* ✅ remove border */
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+}
+.interview-panel-container .table-icon-btn img {
+  width: 20px;
+  height: 20px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .interview-panel-container .panel-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .interview-panel-container .panel-form-card {
+    position: static;
+    margin-bottom: 24px;
+  }
+
+  .interview-panel-container .panel-content {
+    padding: 0 20px 20px 20px;
+  }
+
+  .interview-panel-container .tabs {
+    padding: 0 20px;
+  }
+}
+
+/* Table Styles */
+.interview-panel-container .panel-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.interview-panel-container .panel-table th {
+  background-color: #42579f;
+  font-size: 0.813rem;
+  color: #ffffff;
+  font-weight: 500;
+  text-align: left;
+  padding: 12px 15px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.interview-panel-container .panel-table td {
+  padding: 15px;
+  border-bottom: 1px solid #f0f0f0;
+  color: #000000;
+  font-weight: 400;
+  font-size: 0.813rem;
+  vertical-align: middle;
+}
+
+.interview-panel-container .panel-table tr:last-child td {
+  border-bottom: none;
+}
+
+.interview-panel-container .panel-table tr:hover {
+  background-color: #f9f9f9;
+}
+
+/* Action Buttons */
+.interview-panel-container .action-btn {
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  font-size: 16px;
+  margin: 0 5px;
+  padding: 5px;
+  border-radius: 4px;
+}
+
+.interview-panel-container .action-btn:hover {
+  background: #f0f0f0;
+  color: var(--app-primary-color);
+}
+
+/* Buttons */
+.interview-panel-container .btn {
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.interview-panel-container .btn-outline-secondary {
+  background: #fff;
+  border-color: #ddd;
+  color: #666;
+}
+
+.interview-panel-container .btn-outline-secondary:hover {
+  background: #f5f5f5;
+}
+
+.interview-panel-container .btn-primary {
+  background: var(--app-primary-color);
+  color: white;
+  border: none;
+}
+
+.interview-panel-container .btn-primary:hover {
+  background: #e05d00;
+}
+
+/* Pagination */
+.interview-panel-container .pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+  gap: 6px;
+}
+
+.interview-panel-container .pagination button {
+  background: #fff;
+  border: 1px solid #ddd;
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 13px;
+  color: #666;
+}
+
+.interview-panel-container .pagination button:hover {
+  background: #f5f5f5;
+}
+
+.interview-panel-container .pagination button.active {
+  background: var(--app-primary-color);
+  color: white;
+  border-color: var(--app-primary-color);
+}
+
+/* Form Actions */
+.interview-panel-container.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid #eee;
+}
+
+.table-search-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 10px;
+  gap: 15px;
+  align-items: center;
+}
+
+.table-search-input {
+  width: 240px;
+  padding: 9px 10px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  font-size: 13px;
+}
+
+.table-search-input:focus {
+  outline: none;
+  border-color: #2563eb;
+}
+
+/* Filter Button Styles */
+.interview-panel-container .filter-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #374151;
+  cursor: pointer;
+}
+
+.interview-panel-container .filter-button:hover {
+  border-color: #9ca3af;
+  background: #f9fafb;
+}
+
+.interview-panel-container .filter-icon {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+/* Filter Dropdown Styles */
+.interview-panel-container .table-filters {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.interview-panel-container .table-filter-select {
+  padding: 9px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #374151;
+  background: #fff;
+  cursor: pointer;
+}
+
+.interview-panel-container .table-filter-select:focus {
+  outline: none;
+  border-color: #2563eb;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 1024px) {
+  .interview-panel-container .panel-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .interview-panel-container .panel-form-card {
+    position: static;
+    margin-bottom: 24px;
+  }
+}
+
+.interview-panel-container .field-error {
+  color: rgb(220, 53, 69);
+  font-size: 12px;
+  margin-top: 6px;
+}
+
+/* Info Icon Styles */
+.interview-panel-container .info-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-left: 6px;
+  color: #f26522;
+  cursor: pointer;
+}
+
+.interview-panel-container .info-icon:hover {
+  color: #f26522;
+}
+.interview-panel-container .sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.interview-panel-container .table-size-selector select {
+  padding: 6px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #374151;
+  background: #fff;
+  cursor: pointer;
+}
+
+.interview-panel-container .table-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center; /* pagination stays center */
+  position: relative;
+  margin-top: 16px;
+}
+
+/* Page size sticks to right */
+.interview-panel-container .table-size-selector {
+  position: absolute;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.interview-panel-container .infoicon-16 {
+  width: 16px;
+  height: 16px;
+}
+.panel-name-cell {
+  max-width: 250px; /* adjust width */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.panel-table th:nth-child(1),
+.panel-table td:nth-child(1) {
+  width: 70px;
+}
+
+.header-title {
+  color: var(--app-secondary-color);
+  font-size: 1.25rem;
+  font-weight: 500;
+}
+
+/* Bulk Import Button Styling */
+.bulk-import-btn {
+  background-color: var(--app-primary-color) !important;
+  border-color: var(--app-primary-color) !important;
+  color: white !important;
+  transition: all 0.2s ease-in-out;
+}
+
+.bulk-import-btn:hover {
+  background-color: var(--app-primary-color) !important;
+  border-color: var(--app-primary-color) !important;
+  color: white !important;
+  transform: translateY(-1px);
+}
+
+.bulk-import-btn:active {
+  background-color: var(--app-primary-color) !important;
+  border-color: var(--app-primary-color) !important;
+  transform: translateY(0);
+}
+
+.import-btn:focus,
+.import-btn:active,
+.import-btn:hover,
+.import-btn:focus-visible {
+  background-color: var(--app-primary-color) !important;
+  border-color: var(--app-primary-color) !important;
+  box-shadow: none !important;
+  color: #fff !important;
+}
+.import-btn {
+  background-color: var(--app-primary-color) !important;
+  border-color: var(--app-primary-color) !important;
+  color: #fff !important;
+}
+.file-name {
+  word-break: break-all; /* breaks long words */
+  overflow-wrap: anywhere; /* modern support */
+  white-space: normal; /* allow wrapping */
+}
+/*guidelines*/
+.guidelines-box {
+  background: #f5f6f8;
+  border-radius: 6px;
+  padding: 16px 20px;
+}
+
+.guidelines-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.bulb-icon {
+  width: 22px;
+  height: 22px;
+  margin-top: -4px;
+}
+
+.guidelines-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+  color: var(--app-primary-color);
+}
+
+.guideline-section {
+  margin-top: 10px;
+}
+
+.guideline-section .sectiontitle {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--app-secondary-color) !important;
+}
+
+.main-list {
+  padding-left: 18px;
+  margin: 0;
+}
+
+.main-list > li {
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: #444;
+}
+
+.main-list ul {
+  margin-top: 6px;
+  padding-left: 18px;
+}
+
+.main-list ul li {
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+hr {
+  margin: 12px 0;
+  border: none;
+  border-top: 1px solid #ddd;
+}
+

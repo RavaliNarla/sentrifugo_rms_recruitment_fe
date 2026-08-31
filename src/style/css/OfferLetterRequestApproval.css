@@ -1,0 +1,823 @@
+/* ================= PAGE ================= */
+.offerletter-page {
+  padding: 20px;
+  background: #fff;
+  min-height: 100vh;
+  border-radius: 20px !important;
+}
+
+.offerletter-page .page-title {
+  font-weight: 600;
+  color: var(--app-secondary-color);
+  font-size: 1em;
+}
+.offerletter-page .filter-select__input-container {
+  padding-top: 0px !important;
+  margin-top: 0px !important;
+}
+.offerletter-page .assign-positions-page .page-subtitle {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 1rem;
+  margin: 0;
+}
+
+/* ===== SELECTION SECTION ===== */
+.offerletter-page .assign-positions-page .selection-section {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+.offerletter-page .assign-positions-page .selection-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  max-width: 800px;
+}
+
+.offerletter-page .assign-positions-page .form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.offerletter-page .assign-positions-page .form-label {
+  color: #374151;
+  font-weight: 500;
+  font-size: 0.875rem;
+  margin-bottom: 8px;
+}
+
+.offerletter-page .assign-positions-page .form-select {
+  padding: 12px 16px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  background: #ffffff;
+}
+
+.offerletter-page .assign-positions-page .form-select:disabled {
+  background-color: #afbdeb4f;
+  color: #6c757d;
+  cursor: not-allowed;
+  opacity: 1;
+}
+.form-check-input:disabled {
+  background-color: #afbdeb4f;
+}
+.icon-history {
+  width: 16px;
+  height: 16px;
+}
+.offerletter-page .assign-positions-page .form-select:not(:focus) {
+  border: 2px solid #e5e7eb;
+}
+
+.offerletter-page .assign-positions-page .form-select:focus {
+  border-color: #86b7fe;
+  outline: 0;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* ===== REQUISITION STRIP SECTION ===== */
+.offerletter-page .assign-positions-page .requisition-strip-section {
+  margin-bottom: 24px;
+}
+
+/* ===== COMMITTEE CONFIGURATION SECTION ===== */
+.offerletter-page .assign-positions-page .committee-config-section {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 32px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+.offerletter-page .assign-positions-page .config-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 32px;
+}
+
+.offerletter-page .assign-positions-page .config-title-section {
+  flex: 1;
+}
+
+.offerletter-page .assign-positions-page .config-title {
+  color: #0a0a0a;
+  font-size: 0.875rem;
+  font-weight: 400;
+  margin: 0 0 8px 0;
+}
+
+.offerletter-page .assign-positions-page .config-subtitle {
+  color: #717182;
+  font-size: 0.75rem;
+  font-weight: 400;
+}
+
+.offerletter-page .assign-positions-page .assign-button {
+  background: linear-gradient(135deg, #f26522 0%, #e55a1b 100%);
+  color: #ffffff;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 0.875rem;
+  cursor: pointer;
+
+  box-shadow: 0 4px 12px rgba(242, 101, 34, 0.3);
+}
+
+.offerletter-page .assign-positions-page .assign-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(242, 101, 34, 0.4);
+}
+
+.offerletter-page .assign-positions-page .assign-button:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.offerletter-page .committee-tabs {
+  display: flex;
+
+  border-radius: 12px;
+  padding: 8px;
+  margin-bottom: 32px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  gap: 12px;
+}
+
+.offerletter-page .tab-item {
+  flex: 1;
+  padding: 14px 24px;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 0.875rem;
+  color: #374151;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+.offerletter-page .tab-item.active {
+  background: #42579f;
+  color: #ffffff;
+  border-color: #42579f;
+}
+
+/* ===== PANELS CONTAINER ===== */
+.offerletter-page .panels-container {
+  display: flex;
+  gap: 24px;
+  align-items: stretch;
+}
+
+.offerletter-page .panel-box {
+  flex: 1;
+  background: #ffffff;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  max-height: 500px;
+}
+
+.offerletter-page .panel-box.available {
+  border-color: #3b82f6;
+}
+
+.offerletter-page .panel-box.selected {
+  border-color: #f26522;
+}
+
+.offerletter-page .panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.offerletter-page .panel-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+  color: #1f2937;
+}
+
+.offerletter-page .panel-count {
+  background: #e5e7eb;
+  color: #374151;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.offerletter-page .panel-box.available .panel-count {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.offerletter-page .panel-box.selected .panel-count {
+  background: #fed7aa;
+  color: #c2410c;
+}
+
+.offerletter-page .panel-divider {
+  height: 1px;
+  background: #e5e7eb;
+}
+
+.offerletter-page .assignpanel-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+/* ===== SWAP DIVIDER ===== */
+.offerletter-page .swap-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 0;
+}
+
+.offerletter-page .swap-icon {
+  font-size: 1.5rem;
+  color: #9ca3af;
+  background: #f3f4f6;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ===== EMPTY STATE ===== */
+.offerletter-page .empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.offerletter-page .empty-icon {
+  font-size: 3rem;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.offerletter-page .empty-text {
+  color: #9ca3af;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 1024px) {
+  .offerletter-page .selection-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .offerletter-page .panels-container {
+    flex-direction: column;
+  }
+
+  .offerletter-page .swap-divider {
+    padding: 12px 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .offerletter-page .assign-positions-page {
+    padding: 16px;
+  }
+
+  .offerletter-page .page-header {
+    padding: 24px;
+  }
+
+  .offerletter-page .page-title {
+    font-size: 1.5rem;
+  }
+
+  .offerletter-page .committee-config-section {
+    padding: 20px;
+  }
+
+  .offerletter-page .config-header {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .offerletter-page .committee-tabs {
+    flex-direction: column;
+    background: transparent;
+    padding: 0;
+  }
+
+  .offerletter-page .tab-item {
+    background: #f3f4f6;
+    margin-bottom: 8px;
+    border-radius: 8px;
+  }
+
+  .offerletter-page .tab-item.active {
+    background: #42579f;
+    color: #ffffff;
+  }
+}
+
+.offerletter-page .page-subtitle {
+  margin: 0 0 20px 0;
+  color: var(--bs-secondary-color) !important;
+  font-size: 0.875rem;
+  font-weight: 400;
+}
+
+/* ===== COMMITTEE ROW STYLES (Enhanced) ===== */
+.offerletter-page .committee-row {
+  background: #ffffff;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.offerletter-page .committee-row:hover {
+  border-color: #d1d5db;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.offerletter-page .committee-row.selected {
+  background: #fff7f3;
+}
+
+.offerletter-page .committee-title {
+  font-weight: 500;
+  font-size: 0.875rem;
+  color: #1f2937;
+  margin-bottom: 8px;
+}
+
+.offerletter-page .committee-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.offerletter-page .chip {
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  color: #374151;
+  font-weight: 400;
+}
+
+.offerletter-page .action-pill {
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-weight: 500;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.offerletter-page .action-pill.add {
+  background: #f26522;
+  color: #ffffff;
+}
+
+.offerletter-page .action-pill.add:hover {
+  background: #f26522;
+}
+
+.offerletter-page .assign-positions-page .action-pill.remove {
+  background: #ef4444;
+  color: #ffffff;
+}
+
+.offerletter-page .action-pill.remove:hover {
+  background: #dc2626;
+}
+
+/* ===== DATE ROW STYLES ===== */
+.offerletter-page .assign-positions-page .date-row {
+  display: flex;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.offerletter-page .assign-positions-page .date-row label {
+  display: block;
+  color: #6b7280;
+}
+
+/* ================= SEARCH ================= */
+.offerletter-page .search-boxpost {
+  position: relative;
+}
+
+.offerletter-page .search-boxpost svg {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  transform: translateY(-50%);
+  color: #9ca3af;
+}
+
+.offerletter-page .search-boxpost input {
+  height: 42px;
+  padding-left: 36px;
+  font-size: 0.8125rem;
+  border-radius: 8px;
+  color: var(--app-secondary-color);
+  font-weight: 400;
+}
+
+/* ================= FILTERS ================= */
+.offerletter-page .filters-row select,
+.offerletter-page .filters-row input {
+  height: 42px;
+}
+
+.offerletter-page .filter-label {
+  margin-bottom: 6px;
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: #31315b;
+}
+
+/* ================= FILTER DROPDOWN STYLE ================= */
+
+.offerletter-page .filter-select__control {
+  height: 44px !important;
+  min-height: 44px !important;
+  border-radius: 10px !important;
+  border: 1px solid #d1d5db !important;
+  box-shadow: none !important;
+  font-size: 0.8125rem !important;
+  background-color: #ffffff !important;
+}
+
+.offerletter-page .filter-select__control:hover {
+  border-color: var(--app-secondary-color) !important;
+}
+
+.offerletter-page .filter-select__control--is-focused {
+  border-color: var(--app-secondary-color) !important;
+  box-shadow: 0 0 0 2px rgba(22, 43, 117, 0.1) !important;
+}
+
+.offerletter-page .filter-select__value-container {
+  padding: 0 12px !important;
+}
+
+.offerletter-page .filter-select__placeholder {
+  color: #9ca3af !important;
+  font-size: 0.8125rem;
+}
+
+.offerletter-page .filter-select__single-value {
+  color: #111827 !important;
+  font-weight: 500;
+  font-size: 0.8125rem;
+}
+
+.offerletter-page .filter-select__indicator-separator {
+  display: none !important;
+}
+
+.offerletter-page .filter-select__dropdown-indicator {
+  color: #6b7280 !important;
+  padding-right: 12px !important;
+}
+
+.offerletter-page .filter-select__menu {
+  border-radius: 10px !important;
+  overflow: hidden;
+  font-size: 0.8125rem;
+}
+
+.offerletter-page .filter-select__option {
+  padding: 10px 14px !important;
+}
+
+.offerletter-page .filter-select__option--is-focused {
+  background-color: #f3f4f6 !important;
+}
+
+.offerletter-page .filter-select__option--is-selected {
+  background-color: var(--app-secondary-color) !important;
+  color: #ffffff !important;
+}
+
+.offerletter-page .status-select {
+  appearance: none;
+  background-image: url("../../assets/Vector.png");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 14px;
+  padding-right: 30px;
+  font-size: 0.8125rem;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.offerletter-page .status-select::-ms-expand {
+  display: none;
+}
+
+/* ================= BULK ACTION BAR ================= */
+.offerletter-page .bulk-actions {
+  background: #fff;
+  padding: 12px;
+  border-radius: 8px;
+  margin-left: 0px;
+  margin-right: 0px;
+
+  border: 1px solid #acbed4;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.offerletter-page .selectall {
+  font-size: 0.875em;
+  color: var(--app-secondary-color) !important;
+  font-weight: 500;
+  gap: 1em;
+}
+
+.offerletter-page .selectall .form-check-label {
+  color: var(--app-secondary-color) !important;
+  margin-top: 5px;
+  margin-left: -5px;
+}
+
+.offerletter-page .select-checkbox .form-check-label {
+  color: var(--app-secondary-color);
+  font-weight: 500;
+  font-size: 0.875em;
+  cursor: pointer;
+}
+
+.offerletter-page .selectall .form-check-input {
+  font-size: 1rem;
+  transform: scale(1);
+}
+
+.offerletter-page .selectcheck {
+  padding-left: 8px;
+}
+
+/* ================= BUTTONS ================= */
+.offerletter-page .reject-btn {
+  font-size: 0.875rem;
+  font-weight: 400;
+  border-radius: 8px;
+  background-color: #fdf5f5;
+  color: #d73c40;
+}
+
+.offerletter-page .approve-btn {
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: #25ba2f !important;
+  padding: 6px 18px;
+  background-color: #f4faf6;
+}
+
+/* ================= ROW DATA ================= */
+.offerletter-page .checkbox-col {
+  padding-top: 8px;
+}
+
+.offerletter-page .data-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.offerletter-page .field-label {
+  font-size: 0.75em;
+  font-weight: 500;
+  color: #404040;
+  letter-spacing: 0.2px;
+  margin-bottom: 2px;
+}
+
+.offerletter-page .field-value {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #1e293b;
+}
+
+.offerletter-page .requisition-text {
+  word-break: break-word;
+}
+
+/* ================= PAGINATION ================= */
+.offerletter-page .pagination {
+  gap: 4px;
+}
+
+.offerletter-page .page-link {
+  font-size: 0.875rem;
+  border-radius: 6px;
+}
+
+.offerletter-page .page-item.active .page-link {
+  background-color: var(--app-secondary-color);
+  border-color: var(--app-secondary-color);
+  color: #ffffff;
+}
+
+.offerletter-page .pagesize {
+  font-size: 0.875rem;
+  color: var(--app-secondary-color);
+}
+
+/* ================= STATUS BADGE ================= */
+
+.offerletter-page .status-badge {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 10px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: 6px;
+  white-space: nowrap;
+  color: #fff;
+}
+
+/* Approved */
+.offerletter-page .status-approved {
+  background-color: #e6f4ea !important;
+  color: #25ba2f !important;
+  border: 1px solid #e7f8e8;
+}
+
+/* Pending */
+.offerletter-page .status-pending {
+  background-color: #ffdca8 !important;
+  color: #f28a22 !important;
+  font-weight: 400;
+  font-size: 0.75em;
+}
+
+/* Rejected */
+.offerletter-page .status-rejected {
+  background-color: #d73c400d !important;
+  color: #d73c40 !important;
+  font-weight: 400;
+  font-size: 0.875em;
+}
+
+/* Blue border */
+.offerletter-page .select-checkbox .form-check-input {
+  color: #506097;
+  border: 2px solid #43548f !important;
+  cursor: pointer;
+  margin-right: 15px;
+}
+
+.offerletter-page .select-checkbox .form-check-input:checked {
+  background-color: #42579f !important;
+  border-color: #42579f !important;
+}
+
+.offerletter-page .select-checkbox .form-check-input:focus {
+  box-shadow: 0 0 0 0.15rem rgba(13, 110, 253, 0.25) !important;
+}
+
+.offerletter-page .assign-position-muted {
+  color: #717182;
+  font-size: 0.75rem;
+  font-weight: 400;
+}
+.offerletter-page .icon-history {
+  width: 16px;
+  height: 16px;
+  margin-left: 5px;
+}
+
+/* Css wirutten b y Veeresh */
+.offerletter-request-page {
+  background: none;
+  margin: 30px;
+  padding-bottom: 30px;
+}
+.offerletter-page .offer-page-title {
+  font-weight: 600;
+  color: var(--app-secondary-color);
+  font-size: 1em;
+}
+
+.offerletter-page .offer-page-subtitle {
+  margin: 0 0 20px 0;
+  color: var(--bs-secondary-color);
+  font-size: 0.875rem;
+}
+
+.offerletter-page .offer-filter-label {
+  margin-bottom: 6px;
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: #31315b;
+}
+
+.offerletter-page .offer-bulk-actions {
+	background: #fff;
+	padding: 12px;
+	border-radius: 8px;
+	border: 1px solid #acbed4;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+	margin: 0 1px;
+}
+
+.offerletter-page .offer-field-label {
+  font-size: 0.75em;
+  font-weight: 500;
+  color: #404040;
+}
+
+.offerletter-page .offer-field-value {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #1e293b;
+}
+
+.offerletter-page .offer-reject-btn {
+  font-size: 0.875rem;
+  border-radius: 8px;
+  background-color: #fdf5f5;
+  color: #d73c40;
+}
+
+.offerletter-page .offer-approve-btn {
+  font-size: 0.875rem;
+  color: #25ba2f !important;
+  background-color: #f4faf6;
+}
+
+.offer-letter-request-page {
+	background: none;
+	margin: 30px;
+	padding-bottom: 30px;
+}
+.offerletter-page {
+  padding: 20px;
+  background: #fff;
+  min-height: 100vh;
+  border-radius: 20px !important;
+}
+
+.offer-request-table thead th {
+	background: var(--app-secondary-color) !important;
+	color: #fff !important;
+	border-color: var(--app-secondary-color) !important;
+	font-size: 0.875rem;
+	font-weight: 500;
+	white-space: nowrap;
+	vertical-align: middle;
+	padding: 12px;
+}
+
+.offer-request-table tbody td {
+  vertical-align: middle;
+  font-size: 0.875rem;
+  	padding: 12px;
+
+}
+
+.offer-request-table .form-check-input {
+  border: 2px solid #42579f;
+}
+
+.offer-request-table .form-check-input:checked {
+  background-color: #42579f;
+  border-color: #42579f;
+}
+
+.offer-bulk-actions .form-check-label{
+  font-size: 0.875rem;
+}

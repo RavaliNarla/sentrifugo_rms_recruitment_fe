@@ -1,0 +1,44 @@
+{
+  "title": "Interview Panels",
+  "search_placeholder": "Search Panel",
+  "add": "Add",
+  "added": "Add Panel",
+  "edit": "Edit Panel",
+  "view": "View Panel",
+  "sno": "S. No.",
+  "panel_name": "Panel Name",
+  "panel_members": "Panel Members",
+  "actions": "Actions",
+  "no_records": "No Panels Found",
+  "choose_add_method": "Choose to add manually or import from XLSX file",
+  "manual_entry": "Manual Entry",
+  "import_file": "Import File",
+  "close": "Close",
+
+  "committee": "Committee",
+
+  "enter_panel_name": "Enter Panel Name",
+  "select_members": "Please select...",
+  "select_members_hint": "Select one or more members",
+  "select_community": "Select Community",
+
+  "save": "Save",
+  "update": "Update",
+  "cancel": "Cancel",
+
+  "upload_file": "Upload File",
+  "supported_formats": "CSV/XLSX supported (Headers: name, members)",
+  "upload_csv": "Upload CSV",
+  "upload_xlsx": "Upload XLSX",
+  "download_template": "Download template",
+  "import": "Import",
+
+  "confirm_delete": "Confirm Delete",
+  "delete_confirm_msg": "Are you sure you want to delete this panel?",
+  "delete": "Delete",
+  "atLeastOneMember": "At least one member must be selected",
+  "support_csv_xlsx": "CSV and XLSX formats are supported (Headers: name, members)",
+  "interviewPanelAdded": "Interview Panel added successfully",
+  "interviewPanelUpdated": "Interview Panel updated successfully",
+  "interviewPanelDeleted": "Interview Panel deleted successfully"
+}

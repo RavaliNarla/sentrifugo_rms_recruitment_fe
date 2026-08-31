@@ -1,0 +1,17 @@
+{
+  "state": "राज्य",
+  "languages": "भाषाएँ",
+  "select_languages": "भाषाएँ चुनें",
+  "no_data": "कोई डेटा नहीं",
+  "page_size": "पेज आकार",
+  "s_no": "क्र.सं",
+  "view": "देखें",
+  "edit": "संपादित करें",
+  "search_by_state": "राज्य द्वारा खोजें",
+  "saved_success": "सफलतापूर्वक सहेजा गया",
+  "updated_success": "सफलतापूर्वक अपडेट किया गया",
+  "failed_save": "राज्य भाषाएँ सहेजने में विफल",
+  "languages_required": "कृपया कम से कम एक भाषा चुनें",
+  "duplicate_language": "डुप्लिकेट भाषा",
+  "duplicate_state": "राज्य पहले से मौजूद है"
+}

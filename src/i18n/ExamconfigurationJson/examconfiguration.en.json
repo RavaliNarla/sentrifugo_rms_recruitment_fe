@@ -1,0 +1,61 @@
+{
+  "position_wise_cutoff_configuration": "Position Wise Cutoff Configuration",
+  "position": "Position",
+  "total_marks": "Total Marks",
+  "number_of_sections": "No. of Sections",
+  "weightage": "Weightage",
+  "status": "Status",
+  "actions": "Actions",
+  "no_configurations_found": "No configurations found",
+
+  "written_exam_section_cutoff_configuration": "Written Exam — Section & Cutoff Configuration",
+  "configure_written_exam_parameters": "Configure written examination parameters and define category-wise cut-off marks for candidate shortlisting.",
+
+  "add_configuration": "Add Configuration",
+  "please_select_requisition_first": "Please select Requisition first",
+  "please_select_position_first": "Please select Position first",
+
+  "interview_process_started": "Interview process has already started for this position. Exam configuration cannot be added.",
+   "configure_sections_marks": "Configure sections and cutoff marks",
+  "total_section_marks": "Total Section Marks",
+  "section_consideration_for_combined_score": "Section Consideration for Combined Score",
+  "written_exam_weightage": "Written Exam Weightage",
+  "national_wise_cutoff_configuration": "National Wise Cutoff Configuration",
+  "state_wise_cutoff_configuration": "State Wise Cutoff Configuration",
+  "add": "Add",
+  "save": "Save",
+  "update": "Update",
+  "saving": "Saving...",
+  "updating": "Updating...",
+  "cancel": "Cancel",
+  "accept": "Accept",
+  "reject": "Reject",
+  "comments": "Comments",
+  "enter_comments": "Enter comments",
+   "view_cutoff_configuration": "View Cutoff Configuration",
+  "edit_cutoff_configuration": "Edit Cutoff Configuration",
+  "add_cutoff_configuration": "Add Cutoff Configuration",
+  "sum_of_all_sections": "Sum of all sections",
+  "example_sections": "e.g. 4",
+    "enter_percentage": "Enter Percentage",
+     "section_placeholder": "Section {{number}}",
+      "metric": "Metric",
+  "appeared": "Appeared",
+  "vacancies": "Vacancies",
+  "qualified_without_relaxation": "Qualified Without Relaxation",
+  "qualified_with_relaxation": "Qualified With Relaxation",
+
+  "total": "Total",
+
+  "start": "Start",
+  "end": "End",
+
+  "edit": "Edit",
+  "finalize": "Finalize",
+
+  "position_finalized_successfully": "Position finalized successfully",
+  "failed_to_finalize": "Failed to finalize",
+
+  "category_wise_reservation_state": "Category Wise Reservation (State-wise)",
+  "no_state_wise_summary_found": "No state-wise summary found"
+}

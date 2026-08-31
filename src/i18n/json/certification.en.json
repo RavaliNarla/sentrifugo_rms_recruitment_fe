@@ -1,0 +1,48 @@
+{
+  "certifications": "Certification",
+  "search_placeholder": "Search certifications",
+  "add": "Add",
+  "edit_certification": "Edit Certification",
+  "add_certification": "Add Certification",
+  "view_certification": "View Certification",
+
+  "s_no": "S. No.",
+  "name": "Name",
+  "description": "Description",
+  "actions": "Actions",
+
+  "enter_name": "Enter certification name",
+  "enter_description": "Enter description",
+
+  "manual_entry": "Manual Entry",
+  "import_file": "Import File",
+  "choose_add_method": "Choose to add manually or import from XLSX file.",
+
+  "cancel": "Cancel",
+  "close": "Close",
+  "save": "Save",
+  "update": "Update",
+  "no_file_selected": "Please select a file to upload",
+  "page_size": "Page size :",
+
+  "confirm_delete": "Confirm Delete",
+  "delete_message": "Are you sure you want to delete this certification?",
+  "delete": "Delete",
+  "invalid_file": "Please upload a valid Excel file (.xlsx)",
+  "no_records": "No certifications found",
+  "fetch_error": "Failed to load certifications",
+  "download_template": "Download Template",
+  "add_success": "Certification added successfully",
+  "add_error": "Failed to add certification",
+  "update_success": "Certification updated successfully",
+  "update_error": "Failed to update certification",
+  "delete_success": "Certification deleted successfully",
+  "delete_error": "Failed to delete certification",
+  "support_xlsx": "Support for XLSX formats",
+  "upload_xlsx": "Upload XLSX",
+  "upload_certifications": "Upload File",
+  "reupload_xlsx": "Reupload XLSX",
+  "importing": "Importing...",
+  "import_error": "Failed to import certifications",
+  "remove": "Remove"
+}

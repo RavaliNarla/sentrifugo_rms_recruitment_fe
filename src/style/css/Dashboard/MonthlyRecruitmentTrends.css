@@ -1,0 +1,123 @@
+.monthly-trends-card {
+  background: #ffffff;
+  border: 0.0625rem solid #dbe2ea;
+  border-radius: 1.5rem;
+  padding: 1.5rem;
+  box-shadow: 0 0.125rem 0.625rem rgba(15, 23, 42, 0.08);
+}
+
+.monthly-trends-header {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  margin-bottom: 1.25rem;
+}
+
+.monthly-trends-icon {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.9rem;
+  background: linear-gradient(
+    135deg,
+    #f59e0b,
+    #ea580c
+  );
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.35rem;
+  box-shadow: 0 0.25rem 0.75rem
+    rgba(245, 158, 11, 0.3);
+}
+
+.monthly-trends-header h2 {
+  margin: 0;
+  color: #13294b;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.monthly-trends-header p {
+  margin: 0.15rem 0 0;
+  color: #64748b;
+  font-size: 0.75rem;
+  font-weight: 400;
+}
+
+.monthly-chart-wrapper {
+  margin-top: 1rem;
+  height: 24rem;
+}
+
+.recharts-legend-wrapper {
+  font-size: 0.85rem !important;
+}
+
+.recharts-cartesian-axis-tick-value {
+  font-size: 0.8rem;
+  fill: #64748b;
+}
+
+.recharts-default-tooltip {
+  border-radius: 0.75rem !important;
+  border: 1px solid #e2e8f0 !important;
+}
+.monthly-trends-legend {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+.legend-text {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 500;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.legend-item span:last-child {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.legend-line {
+  width: 1.9rem;
+  height: 0.35rem;
+  border-radius: 999px;
+  display: inline-block;
+}
+.monthly-tooltip {
+  background: #ffffff;
+  border-radius: 1rem;
+  padding: 1rem;
+  min-width: 16rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+}
+
+.tooltip-month {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #13294b;
+  margin-bottom: 0.75rem;
+}
+
+.tooltip-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.35rem;
+}
+.tooltip-text {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 500;
+}

@@ -1,0 +1,18 @@
+{
+  "interview_schedule_request": "साक्षात्कार अनुसूची अनुरोध",
+  "review_interview_schedule_request": "साक्षात्कार अनुसूची अनुरोध की समीक्षा करें तथा स्वीकृत या अस्वीकृत करें।",
+  "loading_position_details": "पद विवरण लोड हो रहा है...",
+  "no_position_details_found": "कोई पद विवरण उपलब्ध नहीं है",
+  "scheduled_candidates": "अनुसूचित उम्मीदवार",
+  "zone_count": "ज़ोन संख्या",
+  "panel_count": "पैनल संख्या",
+  "view_zone_details": "ज़ोन विवरण देखें",
+  "view_panel_details": "पैनल विवरण देखें",
+  "history": "इतिहास",
+  "date": "तिथि",
+  "zone_details": "ज़ोन विवरण",
+  "zone_name": "ज़ोन नाम",
+  "candidates": "उम्मीदवार",
+  "no_zone_details_found": "कोई ज़ोन विवरण उपलब्ध नहीं है",
+  "no_history_found": "कोई इतिहास उपलब्ध नहीं है"
+}

@@ -1,0 +1,18 @@
+{
+  "interview_schedule_request": "Interview Schedule Request",
+  "review_interview_schedule_request": "Review and approve or reject interview schedule request.",
+  "loading_position_details": "Loading position details...",
+  "no_position_details_found": "No position details found",
+  "scheduled_candidates": "Scheduled Candidates",
+  "zone_count": "Zone Count",
+  "panel_count": "Panel Count",
+  "view_zone_details": "View Zone Details",
+  "view_panel_details": "View Panel Details",
+  "history": "History",
+  "date": "Date",
+  "zone_details": "Zone Details",
+  "zone_name": "Zone Name",
+  "candidates": "Candidates",
+  "no_zone_details_found": "No zone details found",
+  "no_history_found": "No history found"
+}
