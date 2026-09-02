@@ -1,11 +1,51 @@
-body {
-  margin: 0;
-  font-family: "Poppins", sans-serif !important;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+:root {
+  --app-primary-color: #208bbd;
+  --app-secondary-color: #162b75;
+  --app-bg-color: #e7ebec;
+  --app-link-color: #208bbd;
 }
 
-code {
-  font-family:
-    source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
+body {
+  margin: 0;
+  background-color: var(--app-bg-color);
+  font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+a {
+  color: var(--app-link-color);
+}
+
+.btn-primary {
+  background-color: var(--app-primary-color) !important;
+  border-color: var(--app-primary-color) !important;
+}
+
+.btn-primary:hover, .btn-primary:focus {
+  background-color: var(--app-secondary-color) !important;
+  border-color: var(--app-secondary-color) !important;
+}
+
+.bg-app-primary {
+  background-color: var(--app-primary-color) !important;
+}
+
+.text-app-primary {
+  color: var(--app-primary-color) !important;
+}
+
+.nav-link.active {
+  color: var(--app-primary-color) !important;
+  font-weight: 600;
+}
+
+.card, .table-card {
+  border-radius: 8px;
+}
+
+.app-header {
+  background-color: var(--app-primary-color);
+}
+
+.app-header .navbar-brand, .app-header .nav-link, .app-header .dropdown-toggle {
+  color: #fff !important;
 }

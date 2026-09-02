@@ -1,78 +1,132 @@
-// src/App.js
-import React, { useEffect } from "react";
-import { useLocation } from "react-router-dom";
-import { useSelector } from "react-redux";
-import "bootstrap/dist/css/bootstrap.min.css";
-import "bootstrap/dist/js/bootstrap.bundle.min.js";
-import "bootstrap-icons/font/bootstrap-icons.css";
-import "../App.css";
-
-import Header from "../app/layouts/Header";
-import Footer from "./layouts/Footer";
+import React from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import PrivateRoute from "./PrivateRoute";
+import PrivilegeRoute from "./PrivilegeRoute";
+import Layout from "./Layout";
+import Login from "../modules/auth/Login";
+import AuthCallback from "../modules/auth/AuthCallback";
+import Unauthorized from "../modules/auth/Unauthorized";
+import Dashboard from "../modules/dashboard/Dashboard";
+import JobPostings from "../modules/jobPosting/JobPostings";
+import CreateRequisition from "../modules/jobPosting/CreateRequisition";
+import AddPosition from "../modules/jobPosting/AddPosition";
+import Approvals from "../modules/approvals/Approvals";
+import CandidateWorkflow from "../modules/candidateWorkflow/CandidateWorkflow";
+import CommitteeManagement from "../modules/committeeManagement/CommitteeManagement";
+import InterviewerSchedule from "../modules/interviewer/InterviewerSchedule";
+import UsersPage from "../modules/admin/UsersPage";
+import DepartmentsPage from "../modules/admin/DepartmentsPage";
+import LocationsPage from "../modules/admin/LocationsPage";
+import PositionTitlesPage from "../modules/admin/PositionTitlesPage";
+import EducationQualificationsPage from "../modules/admin/EducationQualificationsPage";
 
-import "@fontsource/poppins/300.css"; //Light
-import "@fontsource/poppins/400.css"; //Regular
-import "@fontsource/poppins/500.css"; // Medium
-import "@fontsource/poppins/600.css"; //Semi-Bold
-import "@fontsource/poppins/700.css"; //Bold
+function withLayout(element) {
+  return <Layout>{element}</Layout>;
+}
 
-import AppRoutes from "./AppRoutes";
-
-function AppWrapper() {
-  const location = useLocation();
-  const organizationTheme = useSelector(
-    (state) => state.user?.organizationTheme
-  );
-  const hideHeaderFor = ["/login", "/forgot-password", "/verify-otp"];
-  const pathname = location.pathname.toLowerCase();
-  const shouldHideHeader =
-    hideHeaderFor.some((p) => pathname.startsWith(p)) ||
-    pathname.endsWith("/login");
-
-  useEffect(() => {
-    const root = document.documentElement;
-    root.style.setProperty(
-      "--app-primary-color",
-      organizationTheme?.primaryColor || "#ff6a00"
-    );
-    root.style.setProperty(
-      "--app-secondary-color",
-      organizationTheme?.secondaryColor || "#162b75"
-    );
-     root.style.setProperty(
-      "--app-dashboardbg-color",
-      organizationTheme?.dashboardbgcolor || "#e7ebec"
-    );
-    root.style.setProperty(
-      "--app-link-color",
-      organizationTheme?.linkColor || "#ff6a00"
-    );
-    root.style.setProperty(
-      "--app-focus-color",
-      organizationTheme?.focusColor || "rgba(255, 106, 0, 0.12)"
-    );
-  }, [organizationTheme]);
-  useEffect(() => {
-  document.title =
-    organizationTheme?.organizationName || "Recruitment Tracking System";
-}, [organizationTheme]);
-
+function App() {
   return (
     <>
-      <ToastContainer position="top-right" autoClose={1500} />
-      <div className="app-container">
-        {!shouldHideHeader && <Header />}
-        <main className="main-content">
-          <AppRoutes />
-          <Footer />
-        </main>
-      </div>
+      <ToastContainer position="top-right" autoClose={3000} />
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
+        <Route path="/unauthorized" element={<Unauthorized />} />
+
+        <Route path="/dashboard" element={<PrivateRoute>{withLayout(<Dashboard />)}</PrivateRoute>} />
+
+        <Route
+          path="/job-postings"
+          element={
+            <PrivateRoute>
+              <PrivilegeRoute privilege="JobPostings">{withLayout(<JobPostings />)}</PrivilegeRoute>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/job-postings/create-requisition"
+          element={
+            <PrivateRoute>
+              <PrivilegeRoute privilege="JobPostings">{withLayout(<CreateRequisition />)}</PrivilegeRoute>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/job-postings/:requisitionId/add-position"
+          element={
+            <PrivateRoute>
+              <PrivilegeRoute privilege="JobPostings">{withLayout(<AddPosition />)}</PrivilegeRoute>
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/approvals"
+          element={
+            <PrivateRoute>
+              <PrivilegeRoute privilegesRequired={["L1Approval", "L2Approval"]}>{withLayout(<Approvals />)}</PrivilegeRoute>
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/candidate-workflow"
+          element={
+            <PrivateRoute>
+              <PrivilegeRoute
+                privilegesRequired={["CandidatePool", "InterviewPool", "CompensationPool", "OfferPool"]}
+              >
+                {withLayout(<CandidateWorkflow />)}
+              </PrivilegeRoute>
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/committee-management"
+          element={
+            <PrivateRoute>
+              <PrivilegeRoute privilege="CommitteeManagement">{withLayout(<CommitteeManagement />)}</PrivilegeRoute>
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/interviewer"
+          element={
+            <PrivateRoute>
+              <PrivilegeRoute privilege="Interview">{withLayout(<InterviewerSchedule />)}</PrivilegeRoute>
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/admin/users"
+          element={<PrivateRoute><PrivilegeRoute privilege="Admin">{withLayout(<UsersPage />)}</PrivilegeRoute></PrivateRoute>}
+        />
+        <Route
+          path="/admin/departments"
+          element={<PrivateRoute><PrivilegeRoute privilege="Admin">{withLayout(<DepartmentsPage />)}</PrivilegeRoute></PrivateRoute>}
+        />
+        <Route
+          path="/admin/locations"
+          element={<PrivateRoute><PrivilegeRoute privilege="Admin">{withLayout(<LocationsPage />)}</PrivilegeRoute></PrivateRoute>}
+        />
+        <Route
+          path="/admin/position-titles"
+          element={<PrivateRoute><PrivilegeRoute privilege="Admin">{withLayout(<PositionTitlesPage />)}</PrivilegeRoute></PrivateRoute>}
+        />
+        <Route
+          path="/admin/education-qualifications"
+          element={<PrivateRoute><PrivilegeRoute privilege="Admin">{withLayout(<EducationQualificationsPage />)}</PrivilegeRoute></PrivateRoute>}
+        />
+
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      </Routes>
     </>
   );
 }
 
-export default function App() {
-  return <AppWrapper />;
-}
+export default App;
