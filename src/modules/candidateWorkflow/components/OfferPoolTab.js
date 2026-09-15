@@ -3,13 +3,15 @@ import { toast } from "react-toastify";
 import recruiterApiService from "../../../core/recruiterApiService";
 import masterApiService from "../../../core/masterApiService";
 import Pagination from "../../../shared/Pagination";
+import PdfViewerModal from "../../../shared/PdfViewerModal";
+import { useFilePreview } from "../../../shared/useFilePreview";
 
-const OFFER_STATUS_BADGE = {
-  GENERATED: "secondary",
-  SENT: "info",
-  ACCEPTED: "success",
-  REJECTED: "danger",
-  EXPIRED: "dark",
+const OFFER_STATUS_PILL = {
+  GENERATED: "status-pill-secondary",
+  SENT: "status-pill-info",
+  ACCEPTED: "status-pill-success",
+  REJECTED: "status-pill-danger",
+  EXPIRED: "status-pill-secondary",
 };
 
 const OfferPoolTab = ({ positionId }) => {
@@ -24,7 +26,7 @@ const OfferPoolTab = ({ positionId }) => {
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState(null);
+  const filePreview = useFilePreview();
 
   useEffect(() => {
     masterApiService.getOfferTemplates().then((res) => setTemplates(res.data.data || []));
@@ -94,7 +96,7 @@ const OfferPoolTab = ({ positionId }) => {
           <label className="form-label small">Accept Before Date</label>
           <input type="date" className="form-control" value={acceptBeforeDate} onChange={(e) => setAcceptBeforeDate(e.target.value)} />
         </div>
-        <div className="col-md-4 d-flex align-items-end">
+        <div className="col-md-4 d-flex align-items-end justify-content-end">
           {selected.length > 0 && (
             <button className="btn btn-primary" disabled={generating} onClick={handleGenerate}>
               {generating ? "Generating..." : `Generate Offer${selected.length > 1 ? "s" : ""} (${selected.length})`}
@@ -103,10 +105,16 @@ const OfferPoolTab = ({ positionId }) => {
         </div>
       </div>
 
+      {selected.length > 0 && (
+        <div className="mb-2">
+          <span className="badge rounded-pill text-bg-light border text-app-primary fs-13">{selected.length} Candidates Selected</span>
+        </div>
+      )}
+
       {loading ? <div>Loading...</div> : (
-        <table className="table table-hover">
-          <thead className="table-light">
-            <tr>
+        <table className="table table-hover align-middle">
+          <thead>
+            <tr className="text-muted fs-13">
               <th></th>
               <th>Candidate</th>
               <th>Email</th>
@@ -128,10 +136,14 @@ const OfferPoolTab = ({ positionId }) => {
                   <td>{c.email}</td>
                   <td>{c.salary ?? "-"}</td>
                   <td>{offer?.acceptBeforeDate || "-"}</td>
-                  <td>{offer ? <span className={`badge bg-${OFFER_STATUS_BADGE[offer.status] || "secondary"}`}>{offer.status}</span> : "-"}</td>
+                  <td>{offer ? <span className={`status-pill ${OFFER_STATUS_PILL[offer.status] || "status-pill-secondary"}`}>{offer.status}</span> : "-"}</td>
                   <td>
                     {offer?.offerFileUrl && (
-                      <button className="btn btn-sm btn-outline-secondary" onClick={() => setPreviewUrl(recruiterApiService.fileUrl(offer.offerFileUrl))}>
+                      <button
+                        type="button"
+                        className="icon-btn-circle"
+                        onClick={() => filePreview.openFile(offer.offerFileUrl, "Offer Letter Preview")}
+                      >
                         <i className="bi bi-file-earmark-pdf" />
                       </button>
                     )}
@@ -148,19 +160,14 @@ const OfferPoolTab = ({ positionId }) => {
 
       <Pagination page={page} totalPages={totalPages} onChange={setPage} size={size} onSizeChange={(s) => { setSize(s); setPage(0); }} />
 
-      {previewUrl && (
-        <div className="modal show d-block" style={{ background: "rgba(0,0,0,0.7)" }} onClick={() => setPreviewUrl(null)}>
-          <div className="modal-dialog modal-lg" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-content" style={{ height: "85vh" }}>
-              <div className="modal-header">
-                <h5 className="modal-title">Offer Letter Preview</h5>
-                <button className="btn-close" onClick={() => setPreviewUrl(null)} />
-              </div>
-              <iframe src={previewUrl} title="Offer Letter" style={{ width: "100%", height: "100%", border: "none" }} />
-            </div>
-          </div>
-        </div>
-      )}
+      <PdfViewerModal
+        show={filePreview.show}
+        onHide={filePreview.close}
+        fileUrl={filePreview.fileUrl}
+        fileExtension={filePreview.fileExtension}
+        loading={filePreview.loading}
+        title={filePreview.title}
+      />
     </div>
   );
 };

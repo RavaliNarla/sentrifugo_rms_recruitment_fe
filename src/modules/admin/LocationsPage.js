@@ -76,9 +76,9 @@ const LocationsPage = () => {
   };
 
   return (
-    <div className="card p-4">
+    <div className="app-card">
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h4 className="m-0">Locations</h4>
+        <h5 className="page-title m-0">Locations</h5>
         <button className="btn btn-primary" onClick={openAdd}>
           <i className="bi bi-plus-lg" /> Add
         </button>
@@ -87,9 +87,9 @@ const LocationsPage = () => {
       {loading ? (
         <div>Loading...</div>
       ) : (
-        <table className="table table-hover">
-          <thead className="table-light">
-            <tr>
+        <table className="table table-hover align-middle">
+          <thead>
+            <tr className="text-muted fs-13">
               <th>#</th>
               <th>Location Name</th>
               <th>State</th>
@@ -105,10 +105,10 @@ const LocationsPage = () => {
                 <td>{loc.stateName}</td>
                 <td>{loc.address}</td>
                 <td>
-                  <button className="btn btn-sm btn-outline-secondary me-2" onClick={() => openEdit(loc)}>
+                  <button className="icon-btn-circle me-2" onClick={() => openEdit(loc)}>
                     <i className="bi bi-pencil" />
                   </button>
-                  <button className="btn btn-sm btn-outline-danger" onClick={() => handleDelete(loc)}>
+                  <button className="icon-btn-circle danger" onClick={() => handleDelete(loc)}>
                     <i className="bi bi-trash" />
                   </button>
                 </td>

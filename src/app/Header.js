@@ -1,9 +1,20 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { useMsal } from "@azure/msal-react";
 import { clearUser } from "../store/userSlice";
 import headerLogo from "../assets/header-logo.png";
+
+const getInitials = (name = "") => {
+  const parts = name.trim().split(" ").filter(Boolean);
+  if (parts.length === 0) return "";
+  return parts.length === 1
+    ? parts[0][0].toUpperCase()
+    : (parts[0][0] + parts[1][0]).toUpperCase();
+};
+
+const formatRole = (role = "") =>
+  role.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
 
 const Header = () => {
   const { instance } = useMsal();
@@ -11,20 +22,74 @@ const Header = () => {
   const user = useSelector((state) => state.user);
   const privileges = user.privileges || {};
 
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showAdminMenu, setShowAdminMenu] = useState(false);
+  const userMenuRef = useRef(null);
+  const adminMenuRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) {
+        setShowUserMenu(false);
+      }
+      if (adminMenuRef.current && !adminMenuRef.current.contains(e.target)) {
+        setShowAdminMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const handleLogout = () => {
     dispatch(clearUser());
     instance.logoutRedirect({ postLogoutRedirectUri: "/login" });
   };
 
+  const isAdminRoute = window.location.pathname.startsWith("/admin");
+
   return (
-    <nav className="navbar navbar-expand-lg app-header px-3">
-      <Link className="navbar-brand d-flex align-items-center gap-2" to="/dashboard">
-        <img src={headerLogo} alt="logo" height="32" />
-        <span className="fw-bold">Sentrifugo RMS</span>
-      </Link>
-      <div className="collapse navbar-collapse">
-        <ul className="navbar-nav me-auto">
-          {(privileges.Dashboard) && (
+    <header>
+      {/* ===================== TOP COLOR BAR ===================== */}
+      <div className="app-header-topbar">
+        <Link to="/dashboard" className="brand">
+          <img src={headerLogo} alt="Sentrifugo RMS" />
+          <span>Sentrifugo RMS</span>
+        </Link>
+
+        <div className="d-flex align-items-center gap-3" ref={userMenuRef}>
+          <div
+            className="d-flex align-items-center gap-2 position-relative"
+            style={{ cursor: "pointer" }}
+            onClick={() => setShowUserMenu((prev) => !prev)}
+          >
+            <div className="app-header-avatar">{getInitials(user.name)}</div>
+            <div className="d-flex flex-column">
+              <div className="d-flex align-items-center text-white fs-13">
+                {user.name}
+                <i className={`bi bi-chevron-${showUserMenu ? "up" : "down"} ms-1`} style={{ fontSize: "0.7rem" }} />
+              </div>
+              <small className="text-white-50" style={{ fontSize: "0.7rem" }}>{formatRole(user.role)}</small>
+            </div>
+
+            {showUserMenu && (
+              <div
+                className="position-absolute end-0 mt-1 bg-white border rounded shadow"
+                style={{ top: "100%", minWidth: 180, zIndex: 1050 }}
+              >
+                <div className="px-3 py-2 text-danger" style={{ cursor: "pointer", fontSize: "0.875rem" }} onClick={handleLogout}>
+                  <i className="bi bi-box-arrow-right me-2" />
+                  Logout
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ===================== WHITE TAB NAVBAR ===================== */}
+      <nav className="app-header-navbar">
+        <ul className="nav">
+          {privileges.Dashboard && (
             <li className="nav-item">
               <NavLink className="nav-link" to="/dashboard">Dashboard</NavLink>
             </li>
@@ -55,30 +120,32 @@ const Header = () => {
             </li>
           )}
           {privileges.Admin && (
-            <li className="nav-item dropdown">
-              <button className="nav-link dropdown-toggle bg-transparent border-0" type="button" data-bs-toggle="dropdown">
-                Admin
+            <li className="nav-item position-relative" ref={adminMenuRef}>
+              <button
+                type="button"
+                className={`nav-link bg-transparent border-0 ${isAdminRoute ? "active" : ""}`}
+                onClick={() => setShowAdminMenu((prev) => !prev)}
+              >
+                Admin <i className="bi bi-chevron-down ms-1" style={{ fontSize: "0.7rem" }} />
               </button>
-              <ul className="dropdown-menu">
-                <li><Link className="dropdown-item" to="/admin/users">Users</Link></li>
-                <li><Link className="dropdown-item" to="/admin/departments">Departments</Link></li>
-                <li><Link className="dropdown-item" to="/admin/locations">Locations</Link></li>
-                <li><Link className="dropdown-item" to="/admin/position-titles">Position Titles</Link></li>
-                <li><Link className="dropdown-item" to="/admin/education-qualifications">Education Qualifications</Link></li>
-              </ul>
+              {showAdminMenu && (
+                <div
+                  className="position-absolute bg-white border rounded shadow"
+                  style={{ top: "100%", left: 0, minWidth: 220, zIndex: 1050 }}
+                  onClick={() => setShowAdminMenu(false)}
+                >
+                  <Link className="dropdown-item py-2 px-3" to="/admin/users">Users</Link>
+                  <Link className="dropdown-item py-2 px-3" to="/admin/departments">Departments</Link>
+                  <Link className="dropdown-item py-2 px-3" to="/admin/locations">Locations</Link>
+                  <Link className="dropdown-item py-2 px-3" to="/admin/position-titles">Position Titles</Link>
+                  <Link className="dropdown-item py-2 px-3" to="/admin/education-qualifications">Education Qualifications</Link>
+                </div>
+              )}
             </li>
           )}
         </ul>
-        <div className="dropdown">
-          <button className="nav-link dropdown-toggle bg-transparent border-0" type="button" data-bs-toggle="dropdown">
-            {user.name} <small className="d-block text-white-50">{user.role}</small>
-          </button>
-          <ul className="dropdown-menu dropdown-menu-end">
-            <li><button className="dropdown-item" onClick={handleLogout}>Logout</button></li>
-          </ul>
-        </div>
-      </div>
-    </nav>
+      </nav>
+    </header>
   );
 };
 

@@ -1,5 +1,7 @@
 import { recruiterApi, recruiterMultipartApi } from "./apiService";
 
+const buildFilePath = (relativePath) => `/files/${relativePath}`;
+
 const recruiterApiService = {
   // Requisitions
   createRequisition: (payload) => recruiterApi.post("/job-requisitions/create", payload),
@@ -27,8 +29,26 @@ const recruiterApiService = {
   getCandidate: (id) => recruiterApi.get(`/candidates/${id}`),
   shortlistCandidate: (id) => recruiterApi.post(`/candidates/${id}/shortlist`),
 
-  // Files
-  fileUrl: (relativePath) => `${process.env.REACT_APP_RECRUITER_API_URL}/files/${relativePath}`,
+  // Files — stored locally on disk; fetch with auth and return a blob URL for preview
+  fetchFileBlobUrl: async (relativePath) => {
+    if (!relativePath) throw new Error("No file path");
+    const response = await recruiterApi.get(buildFilePath(relativePath), { responseType: "blob" });
+    const ext = relativePath.split(".").pop()?.toLowerCase();
+    const mimeByExt = {
+      pdf: "application/pdf",
+      png: "image/png",
+      jpg: "image/jpeg",
+      jpeg: "image/jpeg",
+      gif: "image/gif",
+      webp: "image/webp",
+      doc: "application/msword",
+      docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    };
+    const typedBlob = new Blob([response.data], {
+      type: mimeByExt[ext] || response.data.type || "application/octet-stream",
+    });
+    return URL.createObjectURL(typedBlob);
+  },
 
   // Committee management
   createPanel: (payload) => recruiterApi.post("/interview-panels/add", payload),

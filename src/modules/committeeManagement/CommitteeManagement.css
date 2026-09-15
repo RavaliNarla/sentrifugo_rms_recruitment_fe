@@ -1,0 +1,118 @@
+.committee-page .panel-header h2 {
+  color: var(--app-secondary-color);
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.committee-tabs {
+  display: flex;
+  gap: 30px;
+  border-bottom: 1px solid #e5e7eb;
+  margin-top: 16px;
+}
+
+.committee-tab {
+  background: none;
+  border: none;
+  padding: 12px 0;
+  font-size: 0.875rem;
+  color: #6a7282;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+}
+
+.committee-tab.active {
+  color: var(--app-primary-color);
+  font-weight: 500;
+}
+
+.committee-tab.active::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background-color: var(--app-primary-color);
+  border-radius: 3px 3px 0 0;
+}
+
+.panel-form-card,
+.panel-table-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 22px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  height: 100%;
+}
+
+.panel-form-card .card-title {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #42579f;
+  margin-bottom: 4px;
+}
+
+.panel-form-card .card-subtitle,
+.panel-table-card .card-subtitle {
+  font-size: 0.75rem;
+  color: #717182;
+}
+
+.panel-table-card .table-title {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #42579f;
+}
+
+.table-search-input {
+  width: 220px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  font-size: 0.8125rem;
+}
+
+.table-filter-select {
+  padding: 7px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  color: #374151;
+  background: #fff;
+}
+
+.member-checklist {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 10px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.table-icon-btn {
+  border: none;
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  color: #666;
+  font-size: 15px;
+}
+
+.table-icon-btn:hover {
+  background: #f0f0f0;
+  color: var(--app-primary-color);
+}
+
+.table-icon-btn.delete:hover {
+  color: #dc3545;
+}

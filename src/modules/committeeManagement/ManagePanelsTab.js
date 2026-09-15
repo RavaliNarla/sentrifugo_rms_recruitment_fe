@@ -10,6 +10,7 @@ const ManagePanelsTab = () => {
   const [selectedMembers, setSelectedMembers] = useState([]);
   const [editing, setEditing] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState("");
 
   const load = async () => {
     setLoading(true);
@@ -78,17 +79,21 @@ const ManagePanelsTab = () => {
     setSelectedMembers((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   };
 
+  const filteredPanels = panels.filter((p) => p.name.toLowerCase().includes(search.toLowerCase()));
+
   return (
-    <div className="row">
-      <div className="col-md-5">
-        <h6>{editing ? "Edit Panel" : "Create New Panel"}</h6>
+    <div className="row g-3" style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "24px" }}>
+      <div className="panel-form-card">
+        <div className="card-title">{editing ? "Update Panel" : "Create New Panel"}</div>
+        <div className="card-subtitle mb-3">Create and manage interview panels</div>
+
         <div className="mb-3">
-          <label className="form-label">Panel Name *</label>
+          <label className="form-label fs-14">Panel Name *</label>
           <input className="form-control" value={name} onChange={(e) => setName(e.target.value)} placeholder="Enter Panel Name" />
         </div>
         <div className="mb-3">
-          <label className="form-label">Panel Members *</label>
-          <div className="border rounded p-2" style={{ maxHeight: 220, overflowY: "auto" }}>
+          <label className="form-label fs-14">Panel Members *</label>
+          <div className="member-checklist">
             {members.map((m) => (
               <div key={m.id} className="form-check">
                 <input
@@ -97,36 +102,50 @@ const ManagePanelsTab = () => {
                   checked={selectedMembers.includes(m.id)}
                   onChange={() => toggleMember(m.id)}
                 />
-                <label className="form-check-label">{m.name} <small className="text-muted">({m.role})</small></label>
+                <label className="form-check-label fs-14">{m.name} <small className="text-muted">({m.role})</small></label>
               </div>
             ))}
           </div>
         </div>
-        <div className="d-flex gap-2">
+        <div className="d-flex justify-content-end gap-2">
           {editing && <button className="btn btn-outline-secondary" onClick={resetForm}>Cancel</button>}
           <button className="btn btn-primary" onClick={handleSave}>{editing ? "Update Panel" : "Save Panel"}</button>
         </div>
       </div>
 
-      <div className="col-md-7">
-        <h6>Panels</h6>
+      <div className="panel-table-card">
+        <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+          <span className="table-title">Panels History</span>
+          <input
+            className="table-search-input"
+            placeholder="Search by panel name..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
         {loading ? <div>Loading...</div> : (
-          <table className="table table-hover">
-            <thead className="table-light">
-              <tr><th>Panel Name</th><th>Members</th><th>Actions</th></tr>
+          <table className="table table-navy mb-0">
+            <thead>
+              <tr>
+                <th style={{ width: 60 }}>S.No</th>
+                <th>Panel Name</th>
+                <th>Panel Members</th>
+                <th style={{ width: 100 }}>Actions</th>
+              </tr>
             </thead>
             <tbody>
-              {panels.map((p) => (
+              {filteredPanels.map((p, idx) => (
                 <tr key={p.id}>
+                  <td>{idx + 1}</td>
                   <td>{p.name}</td>
                   <td>{(p.memberNames || []).join(", ")}</td>
                   <td>
-                    <button className="btn btn-sm btn-outline-secondary me-2" onClick={() => handleEdit(p)}><i className="bi bi-pencil" /></button>
-                    <button className="btn btn-sm btn-outline-danger" onClick={() => handleDelete(p)}><i className="bi bi-trash" /></button>
+                    <button className="table-icon-btn" onClick={() => handleEdit(p)} title="Edit"><i className="bi bi-pencil" /></button>
+                    <button className="table-icon-btn delete" onClick={() => handleDelete(p)} title="Delete"><i className="bi bi-trash" /></button>
                   </td>
                 </tr>
               ))}
-              {panels.length === 0 && <tr><td colSpan={3} className="text-center text-muted py-4">No panels created yet</td></tr>}
+              {filteredPanels.length === 0 && <tr><td colSpan={4} className="text-center text-muted py-4">No panels created yet</td></tr>}
             </tbody>
           </table>
         )}

@@ -45,6 +45,14 @@ const ScheduleInterviewModal = ({ positionId, candidates, onClose, onScheduled }
       toast.error("Fill in all panel window fields");
       return;
     }
+    if (windows.some((w) => !w.durationMinutes || Number(w.durationMinutes) <= 0)) {
+      toast.error("Duration must be greater than 0 minutes");
+      return;
+    }
+    if (windows.some((w) => toMinutes(w.endTime) <= toMinutes(w.startTime))) {
+      toast.error("End time must be after start time for each panel window");
+      return;
+    }
     if (totalCapacity < candidates.length) {
       toast.error(`Not enough slots (${totalCapacity}) for ${candidates.length} candidate(s). Add more panel time.`);
       return;

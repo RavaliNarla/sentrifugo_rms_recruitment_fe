@@ -1,7 +1,6 @@
 import React from "react";
-import recruiterApiService from "../../../core/recruiterApiService";
 
-const CandidateProfileModal = ({ candidate, onClose, onShortlist }) => {
+const CandidateProfileModal = ({ candidate, onClose, onShortlist, onViewFile }) => {
   if (!candidate) return null;
 
   return (
@@ -23,7 +22,9 @@ const CandidateProfileModal = ({ candidate, onClose, onShortlist }) => {
                   <td className="fw-bold">Resume</td>
                   <td>
                     {candidate.hasResume ? (
-                      <a href={recruiterApiService.fileUrl(candidate.resumeUrl)} target="_blank" rel="noreferrer">View Resume</a>
+                      <button type="button" className="btn btn-link p-0" onClick={() => onViewFile(candidate.resumeUrl, "Resume Preview")}>
+                        View Resume
+                      </button>
                     ) : "-"}
                   </td>
                 </tr>
@@ -31,7 +32,9 @@ const CandidateProfileModal = ({ candidate, onClose, onShortlist }) => {
                   <td className="fw-bold">ID Proof</td>
                   <td>
                     {candidate.hasIdProof ? (
-                      <a href={recruiterApiService.fileUrl(candidate.idProofUrl)} target="_blank" rel="noreferrer">View ID Proof</a>
+                      <button type="button" className="btn btn-link p-0" onClick={() => onViewFile(candidate.idProofUrl, "ID Proof Preview")}>
+                        View ID Proof
+                      </button>
                     ) : "-"}
                   </td>
                 </tr>

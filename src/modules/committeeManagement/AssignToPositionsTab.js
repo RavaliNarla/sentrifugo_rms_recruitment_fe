@@ -69,17 +69,17 @@ const AssignToPositionsTab = () => {
   };
 
   return (
-    <div>
+    <div className="panel-form-card">
       <div className="row mb-4">
         <div className="col-md-6">
-          <label className="form-label">Requisition</label>
+          <label className="form-label fs-14">Requisition</label>
           <select className="form-select" value={requisitionId} onChange={(e) => setRequisitionId(e.target.value)}>
             <option value="">Select Requisition</option>
             {requisitions.map((r) => <option key={r.id} value={r.id}>{r.requisitionCode} - {r.title}</option>)}
           </select>
         </div>
         <div className="col-md-6">
-          <label className="form-label">Position</label>
+          <label className="form-label fs-14">Position</label>
           <select className="form-select" value={positionId} onChange={(e) => setPositionId(e.target.value)} disabled={!requisitionId}>
             <option value="">Select Position</option>
             {positions.map((p) => <option key={p.id} value={p.id}>{p.positionTitleName} - {p.locationName}</option>)}
@@ -90,34 +90,34 @@ const AssignToPositionsTab = () => {
       {positionId && (
         <div className="row">
           <div className="col-md-5">
-            <h6>Available Panels</h6>
-            <div className="border rounded p-2" style={{ minHeight: 120 }}>
+            <div className="card-title mb-2">Available Panels</div>
+            <div className="member-checklist">
               {availablePanels.map((p) => (
                 <div key={p.id} className="d-flex justify-content-between align-items-center py-1">
-                  <span>{p.name}</span>
+                  <span className="fs-14">{p.name}</span>
                   <button className="btn btn-sm btn-outline-primary" onClick={() => setSelectedPanelId(p.id)}>Select</button>
                 </div>
               ))}
-              {availablePanels.length === 0 && <div className="text-muted small">No more panels available</div>}
+              {availablePanels.length === 0 && <div className="text-muted fs-14">No more panels available</div>}
             </div>
           </div>
 
           <div className="col-md-7">
-            <h6>Assign Selected Panel</h6>
-            <div className="row g-2 align-items-end mb-3">
+            <div className="card-title mb-2">Assign Selected Panel</div>
+            <div className="row g-2 align-items-end mb-4">
               <div className="col-md-4">
-                <label className="form-label small">Panel</label>
+                <label className="form-label fs-14">Panel</label>
                 <select className="form-select form-select-sm" value={selectedPanelId} onChange={(e) => setSelectedPanelId(e.target.value)}>
                   <option value="">Select</option>
                   {availablePanels.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
                 </select>
               </div>
               <div className="col-md-3">
-                <label className="form-label small">Start Date</label>
+                <label className="form-label fs-14">Start Date</label>
                 <input type="date" className="form-control form-control-sm" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
               </div>
               <div className="col-md-3">
-                <label className="form-label small">End Date</label>
+                <label className="form-label fs-14">End Date</label>
                 <input type="date" className="form-control form-control-sm" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
               </div>
               <div className="col-md-2">
@@ -125,10 +125,10 @@ const AssignToPositionsTab = () => {
               </div>
             </div>
 
-            <h6>Assigned Panels</h6>
-            <table className="table table-sm">
-              <thead className="table-light">
-                <tr><th>Panel</th><th>Start</th><th>End</th><th></th></tr>
+            <div className="card-title mb-2">Assigned Panels</div>
+            <table className="table table-navy mb-0">
+              <thead>
+                <tr><th>Panel</th><th>Start</th><th>End</th><th style={{ width: 60 }}></th></tr>
               </thead>
               <tbody>
                 {assignedPanels.map((p) => (
@@ -137,7 +137,7 @@ const AssignToPositionsTab = () => {
                     <td>{p.startDate}</td>
                     <td>{p.endDate}</td>
                     <td>
-                      <button className="btn btn-sm btn-outline-danger" onClick={() => handleRemove(p.id)}><i className="bi bi-trash" /></button>
+                      <button className="table-icon-btn delete" onClick={() => handleRemove(p.id)}><i className="bi bi-trash" /></button>
                     </td>
                   </tr>
                 ))}

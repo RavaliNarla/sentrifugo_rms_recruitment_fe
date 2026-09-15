@@ -3,10 +3,10 @@ import { toast } from "react-toastify";
 import recruiterApiService from "../../../core/recruiterApiService";
 import Pagination from "../../../shared/Pagination";
 
-const STATUS_BADGE = {
-  SCHEDULED: "info",
-  QUALIFIED: "success",
-  DISQUALIFIED: "danger",
+const STATUS_PILL = {
+  SCHEDULED: "status-pill-info",
+  QUALIFIED: "status-pill-success",
+  DISQUALIFIED: "status-pill-danger",
 };
 
 const InterviewPoolTab = ({ positionId }) => {
@@ -56,18 +56,21 @@ const InterviewPoolTab = ({ positionId }) => {
 
   return (
     <div>
-      <div className="d-flex justify-content-end mb-3">
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        {selected.length > 0 ? (
+          <span className="badge rounded-pill text-bg-light border text-app-primary fs-13">{selected.length} Candidates Selected</span>
+        ) : <span />}
         {canMove && (
-          <button className="btn btn-outline-primary" onClick={handleMoveToCompensation}>
+          <button className="btn btn-blue-dark" onClick={handleMoveToCompensation}>
             Move to Compensation Pool ({selected.length})
           </button>
         )}
       </div>
 
       {loading ? <div>Loading...</div> : (
-        <table className="table table-hover">
-          <thead className="table-light">
-            <tr>
+        <table className="table table-hover align-middle">
+          <thead>
+            <tr className="text-muted fs-13">
               <th></th>
               <th>Candidate</th>
               <th>Date</th>
@@ -93,7 +96,7 @@ const InterviewPoolTab = ({ positionId }) => {
                   {r.finalScore != null ? r.finalScore : "-"}
                   <small className="text-muted ms-1">({r.membersScored}/{r.membersTotal} scored)</small>
                 </td>
-                <td><span className={`badge bg-${STATUS_BADGE[r.applicationStatus] || "secondary"}`}>{r.applicationStatus}</span></td>
+                <td><span className={`status-pill ${STATUS_PILL[r.applicationStatus] || "status-pill-secondary"}`}>{r.applicationStatus}</span></td>
               </tr>
             ))}
             {rows.length === 0 && (

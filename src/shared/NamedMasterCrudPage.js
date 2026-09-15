@@ -73,9 +73,9 @@ const NamedMasterCrudPage = ({ title, getAll, add, update, remove }) => {
   };
 
   return (
-    <div className="card p-4">
+    <div className="app-card">
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h4 className="m-0">{title}</h4>
+        <h5 className="page-title m-0">{title}</h5>
         <button className="btn btn-primary" onClick={openAdd}>
           <i className="bi bi-plus-lg" /> Add
         </button>
@@ -84,9 +84,9 @@ const NamedMasterCrudPage = ({ title, getAll, add, update, remove }) => {
       {loading ? (
         <div>Loading...</div>
       ) : (
-        <table className="table table-hover">
-          <thead className="table-light">
-            <tr>
+        <table className="table table-hover align-middle">
+          <thead>
+            <tr className="text-muted fs-13">
               <th>#</th>
               <th>Name</th>
               <th style={{ width: 120 }}>Actions</th>
@@ -98,10 +98,10 @@ const NamedMasterCrudPage = ({ title, getAll, add, update, remove }) => {
                 <td>{idx + 1}</td>
                 <td>{item.name}</td>
                 <td>
-                  <button className="btn btn-sm btn-outline-secondary me-2" onClick={() => openEdit(item)}>
+                  <button className="icon-btn-circle me-2" onClick={() => openEdit(item)}>
                     <i className="bi bi-pencil" />
                   </button>
-                  <button className="btn btn-sm btn-outline-danger" onClick={() => handleDelete(item)}>
+                  <button className="icon-btn-circle danger" onClick={() => handleDelete(item)}>
                     <i className="bi bi-trash" />
                   </button>
                 </td>

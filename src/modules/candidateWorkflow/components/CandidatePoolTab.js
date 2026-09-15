@@ -2,19 +2,23 @@ import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import recruiterApiService from "../../../core/recruiterApiService";
 import Pagination from "../../../shared/Pagination";
+import PdfViewerModal from "../../../shared/PdfViewerModal";
+import { useFilePreview } from "../../../shared/useFilePreview";
 import AddCandidateModal from "./AddCandidateModal";
 import CandidateProfileModal from "./CandidateProfileModal";
 import ScheduleInterviewModal from "./ScheduleInterviewModal";
 
-const STATUS_BADGE = {
-  ADDED: "secondary",
-  SHORTLISTED: "warning",
-  SCHEDULED: "info",
-  QUALIFIED: "success",
-  DISQUALIFIED: "danger",
-  COMPENSATION_PENDING: "primary",
-  MOVED_TO_OFFER: "dark",
+const STATUS_PILL = {
+  ADDED: "status-pill-secondary",
+  SHORTLISTED: "status-pill-warning",
+  SCHEDULED: "status-pill-info",
+  QUALIFIED: "status-pill-success",
+  DISQUALIFIED: "status-pill-danger",
+  COMPENSATION_PENDING: "status-pill-warning",
+  MOVED_TO_OFFER: "status-pill-secondary",
 };
+
+const STATUS_OPTIONS = ["ADDED", "SHORTLISTED", "SCHEDULED", "QUALIFIED", "DISQUALIFIED", "COMPENSATION_PENDING", "MOVED_TO_OFFER"];
 
 const CandidatePoolTab = ({ requisitionId, positionId }) => {
   const [candidates, setCandidates] = useState([]);
@@ -26,11 +30,20 @@ const CandidatePoolTab = ({ requisitionId, positionId }) => {
   const [profileCandidate, setProfileCandidate] = useState(null);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [searchText, setSearchText] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const filePreview = useFilePreview();
 
   const load = async () => {
     setLoading(true);
     try {
-      const res = await recruiterApiService.searchCandidates({ positionId, page, size });
+      const res = await recruiterApiService.searchCandidates({
+        positionId,
+        page,
+        size,
+        searchText,
+        statuses: statusFilter ? [statusFilter] : undefined,
+      });
       setCandidates(res.data.data.content || []);
       setTotalPages(res.data.data.totalPages || 0);
     } catch (e) {
@@ -44,7 +57,22 @@ const CandidatePoolTab = ({ requisitionId, positionId }) => {
     load();
     setSelected([]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [positionId, page, size]);
+  }, [positionId, page, size, statusFilter]);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setPage(0);
+      load();
+    }, 400);
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchText]);
+
+  const clearFilters = () => {
+    setSearchText("");
+    setStatusFilter("");
+    setPage(0);
+  };
 
   const toggleSelect = (id) => {
     setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
@@ -66,23 +94,39 @@ const CandidatePoolTab = ({ requisitionId, positionId }) => {
 
   return (
     <div>
-      <div className="d-flex justify-content-between mb-3">
-        <div>
+      <div className="d-flex justify-content-between align-items-end flex-wrap gap-2 mb-3">
+        <div className="d-flex align-items-center flex-wrap gap-2">
+          <span className="text-muted fs-14">Filter by:</span>
+          <button className="btn btn-link fs-14 text-danger p-0 text-decoration-none" onClick={clearFilters}>Clear all</button>
+          <select className="form-select form-select-sm" style={{ width: 170 }} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+            <option value="">All Statuses</option>
+            {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s.replace(/_/g, " ")}</option>)}
+          </select>
+          <div className="search-boxpost">
+            <i className="bi bi-search" />
+            <input className="form-control form-control-sm" placeholder="Search candidates..." value={searchText} onChange={(e) => setSearchText(e.target.value)} />
+          </div>
+          {selected.length > 0 && (
+            <span className="badge rounded-pill text-bg-light border text-app-primary fs-13">{selected.length} Candidates Selected</span>
+          )}
+        </div>
+
+        <div className="d-flex gap-2">
           {canSchedule && (
-            <button className="btn btn-outline-primary" onClick={() => setShowScheduleModal(true)}>
+            <button className="btn btn-blue-dark" onClick={() => setShowScheduleModal(true)}>
               Schedule Interview ({selected.length})
             </button>
           )}
+          <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>
+            <i className="bi bi-plus-lg" /> Add Candidate
+          </button>
         </div>
-        <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>
-          <i className="bi bi-plus-lg" /> Add Candidate
-        </button>
       </div>
 
       {loading ? <div>Loading...</div> : (
-        <table className="table table-hover">
-          <thead className="table-light">
-            <tr>
+        <table className="table table-hover align-middle">
+          <thead>
+            <tr className="text-muted fs-13">
               <th></th>
               <th>Candidate</th>
               <th>Phone</th>
@@ -102,15 +146,20 @@ const CandidatePoolTab = ({ requisitionId, positionId }) => {
                 <td>{c.name}</td>
                 <td>{c.phone}</td>
                 <td>{c.email}</td>
-                <td><span className={`badge bg-${STATUS_BADGE[c.status] || "secondary"}`}>{c.status}</span></td>
+                <td><span className={`status-pill ${STATUS_PILL[c.status] || "status-pill-secondary"}`}>{c.status.replace(/_/g, " ")}</span></td>
                 <td>
-                  <button className="btn btn-sm btn-outline-secondary me-2" title="View Profile" onClick={() => setProfileCandidate(c)}>
+                  <button className="icon-btn-circle me-2" title="View Profile" onClick={() => setProfileCandidate(c)}>
                     <i className="bi bi-person" />
                   </button>
                   {c.hasResume && (
-                    <a className="btn btn-sm btn-outline-secondary me-2" title="View Resume" href={recruiterApiService.fileUrl(c.resumeUrl)} target="_blank" rel="noreferrer">
+                    <button
+                      type="button"
+                      className="icon-btn-circle me-2"
+                      title="View Resume"
+                      onClick={() => filePreview.openFile(c.resumeUrl, "Resume Preview")}
+                    >
                       <i className="bi bi-file-earmark-text" />
-                    </a>
+                    </button>
                   )}
                   {c.status === "ADDED" && (
                     <button className="btn btn-sm btn-outline-primary" onClick={() => handleShortlist(c.id)}>Shortlist</button>
@@ -137,8 +186,22 @@ const CandidatePoolTab = ({ requisitionId, positionId }) => {
       )}
 
       {profileCandidate && (
-        <CandidateProfileModal candidate={profileCandidate} onClose={() => setProfileCandidate(null)} onShortlist={handleShortlist} />
+        <CandidateProfileModal
+          candidate={profileCandidate}
+          onClose={() => setProfileCandidate(null)}
+          onShortlist={handleShortlist}
+          onViewFile={filePreview.openFile}
+        />
       )}
+
+      <PdfViewerModal
+        show={filePreview.show}
+        onHide={filePreview.close}
+        fileUrl={filePreview.fileUrl}
+        fileExtension={filePreview.fileExtension}
+        loading={filePreview.loading}
+        title={filePreview.title}
+      />
 
       {showScheduleModal && (
         <ScheduleInterviewModal

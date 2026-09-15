@@ -72,9 +72,9 @@ const UsersPage = () => {
   };
 
   return (
-    <div className="card p-4">
+    <div className="app-card">
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h4 className="m-0">Users</h4>
+        <h5 className="page-title m-0">Users</h5>
         <button className="btn btn-primary" onClick={openAdd}>
           <i className="bi bi-plus-lg" /> Add
         </button>
@@ -83,9 +83,9 @@ const UsersPage = () => {
       {loading ? (
         <div>Loading...</div>
       ) : (
-        <table className="table table-hover">
-          <thead className="table-light">
-            <tr>
+        <table className="table table-hover align-middle">
+          <thead>
+            <tr className="text-muted fs-13">
               <th>#</th>
               <th>Name</th>
               <th>Role</th>
@@ -99,14 +99,14 @@ const UsersPage = () => {
                 <td>{idx + 1}</td>
                 <td>{user.name}</td>
                 <td>
-                  <span className="badge bg-secondary">{user.role}</span>
+                  <span className="status-pill status-pill-secondary">{user.role}</span>
                 </td>
                 <td>{user.email}</td>
                 <td>
-                  <button className="btn btn-sm btn-outline-secondary me-2" onClick={() => openEdit(user)}>
+                  <button className="icon-btn-circle me-2" onClick={() => openEdit(user)}>
                     <i className="bi bi-pencil" />
                   </button>
-                  <button className="btn btn-sm btn-outline-danger" onClick={() => handleDelete(user)}>
+                  <button className="icon-btn-circle danger" onClick={() => handleDelete(user)}>
                     <i className="bi bi-trash" />
                   </button>
                 </td>

@@ -4,9 +4,9 @@ import recruiterApiService from "../../core/recruiterApiService";
 
 const StatCard = ({ label, value, color }) => (
   <div className="col-md-3 mb-3">
-    <div className="card p-3 text-center h-100">
+    <div className="app-card text-center h-100">
       <div className="fs-2 fw-bold" style={{ color: color || "var(--app-primary-color)" }}>{value}</div>
-      <div className="text-muted">{label}</div>
+      <div className="text-muted fs-14">{label}</div>
     </div>
   </div>
 );
@@ -24,7 +24,7 @@ const Dashboard = () => {
 
   return (
     <div>
-      <h3 className="mb-4">Welcome, {user.name}</h3>
+      <h5 className="page-title mb-4">Welcome, {user.name}</h5>
 
       {summary ? (
         <div className="row">
@@ -39,7 +39,7 @@ const Dashboard = () => {
           <StatCard label="Offers Sent" value={summary.offersSent} />
         </div>
       ) : (
-        <div className="card p-4">
+        <div className="app-card">
           <p className="text-muted m-0">
             Use the navigation above to manage job postings, candidates, interviews, and offers.
           </p>

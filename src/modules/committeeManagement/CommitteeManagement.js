@@ -1,27 +1,29 @@
 import React, { useState } from "react";
 import ManagePanelsTab from "./ManagePanelsTab";
 import AssignToPositionsTab from "./AssignToPositionsTab";
+import "./CommitteeManagement.css";
 
 const CommitteeManagement = () => {
   const [activeTab, setActiveTab] = useState("MANAGE_PANELS");
 
   return (
-    <div>
-      <h4 className="mb-1">Committee Management</h4>
-      <p className="text-muted">Manage interview panels and assign them to positions</p>
+    <div className="committee-page">
+      <div className="panel-header">
+        <h2>Committee Management</h2>
+        <span className="page-subtitle">Manage interview panels and assign them to positions</span>
+      </div>
 
-      <div className="card">
-        <div className="card-header bg-white d-flex gap-2">
-          <button className={`btn btn-sm ${activeTab === "MANAGE_PANELS" ? "btn-primary" : "btn-outline-secondary"}`} onClick={() => setActiveTab("MANAGE_PANELS")}>
-            Manage Panels
-          </button>
-          <button className={`btn btn-sm ${activeTab === "ASSIGN" ? "btn-primary" : "btn-outline-secondary"}`} onClick={() => setActiveTab("ASSIGN")}>
-            Assign to Positions
-          </button>
-        </div>
-        <div className="card-body">
-          {activeTab === "MANAGE_PANELS" ? <ManagePanelsTab /> : <AssignToPositionsTab />}
-        </div>
+      <div className="committee-tabs">
+        <button className={`committee-tab ${activeTab === "MANAGE_PANELS" ? "active" : ""}`} onClick={() => setActiveTab("MANAGE_PANELS")}>
+          <i className="bi bi-people" /> Manage Panels
+        </button>
+        <button className={`committee-tab ${activeTab === "ASSIGN" ? "active" : ""}`} onClick={() => setActiveTab("ASSIGN")}>
+          <i className="bi bi-file-earmark-text" /> Assign to Positions
+        </button>
+      </div>
+
+      <div className="mt-4">
+        {activeTab === "MANAGE_PANELS" ? <ManagePanelsTab /> : <AssignToPositionsTab />}
       </div>
     </div>
   );

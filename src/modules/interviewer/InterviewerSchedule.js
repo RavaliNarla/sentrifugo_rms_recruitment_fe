@@ -72,8 +72,8 @@ const InterviewerSchedule = () => {
 
   return (
     <div>
-      <h4 className="mb-3">My Interview Schedule</h4>
-      <div className="card p-3 mb-3">
+      <h5 className="page-title mb-3">My Interview Schedule</h5>
+      <div className="app-card mb-3">
         <div className="row">
           <div className="col-md-6">
             <label className="form-label">Requisition</label>
@@ -93,7 +93,7 @@ const InterviewerSchedule = () => {
       </div>
 
       {positionId && (
-        <div className="card p-3">
+        <div className="app-card">
           {loading ? <div>Loading...</div> : (
             <>
               <table className="table">

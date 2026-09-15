@@ -64,8 +64,8 @@ const Approvals = () => {
     <div>
       <div className="d-flex justify-content-between align-items-center mb-3">
         <div>
-          <h4 className="m-0">Requisition Requests</h4>
-          <small className="text-muted">Review and approve or reject requisition requests ({level} Approver)</small>
+          <h5 className="page-title m-0">Requisition Requests</h5>
+          <span className="page-subtitle">Review and approve or reject requisition requests ({level} Approver)</span>
         </div>
         {selected.length > 0 && (
           <div className="d-flex gap-2 align-items-center">

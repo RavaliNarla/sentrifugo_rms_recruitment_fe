@@ -24,6 +24,7 @@ const AddPosition = () => {
   const { requisitionId } = useParams();
   const location = useLocation();
   const editingPosition = location.state?.position;
+  const viewOnly = location.state?.viewOnly === true;
 
   const [departments, setDepartments] = useState([]);
   const [locations, setLocations] = useState([]);
@@ -67,6 +68,7 @@ const AddPosition = () => {
   }, []);
 
   const handleSave = async () => {
+    if (viewOnly) return;
     if (!form.departmentId || !form.locationId || !form.positionTitleId || !form.jobDescription) {
       toast.error("Department, Location, Position Title and Job Description are required");
       return;
@@ -110,8 +112,11 @@ const AddPosition = () => {
 
   return (
     <div className="card p-4" style={{ maxWidth: 800 }}>
-      <h4 className="mb-4">{editingPosition ? "Edit Position" : "Add New Position"}</h4>
+      <h4 className="mb-4">
+        {viewOnly ? "View Position" : editingPosition ? "Edit Position" : "Add New Position"}
+      </h4>
 
+      <fieldset disabled={viewOnly} style={{ border: 0, padding: 0, margin: 0 }}>
       <div className="row">
         <div className="col-md-6 mb-3">
           <label className="form-label">Department *</label>
@@ -204,22 +209,29 @@ const AddPosition = () => {
           />
         </div>
       </div>
-      <div className="mb-3">
-        <label className="form-label">Upload Approval Email/Document</label>
-        <input
-          type="file"
-          className="form-control"
-          accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
-          onChange={(e) => setApprovalDoc(e.target.files[0])}
-        />
-        <small className="text-muted">Scanned copy, email attachment, or screenshot of management approval.</small>
-      </div>
+      {!viewOnly && (
+        <div className="mb-3">
+          <label className="form-label">Upload Approval Email/Document</label>
+          <input
+            type="file"
+            className="form-control"
+            accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+            onChange={(e) => setApprovalDoc(e.target.files[0])}
+          />
+          <small className="text-muted">Scanned copy, email attachment, or screenshot of management approval.</small>
+        </div>
+      )}
+      </fieldset>
 
       <div className="d-flex justify-content-end gap-2 mt-3">
-        <button className="btn btn-outline-secondary" onClick={() => navigate("/job-postings")}>Cancel</button>
-        <button className="btn btn-primary" disabled={saving} onClick={handleSave}>
-          {saving ? "Saving..." : "Save Position"}
+        <button className="btn btn-outline-secondary" onClick={() => navigate("/job-postings")}>
+          {viewOnly ? "Back" : "Cancel"}
         </button>
+        {!viewOnly && (
+          <button className="btn btn-primary" disabled={saving} onClick={handleSave}>
+            {saving ? "Saving..." : "Save Position"}
+          </button>
+        )}
       </div>
     </div>
   );

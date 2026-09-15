@@ -7,6 +7,13 @@ import InterviewPoolTab from "./components/InterviewPoolTab";
 import CompensationPoolTab from "./components/CompensationPoolTab";
 import OfferPoolTab from "./components/OfferPoolTab";
 
+const TAB_ICONS = {
+  CANDIDATE_POOL: "bi-people",
+  INTERVIEW_POOL: "bi-person-video3",
+  COMPENSATION_POOL: "bi-cash-coin",
+  OFFER_POOL: "bi-check2-circle",
+};
+
 const CandidateWorkflow = () => {
   const privileges = useSelector((state) => state.user.privileges) || {};
 
@@ -45,10 +52,13 @@ const CandidateWorkflow = () => {
 
   return (
     <div>
-      <div className="card p-3 mb-3">
+      <h5 className="page-title mb-1">Candidate Workflow</h5>
+      <div className="page-subtitle mb-3">Manage candidates through screening, interview, compensation and offer</div>
+
+      <div className="app-card mb-3">
         <div className="row">
-          <div className="col-md-6">
-            <label className="form-label">Requisition</label>
+          <div className="col-md-6 mb-2">
+            <label className="form-label fs-14 text-muted">Requisition</label>
             <select className="form-select" value={requisitionId} onChange={(e) => setRequisitionId(e.target.value)}>
               <option value="">Select Requisition</option>
               {requisitions.map((r) => (
@@ -56,8 +66,8 @@ const CandidateWorkflow = () => {
               ))}
             </select>
           </div>
-          <div className="col-md-6">
-            <label className="form-label">Position</label>
+          <div className="col-md-6 mb-2">
+            <label className="form-label fs-14 text-muted">Position</label>
             <select className="form-select" value={positionId} onChange={(e) => setPositionId(e.target.value)} disabled={!requisitionId}>
               <option value="">Select Position</option>
               {positions.map((p) => (
@@ -68,30 +78,30 @@ const CandidateWorkflow = () => {
         </div>
       </div>
 
-      <div className="card">
-        <div className="card-header bg-white d-flex gap-2">
+      <div className="app-card">
+        <div className="pool-tabs mb-3">
           {tabs.map((t) => (
             <button
               key={t.key}
-              className={`btn btn-sm ${activeTab === t.key ? "btn-primary" : "btn-outline-secondary"}`}
+              className={`pool-tab-btn ${activeTab === t.key ? "active" : ""}`}
               onClick={() => setActiveTab(t.key)}
             >
+              <i className={`bi ${TAB_ICONS[t.key]}`} />
               {t.label}
             </button>
           ))}
         </div>
-        <div className="card-body">
-          {!positionId ? (
-            <div className="text-center text-muted py-5">Select a requisition and position to continue.</div>
-          ) : (
-            <>
-              {activeTab === "CANDIDATE_POOL" && <CandidatePoolTab requisitionId={requisitionId} positionId={positionId} />}
-              {activeTab === "INTERVIEW_POOL" && <InterviewPoolTab positionId={positionId} />}
-              {activeTab === "COMPENSATION_POOL" && <CompensationPoolTab positionId={positionId} />}
-              {activeTab === "OFFER_POOL" && <OfferPoolTab positionId={positionId} />}
-            </>
-          )}
-        </div>
+
+        {!positionId ? (
+          <div className="text-center text-muted py-5">Select a requisition and position to continue.</div>
+        ) : (
+          <>
+            {activeTab === "CANDIDATE_POOL" && <CandidatePoolTab requisitionId={requisitionId} positionId={positionId} />}
+            {activeTab === "INTERVIEW_POOL" && <InterviewPoolTab positionId={positionId} />}
+            {activeTab === "COMPENSATION_POOL" && <CompensationPoolTab positionId={positionId} />}
+            {activeTab === "OFFER_POOL" && <OfferPoolTab positionId={positionId} />}
+          </>
+        )}
       </div>
     </div>
   );

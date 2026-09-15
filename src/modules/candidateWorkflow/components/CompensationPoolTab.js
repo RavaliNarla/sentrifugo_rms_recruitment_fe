@@ -66,18 +66,21 @@ const CompensationPoolTab = ({ positionId }) => {
 
   return (
     <div>
-      <div className="d-flex justify-content-end mb-3">
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        {selected.length > 0 ? (
+          <span className="badge rounded-pill text-bg-light border text-app-primary fs-13">{selected.length} Candidates Selected</span>
+        ) : <span />}
         {selected.length > 0 && (
-          <button className="btn btn-outline-primary" onClick={handleMoveToOffer}>
+          <button className="btn btn-blue-dark" onClick={handleMoveToOffer}>
             Move to Offer Pool ({selected.length})
           </button>
         )}
       </div>
 
       {loading ? <div>Loading...</div> : (
-        <table className="table table-hover">
-          <thead className="table-light">
-            <tr>
+        <table className="table table-hover align-middle">
+          <thead>
+            <tr className="text-muted fs-13">
               <th></th>
               <th>Candidate</th>
               <th>Score</th>
