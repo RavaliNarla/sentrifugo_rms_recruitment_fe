@@ -106,11 +106,7 @@ const JobPostings = () => {
 
   return (
     <div className="job-postings-page">
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <div>
-          <h5 className="page-title mb-0">Job Postings</h5>
-          <div className="page-subtitle">Create, submit and track requisitions through approval</div>
-        </div>
+      <div className="d-flex justify-content-end align-items-center mb-3">
         <button className="btn btn-primary" onClick={() => navigate("/job-postings/create-requisition")}>
           <i className="bi bi-plus-lg me-1" /> Create New Requisition
         </button>

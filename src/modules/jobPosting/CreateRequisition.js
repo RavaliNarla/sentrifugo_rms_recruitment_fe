@@ -27,33 +27,26 @@ const CreateRequisition = () => {
   };
 
   return (
-    <div className="card p-4" style={{ maxWidth: 700 }}>
-      <h4 className="mb-4">Create New Requisition</h4>
-
-      <div className="mb-3">
-        <label className="form-label">Requisition Title *</label>
-        <input
-          className="form-control"
-          placeholder="Enter Requisition Title"
-          value={form.title}
-          onChange={(e) => setForm({ ...form, title: e.target.value })}
-        />
-        <small className="text-muted">Use a clear, searchable title.</small>
+    <div className="app-card">
+      <div className="list-card-title-wrap mb-1">
+        <i className="bi bi-file-earmark-plus-fill" />
+        <span className="list-card-title" style={{ fontSize: "1.1rem" }}>Create New Requisition</span>
       </div>
-
-      <div className="mb-3">
-        <label className="form-label">Description *</label>
-        <textarea
-          className="form-control"
-          rows={4}
-          placeholder="Enter Requisition Description"
-          value={form.description}
-          onChange={(e) => setForm({ ...form, description: e.target.value })}
-        />
-      </div>
+      <div className="page-subtitle mb-4">Fill in the details below to raise a new hiring requisition.</div>
+      <hr className="mb-4" style={{ borderColor: "var(--card-border)" }} />
 
       <div className="row">
-        <div className="col-md-6 mb-3">
+        <div className="col-md-8 mb-3">
+          <label className="form-label">Requisition Title *</label>
+          <input
+            className="form-control"
+            placeholder="Enter Requisition Title"
+            value={form.title}
+            onChange={(e) => setForm({ ...form, title: e.target.value })}
+          />
+          <small className="text-muted">Use a clear, searchable title.</small>
+        </div>
+        <div className="col-md-4 mb-3">
           <label className="form-label">Start Date *</label>
           <input
             type="date"
@@ -62,7 +55,20 @@ const CreateRequisition = () => {
             onChange={(e) => setForm({ ...form, startDate: e.target.value })}
           />
         </div>
-        <div className="col-md-6 mb-3">
+      </div>
+
+      <div className="row">
+        <div className="col-md-8 mb-3">
+          <label className="form-label">Description *</label>
+          <textarea
+            className="form-control"
+            rows={5}
+            placeholder="Enter Requisition Description"
+            value={form.description}
+            onChange={(e) => setForm({ ...form, description: e.target.value })}
+          />
+        </div>
+        <div className="col-md-4 mb-3">
           <label className="form-label">Expected Fulfilment Date *</label>
           <input
             type="date"

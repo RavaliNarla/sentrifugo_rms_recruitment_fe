@@ -74,8 +74,12 @@ const NamedMasterCrudPage = ({ title, getAll, add, update, remove }) => {
 
   return (
     <div className="app-card">
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <h5 className="page-title m-0">{title}</h5>
+      <div className="list-card-header">
+        <div className="list-card-title-wrap">
+          <i className="bi bi-collection-fill" />
+          <span className="list-card-title">{title} records</span>
+          <span className="list-card-count">({items.length} record{items.length === 1 ? "" : "s"})</span>
+        </div>
         <button className="btn btn-primary" onClick={openAdd}>
           <i className="bi bi-plus-lg" /> Add
         </button>
@@ -119,8 +123,8 @@ const NamedMasterCrudPage = ({ title, getAll, add, update, remove }) => {
       )}
 
       {showModal && (
-        <div className="modal show d-block" style={{ background: "rgba(0,0,0,0.5)" }}>
-          <div className="modal-dialog">
+        <div className="modal show d-block" style={{ background: "rgba(15,60,30,0.45)" }}>
+          <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">{editing ? "Edit" : "Add"} {title}</h5>

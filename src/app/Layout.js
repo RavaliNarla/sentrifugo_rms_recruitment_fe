@@ -1,14 +1,16 @@
 import React from "react";
-import Header from "./Header";
+import Sidebar from "./Sidebar";
+import Topbar from "./Topbar";
 import Footer from "./Footer";
 
 const Layout = ({ children }) => (
-  <div className="d-flex flex-column" style={{ minHeight: "100vh" }}>
-    <Header />
-    <main className="flex-grow-1" style={{ background: "var(--app-bg-color)" }}>
-      <div className="container-fluid p-4">{children}</div>
-    </main>
-    <Footer />
+  <div>
+    <Sidebar />
+    <div className="page-content">
+      <Topbar />
+      <div className="page-content-body">{children}</div>
+      <Footer />
+    </div>
   </div>
 );
 

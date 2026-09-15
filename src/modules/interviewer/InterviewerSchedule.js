@@ -72,7 +72,6 @@ const InterviewerSchedule = () => {
 
   return (
     <div>
-      <h5 className="page-title mb-3">My Interview Schedule</h5>
       <div className="app-card mb-3">
         <div className="row">
           <div className="col-md-6">

@@ -80,7 +80,7 @@ const ScheduleInterviewModal = ({ positionId, candidates, onClose, onScheduled }
 
   return (
     <div className="modal show d-block" style={{ background: "rgba(0,0,0,0.5)" }}>
-      <div className="modal-dialog modal-lg">
+      <div className="modal-dialog modal-lg modal-dialog-centered">
         <div className="modal-content">
           <div className="modal-header">
             <h5 className="modal-title">Schedule Interview for {candidates.length} candidate(s)</h5>

@@ -8,11 +8,6 @@ const CommitteeManagement = () => {
 
   return (
     <div className="committee-page">
-      <div className="panel-header">
-        <h2>Committee Management</h2>
-        <span className="page-subtitle">Manage interview panels and assign them to positions</span>
-      </div>
-
       <div className="committee-tabs">
         <button className={`committee-tab ${activeTab === "MANAGE_PANELS" ? "active" : ""}`} onClick={() => setActiveTab("MANAGE_PANELS")}>
           <i className="bi bi-people" /> Manage Panels

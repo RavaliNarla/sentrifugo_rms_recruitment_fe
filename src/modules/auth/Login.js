@@ -3,8 +3,8 @@ import { useMsal } from "@azure/msal-react";
 import { InteractionStatus } from "@azure/msal-browser";
 import { toast } from "react-toastify";
 import { loginRequest } from "../../app/msalConfig";
-import logo from "../../assets/logo.png";
-import pana from "../../assets/pana.png";
+import mascot from "../../assets/mascot.png";
+import companyLogo from "../../assets/sagar-cement-logo.png";
 import "./Login.css";
 
 const Login = () => {
@@ -30,18 +30,46 @@ const Login = () => {
   };
 
   return (
-    <div className="login-container">
-      <div className="login-left-panel">
-        <img src={pana} alt="Recruitment illustration" />
-        <h1 className="fw-bold">Sentrifugo RMS</h1>
-        <p className="text-white-50">Recruitment made simple</p>
+    <div className="auth-shell">
+      <div className="auth-left">
+        <div className="auth-left-logo">
+          <span className="chip">
+            <img src={mascot} alt="Sagar Cement" />
+          </span>
+          <span className="d-flex flex-column">
+            <span className="word">SAGAR RMS</span>
+            <span className="sub">Recruitment Hub</span>
+          </span>
+        </div>
+
+        <div className="auth-hero-wrap">
+          <div className="auth-hero">
+            <h2>Recruit Smarter,<br />Hire Faster.</h2>
+            <p>
+              A single, streamlined portal for Sagar Cement's recruiters to raise requisitions,
+              screen candidates, run interview panels, and send offers — end to end.
+            </p>
+          </div>
+        </div>
+
+        <span className="auth-badge">Recruiter Portal &bull; Sagar Cement</span>
       </div>
-      <div className="login-right-panel">
-        <img src={logo} alt="Company logo" className="logo" />
-        <h4 className="mb-4">Welcome to the Recruiter Portal</h4>
-        <button className="btn btn-primary btn-lg px-5 w-100" disabled={loggingIn} onClick={handleLogin}>
-          {loggingIn ? "Redirecting to Microsoft..." : "Login with Microsoft"}
-        </button>
+
+      <div className="auth-right">
+        <div className="auth-right-inner">
+          <img src={companyLogo} alt="Sagar Cement" className="auth-logo" />
+          <div className="auth-heading">Welcome to the Recruiter Portal</div>
+          <div className="auth-subheading">Sign in with your Sagar Cement Microsoft account to continue.</div>
+
+          <div className="auth-card">
+            <button type="button" className="btn-auth-ms" disabled={loggingIn} onClick={handleLogin}>
+              <i className="bi bi-microsoft" />
+              {loggingIn ? "Redirecting to Microsoft..." : "Sign in with Microsoft"}
+            </button>
+          </div>
+        </div>
+
+        <div className="auth-footer">Powered by Sagarsoft &copy; {new Date().getFullYear()}</div>
       </div>
     </div>
   );

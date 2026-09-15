@@ -44,7 +44,7 @@ const AuthCallback = () => {
 
   return (
     <div className="d-flex flex-column align-items-center justify-content-center" style={{ height: "100vh" }}>
-      <div className="spinner-border text-primary mb-3" role="status" />
+      <div className="spinner-border mb-3" style={{ color: "var(--brand-primary)" }} role="status" />
       <div>Signing you in...</div>
     </div>
   );

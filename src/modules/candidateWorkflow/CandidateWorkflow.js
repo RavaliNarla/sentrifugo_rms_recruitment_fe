@@ -52,9 +52,6 @@ const CandidateWorkflow = () => {
 
   return (
     <div>
-      <h5 className="page-title mb-1">Candidate Workflow</h5>
-      <div className="page-subtitle mb-3">Manage candidates through screening, interview, compensation and offer</div>
-
       <div className="app-card mb-3">
         <div className="row">
           <div className="col-md-6 mb-2">

@@ -111,10 +111,17 @@ const AddPosition = () => {
   };
 
   return (
-    <div className="card p-4" style={{ maxWidth: 800 }}>
-      <h4 className="mb-4">
-        {viewOnly ? "View Position" : editingPosition ? "Edit Position" : "Add New Position"}
-      </h4>
+    <div className="app-card">
+      <div className="list-card-title-wrap mb-1">
+        <i className={`bi ${viewOnly ? "bi-eye-fill" : "bi-briefcase-fill"}`} />
+        <span className="list-card-title" style={{ fontSize: "1.1rem" }}>
+          {viewOnly ? "View Position" : editingPosition ? "Edit Position" : "Add New Position"}
+        </span>
+      </div>
+      <div className="page-subtitle mb-4">
+        {viewOnly ? "Position details for this requisition." : "Fill in the role details below."}
+      </div>
+      <hr className="mb-4" style={{ borderColor: "var(--card-border)" }} />
 
       <fieldset disabled={viewOnly} style={{ border: 0, padding: 0, margin: 0 }}>
       <div className="row">
