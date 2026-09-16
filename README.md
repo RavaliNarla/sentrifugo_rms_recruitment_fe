@@ -16,8 +16,26 @@ backend repo's README): `auth-portal` (8085), `master-portal` (8080), `recruiter
 
 ## Configuration
 
-All config lives in `.env` (MSAL client id/tenant/redirect URI, and the 3 backend base URLs).
+| File | Used when |
+|---|---|
+| `.env` | Local `npm start` → localhost APIs + `http://localhost:3000/auth/callback` |
+| `.env.production` | `npm run build` → bobdev APIs + `https://bobdev.recruitment.sentrifugo.com/auth/callback` |
+
 No secrets beyond the public MSAL client id, which is not sensitive.
+
+## Deploy to bobdev
+
+```powershell
+npm ci
+npm run build
+```
+
+Copy the `build/` folder to the web root for https://bobdev.recruitment.sentrifugo.com
+(same host the reverse proxy already uses for the recruitment UI).
+
+Ensure Azure AD has redirect URI: `https://bobdev.recruitment.sentrifugo.com/auth/callback`.
+
+API host used by the production build: `https://dev.bobjava.sentrifugo.com`.
 
 ## Structure
 

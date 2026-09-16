@@ -31,6 +31,9 @@ function App() {
       <ToastContainer position="top-right" autoClose={3000} />
       <Routes>
         <Route path="/login" element={<Login />} />
+        {/* Old BOB FE used /sagarsoft/login — keep bookmark/Azure redirect from looping there */}
+        <Route path="/sagarsoft/login" element={<Navigate to="/login" replace />} />
+        <Route path="/sagarsoft/*" element={<Navigate to="/login" replace />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
 
