@@ -11,7 +11,11 @@ const EMPTY_FORM = {
   jobDescription: "",
   educationQualificationId: "",
   experienceYears: "0",
+  rolesResponsibilities: "",
+  certifications: "",
+  medicalFitnessRequired: false,
   employmentType: "REGULAR",
+  contractualPeriod: "",
   vacancies: 1,
   approvedById: "",
   approvedOn: "",
@@ -39,13 +43,11 @@ const AddPosition = () => {
     Promise.all([
       masterApiService.getDepartments(),
       masterApiService.getLocations(),
-      masterApiService.getPositionTitles(),
       masterApiService.getEducationQualifications(),
       masterApiService.getApprovedByRoles(),
-    ]).then(([d, l, p, e, a]) => {
+    ]).then(([d, l, e, a]) => {
       setDepartments(d.data.data || []);
       setLocations(l.data.data || []);
-      setPositionTitles(p.data.data || []);
       setEducationQualifications(e.data.data || []);
       setApprovedByRoles(a.data.data || []);
     }).catch(() => toast.error("Failed to load master data"));
@@ -58,14 +60,46 @@ const AddPosition = () => {
         jobDescription: editingPosition.jobDescription || "",
         educationQualificationId: editingPosition.educationQualificationId || "",
         experienceYears: String(editingPosition.experienceYears ?? "0"),
+        rolesResponsibilities: editingPosition.rolesResponsibilities || "",
+        certifications: editingPosition.certifications || "",
+        medicalFitnessRequired: editingPosition.medicalFitnessRequired === true,
         employmentType: editingPosition.employmentType || "REGULAR",
+        contractualPeriod: editingPosition.contractualPeriod || "",
         vacancies: editingPosition.vacancies || 1,
         approvedById: editingPosition.approvedById || "",
         approvedOn: editingPosition.approvedOn || "",
       });
+      if (editingPosition.departmentId) {
+        loadPositionTitles(editingPosition.departmentId);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const loadPositionTitles = (departmentId) => {
+    if (!departmentId) {
+      setPositionTitles([]);
+      return;
+    }
+    masterApiService.getPositionTitlesByDepartment(departmentId)
+      .then((res) => setPositionTitles(res.data.data || []))
+      .catch(() => toast.error("Failed to load position titles"));
+  };
+
+  const handleDepartmentChange = (departmentId) => {
+    setForm((prev) => ({ ...prev, departmentId, positionTitleId: "" }));
+    loadPositionTitles(departmentId);
+  };
+
+  const handlePositionTitleChange = (positionTitleId) => {
+    const master = positionTitles.find((p) => p.id === positionTitleId);
+    setForm((prev) => ({
+      ...prev,
+      positionTitleId,
+      jobDescription: master?.jobDescription || prev.jobDescription,
+      experienceYears: master?.minimumExperienceYears != null ? String(master.minimumExperienceYears) : prev.experienceYears,
+    }));
+  };
 
   const handleSave = async () => {
     if (viewOnly) return;
@@ -83,7 +117,11 @@ const AddPosition = () => {
         jobDescription: form.jobDescription,
         educationQualificationId: form.educationQualificationId || null,
         experienceYears: Number(form.experienceYears),
+        rolesResponsibilities: form.rolesResponsibilities || null,
+        certifications: form.certifications || null,
+        medicalFitnessRequired: form.medicalFitnessRequired,
         employmentType: form.employmentType,
+        contractualPeriod: form.employmentType === "CONTRACT" ? (form.contractualPeriod || null) : null,
         vacancies: Number(form.vacancies) || 1,
         approvedById: form.approvedById || null,
         approvedOn: form.approvedOn || null,
@@ -127,7 +165,7 @@ const AddPosition = () => {
       <div className="row">
         <div className="col-md-6 mb-3">
           <label className="form-label">Department *</label>
-          <select className="form-select" value={form.departmentId} onChange={(e) => setForm({ ...form, departmentId: e.target.value })}>
+          <select className="form-select" value={form.departmentId} onChange={(e) => handleDepartmentChange(e.target.value)}>
             <option value="">Select</option>
             {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
           </select>
@@ -143,10 +181,16 @@ const AddPosition = () => {
 
       <div className="mb-3">
         <label className="form-label">Position Title *</label>
-        <select className="form-select" value={form.positionTitleId} onChange={(e) => setForm({ ...form, positionTitleId: e.target.value })}>
-          <option value="">Select</option>
+        <select
+          className="form-select"
+          value={form.positionTitleId}
+          onChange={(e) => handlePositionTitleChange(e.target.value)}
+          disabled={!form.departmentId}
+        >
+          <option value="">{form.departmentId ? "Select" : "Select a Department first"}</option>
           {positionTitles.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
         </select>
+        <small className="text-muted">Picking a title prefills job description and experience below from the Position Master — you can still edit them.</small>
       </div>
 
       <div className="mb-3">
@@ -175,14 +219,72 @@ const AddPosition = () => {
         </div>
       </div>
 
+      <div className="mb-3">
+        <label className="form-label">Roles &amp; Responsibilities</label>
+        <textarea
+          className="form-control"
+          rows={3}
+          value={form.rolesResponsibilities}
+          onChange={(e) => setForm({ ...form, rolesResponsibilities: e.target.value })}
+        />
+      </div>
+
+      <div className="row">
+        <div className="col-md-6 mb-3">
+          <label className="form-label">Certifications</label>
+          <input
+            className="form-control"
+            placeholder="e.g. PMP, Six Sigma (optional)"
+            value={form.certifications}
+            onChange={(e) => setForm({ ...form, certifications: e.target.value })}
+          />
+        </div>
+        <div className="col-md-6 mb-3 d-flex align-items-end">
+          <div className="form-check">
+            <input
+              type="checkbox"
+              className="form-check-input"
+              id="medicalFitnessRequired"
+              checked={form.medicalFitnessRequired}
+              onChange={(e) => setForm({ ...form, medicalFitnessRequired: e.target.checked })}
+            />
+            <label className="form-check-label" htmlFor="medicalFitnessRequired">
+              Medical Fitness Required
+            </label>
+          </div>
+        </div>
+      </div>
+
       <div className="row">
         <div className="col-md-4 mb-3">
           <label className="form-label">Employment Type</label>
-          <select className="form-select" value={form.employmentType} onChange={(e) => setForm({ ...form, employmentType: e.target.value })}>
+          <select
+            className="form-select"
+            value={form.employmentType}
+            onChange={(e) => {
+              const employmentType = e.target.value;
+              setForm((prev) => ({
+                ...prev,
+                employmentType,
+                contractualPeriod: employmentType === "CONTRACT" ? prev.contractualPeriod : "",
+              }));
+            }}
+          >
             <option value="REGULAR">Regular</option>
             <option value="CONTRACT">Contract</option>
           </select>
         </div>
+        {form.employmentType === "CONTRACT" && (
+          <div className="col-md-4 mb-3">
+            <label className="form-label">Contractual Period</label>
+            <input
+              className="form-control"
+              placeholder="e.g. 6 months"
+              value={form.contractualPeriod}
+              onChange={(e) => setForm({ ...form, contractualPeriod: e.target.value })}
+            />
+          </div>
+        )}
         <div className="col-md-4 mb-3">
           <label className="form-label">Number of Positions to be Hired</label>
           <input

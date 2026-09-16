@@ -21,6 +21,7 @@ const masterApiService = {
 
   // Position titles
   getPositionTitles: () => masterApi.get("/position-titles/all"),
+  getPositionTitlesByDepartment: (departmentId) => masterApi.get(`/position-titles/by-department/${departmentId}`),
   addPositionTitle: (payload) => masterApi.post("/position-titles/add", payload),
   updatePositionTitle: (id, payload) => masterApi.put(`/position-titles/update/${id}`, payload),
   deletePositionTitle: (id) => masterApi.delete(`/position-titles/delete/${id}`),

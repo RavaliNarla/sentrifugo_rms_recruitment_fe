@@ -25,6 +25,22 @@ const STATUS_OPTIONS = [
   { value: "FULFILLED", label: "Fulfilled" },
 ];
 
+const MONTH_OPTIONS = [
+  { value: "", label: "All Months" },
+  { value: "1", label: "January" },
+  { value: "2", label: "February" },
+  { value: "3", label: "March" },
+  { value: "4", label: "April" },
+  { value: "5", label: "May" },
+  { value: "6", label: "June" },
+  { value: "7", label: "July" },
+  { value: "8", label: "August" },
+  { value: "9", label: "September" },
+  { value: "10", label: "October" },
+  { value: "11", label: "November" },
+  { value: "12", label: "December" },
+];
+
 const JobPostings = () => {
   const navigate = useNavigate();
   const [requisitions, setRequisitions] = useState([]);
@@ -34,11 +50,18 @@ const JobPostings = () => {
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [yearFilter, setYearFilter] = useState("");
+  const [customYearFrom, setCustomYearFrom] = useState("");
+  const [customYearTo, setCustomYearTo] = useState("");
+  const [monthFilter, setMonthFilter] = useState("");
+  const [jobTitleFilter, setJobTitleFilter] = useState("");
+  const [departmentFilter, setDepartmentFilter] = useState("");
+  const [locationFilter, setLocationFilter] = useState("");
 
   const loadRequisitions = async () => {
     setLoading(true);
     try {
-      const res = await recruiterApiService.getRequisitions(0, 50);
+      const res = await recruiterApiService.getRequisitions(0, 1000);
       const content = res.data.data.content || [];
       setRequisitions(content);
 
@@ -93,12 +116,58 @@ const JobPostings = () => {
     }
   };
 
+  const years = Array.from(
+    new Set(requisitions.filter((r) => r.startDate).map((r) => r.startDate.slice(0, 4)))
+  ).sort((a, b) => b.localeCompare(a));
+
+  const allPositions = Object.values(positionsByReq).flat();
+  const jobTitles = Array.from(new Set(allPositions.map((p) => p.positionTitleName).filter(Boolean))).sort();
+  const departments = Array.from(new Set(allPositions.map((p) => p.departmentName).filter(Boolean))).sort();
+  const locations = Array.from(new Set(allPositions.map((p) => p.locationName).filter(Boolean))).sort();
+
+  const clearFilters = () => {
+    setSearchText("");
+    setStatusFilter("");
+    setYearFilter("");
+    setCustomYearFrom("");
+    setCustomYearTo("");
+    setMonthFilter("");
+    setJobTitleFilter("");
+    setDepartmentFilter("");
+    setLocationFilter("");
+  };
+
+  const hasActiveFilters =
+    searchText || statusFilter || yearFilter || monthFilter || jobTitleFilter || departmentFilter || locationFilter;
+
   const filteredRequisitions = requisitions.filter((req) => {
     if (statusFilter && req.status !== statusFilter) return false;
     if (searchText) {
       const haystack = `${req.requisitionCode} ${req.title}`.toLowerCase();
       if (!haystack.includes(searchText.toLowerCase())) return false;
     }
+    if (yearFilter === "CUSTOM") {
+      const reqYear = req.startDate ? parseInt(req.startDate.slice(0, 4), 10) : null;
+      const from = customYearFrom ? parseInt(customYearFrom, 10) : null;
+      const to = customYearTo ? parseInt(customYearTo, 10) : null;
+      if (from && (!reqYear || reqYear < from)) return false;
+      if (to && (!reqYear || reqYear > to)) return false;
+    } else if (yearFilter) {
+      if (!req.startDate || req.startDate.slice(0, 4) !== yearFilter) return false;
+    }
+
+    if (monthFilter) {
+      const reqMonth = req.startDate ? String(parseInt(req.startDate.slice(5, 7), 10)) : null;
+      if (reqMonth !== monthFilter) return false;
+    }
+
+    if (jobTitleFilter || departmentFilter || locationFilter) {
+      const positions = positionsByReq[req.id] || [];
+      if (jobTitleFilter && !positions.some((p) => p.positionTitleName === jobTitleFilter)) return false;
+      if (departmentFilter && !positions.some((p) => p.departmentName === departmentFilter)) return false;
+      if (locationFilter && !positions.some((p) => p.locationName === locationFilter)) return false;
+    }
+
     return true;
   });
 
@@ -112,33 +181,107 @@ const JobPostings = () => {
         </button>
       </div>
 
-      <div className="row filters-row g-2 mb-3">
-        <div className="col-md-6">
+      <div className="row filters-row g-2 mb-3 align-items-center">
+        <div className="col-lg-auto col-md-4">
+          <select
+            className="form-select filter-pill"
+            value={yearFilter}
+            onChange={(e) => { setYearFilter(e.target.value); setCustomYearFrom(""); setCustomYearTo(""); }}
+          >
+            <option value="">All Years</option>
+            {years.map((y) => <option key={y} value={y}>{`Year - ${y}`}</option>)}
+            <option value="CUSTOM">Custom Range…</option>
+          </select>
+        </div>
+        {yearFilter === "CUSTOM" && (
+          <>
+            <div className="col-lg-auto col-md-4">
+              <input
+                type="number"
+                className="form-control filter-pill filter-pill-year"
+                placeholder="From year"
+                value={customYearFrom}
+                onChange={(e) => setCustomYearFrom(e.target.value)}
+              />
+            </div>
+            <div className="col-lg-auto col-md-4">
+              <input
+                type="number"
+                className="form-control filter-pill filter-pill-year"
+                placeholder="To year"
+                value={customYearTo}
+                onChange={(e) => setCustomYearTo(e.target.value)}
+              />
+            </div>
+          </>
+        )}
+        <div className="col-lg-auto col-md-4">
+          <select className="form-select filter-pill" value={monthFilter} onChange={(e) => setMonthFilter(e.target.value)}>
+            {MONTH_OPTIONS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
+          </select>
+        </div>
+        <div className="col-lg col-md-4">
           <div className="search-boxpost">
             <i className="bi bi-search" />
             <input
-              className="form-control"
+              className="form-control filter-pill"
               placeholder="Search requisitions by id, title"
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
             />
           </div>
         </div>
-        <div className="col-md-3">
-          <select className="form-select" style={{ height: 42 }} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+        <div className="col-lg-auto col-md-4">
+          <select
+            className="form-select filter-pill"
+            value={jobTitleFilter}
+            onChange={(e) => setJobTitleFilter(e.target.value)}
+          >
+            <option value="">All Job Titles</option>
+            {jobTitles.map((t) => <option key={t} value={t}>{t}</option>)}
+          </select>
+        </div>
+        <div className="col-lg-auto col-md-4">
+          <select
+            className="form-select filter-pill"
+            value={departmentFilter}
+            onChange={(e) => setDepartmentFilter(e.target.value)}
+          >
+            <option value="">All Departments</option>
+            {departments.map((d) => <option key={d} value={d}>{d}</option>)}
+          </select>
+        </div>
+        <div className="col-lg-auto col-md-4">
+          <select
+            className="form-select filter-pill"
+            value={locationFilter}
+            onChange={(e) => setLocationFilter(e.target.value)}
+          >
+            <option value="">All Locations</option>
+            {locations.map((l) => <option key={l} value={l}>{l}</option>)}
+          </select>
+        </div>
+        <div className="col-lg-auto col-md-4">
+          <select className="form-select filter-pill" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
             {STATUS_OPTIONS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
           </select>
         </div>
+        {hasActiveFilters && (
+          <div className="col-lg-auto col-md-4">
+            <button type="button" className="btn btn-outline-secondary filter-pill" onClick={clearFilters}>
+              <i className="bi bi-x-lg me-1" /> Clear Filters
+            </button>
+          </div>
+        )}
       </div>
 
-      <div className="bulk-actions-bar">
-        <span className="fs-14 text-muted">Select requisitions in NEW/REJECTED status to submit for approval</span>
-        {selected.length > 0 && (
+      {selected.length > 0 && (
+        <div className="bulk-actions-bar">
           <button className="btn btn-blue-dark" onClick={handleSubmit}>
             <i className="bi bi-send me-1" /> Submit for Approval ({selected.length})
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
       {loading ? (
         <div>Loading...</div>
@@ -158,15 +301,14 @@ const JobPostings = () => {
             <div className="requisition-card" key={req.id}>
               <div className="d-flex justify-content-between align-items-start" style={{ cursor: "pointer" }} onClick={() => toggleExpand(req.id)}>
                 <div className="d-flex align-items-start gap-2">
-                  {selectableStatuses.includes(req.status) && (
-                    <input
-                      type="checkbox"
-                      className="form-check-input mt-1"
-                      checked={selected.includes(req.id)}
-                      onClick={(e) => e.stopPropagation()}
-                      onChange={() => toggleSelect(req.id)}
-                    />
-                  )}
+                  <input
+                    type="checkbox"
+                    className="form-check-input mt-1"
+                    checked={selected.includes(req.id)}
+                    disabled={!selectableStatuses.includes(req.status)}
+                    onClick={(e) => e.stopPropagation()}
+                    onChange={() => toggleSelect(req.id)}
+                  />
                   <div>
                     <div className="d-flex align-items-center gap-2 mb-1">
                       <span className="badge bg-light text-dark border">{req.requisitionCode}</span>
