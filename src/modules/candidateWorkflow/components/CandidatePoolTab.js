@@ -4,6 +4,7 @@ import recruiterApiService from "../../../core/recruiterApiService";
 import Pagination from "../../../shared/Pagination";
 import PdfViewerModal from "../../../shared/PdfViewerModal";
 import { useFilePreview } from "../../../shared/useFilePreview";
+import ConfirmModal from "../../../shared/ConfirmModal";
 import AddCandidateModal from "./AddCandidateModal";
 import CandidateProfileModal from "./CandidateProfileModal";
 import ScheduleInterviewModal from "./ScheduleInterviewModal";
@@ -44,6 +45,10 @@ const CandidatePoolTab = ({ requisitionId, positionId }) => {
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const filePreview = useFilePreview();
+  const [confirmState, setConfirmState] = useState({ show: false, message: "", onConfirm: null });
+
+  const askConfirm = (message, action) => setConfirmState({ show: true, message, onConfirm: action });
+  const closeConfirm = () => setConfirmState({ show: false, message: "", onConfirm: null });
 
   const load = async () => {
     setLoading(true);
@@ -102,15 +107,17 @@ const CandidatePoolTab = ({ requisitionId, positionId }) => {
   };
 
   // SCL_42: Edit/Delete are only available for newly-added candidates.
-  const handleDelete = async (c) => {
-    if (!window.confirm(`Delete candidate "${c.name}"? This cannot be undone.`)) return;
-    try {
-      await recruiterApiService.deleteCandidate(c.id);
-      toast.success("Candidate deleted successfully");
-      load();
-    } catch (e) {
-      toast.error(e.response?.data?.message || "Failed to delete candidate");
-    }
+  const handleDelete = (c) => {
+    askConfirm(`Are you sure you want to delete the candidate "${c.name}"?`, async () => {
+      closeConfirm();
+      try {
+        await recruiterApiService.deleteCandidate(c.id);
+        toast.success("Candidate deleted successfully");
+        load();
+      } catch (e) {
+        toast.error(e.response?.data?.message || "Failed to delete candidate");
+      }
+    });
   };
 
   const selectedCandidates = candidates.filter((c) => selected.includes(c.id));
@@ -244,6 +251,13 @@ const CandidatePoolTab = ({ requisitionId, positionId }) => {
           onScheduled={() => { setShowScheduleModal(false); setSelected([]); load(); }}
         />
       )}
+
+      <ConfirmModal
+        show={confirmState.show}
+        message={confirmState.message}
+        onConfirm={confirmState.onConfirm}
+        onCancel={closeConfirm}
+      />
     </div>
   );
 };

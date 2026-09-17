@@ -103,6 +103,10 @@ const Sidebar = () => {
               <i className="bi bi-mortarboard" />
               <span className="label">Specializations</span>
             </NavLink>
+            <NavLink to="/admin/certifications" className={({ isActive }) => (isActive ? "active" : "")}>
+              <i className="bi bi-patch-check-fill" />
+              <span className="label">Certifications</span>
+            </NavLink>
           </>
         )}
       </nav>

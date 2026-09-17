@@ -72,6 +72,11 @@ const ROUTES = [
     title: "Specializations",
     subtitle: "Manage specialization master data (optional, linked to an education level)",
   },
+  {
+    prefix: "/admin/certifications",
+    title: "Certifications",
+    subtitle: "Manage certification master data (optional field on positions)",
+  },
 ];
 
 export function getPageMeta(pathname, user) {

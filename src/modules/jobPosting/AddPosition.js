@@ -16,7 +16,7 @@ const EMPTY_FORM = {
   educationQualificationId: "",
   specializationId: "",
   experienceYears: "",
-  certifications: "",
+  certificationId: "",
   medicalFitnessRequired: false,
   employmentType: "",
   contractualPeriod: "",
@@ -49,6 +49,7 @@ const AddPosition = () => {
   const [positionTitles, setPositionTitles] = useState([]);
   const [educationQualifications, setEducationQualifications] = useState([]);
   const [specializations, setSpecializations] = useState([]);
+  const [certifications, setCertifications] = useState([]);
   const [approvedByRoles, setApprovedByRoles] = useState([]);
   const [form, setForm] = useState(EMPTY_FORM);
   const [approvalDoc, setApprovalDoc] = useState(null);
@@ -61,11 +62,13 @@ const AddPosition = () => {
       masterApiService.getLocations(),
       masterApiService.getEducationQualifications(),
       masterApiService.getApprovedByRoles(),
-    ]).then(([d, l, e, a]) => {
+      masterApiService.getCertifications(),
+    ]).then(([d, l, e, a, c]) => {
       setDepartments(d.data.data || []);
       setLocations(l.data.data || []);
       setEducationQualifications(e.data.data || []);
       setApprovedByRoles(a.data.data || []);
+      setCertifications(c.data.data || []);
     }).catch(() => toast.error("Failed to load master data"));
 
     if (editingPosition) {
@@ -77,7 +80,7 @@ const AddPosition = () => {
         educationQualificationId: editingPosition.educationQualificationId || "",
         specializationId: editingPosition.specializationId || "",
         experienceYears: editingPosition.experienceYears != null ? String(editingPosition.experienceYears) : "",
-        certifications: editingPosition.certifications || "",
+        certificationId: editingPosition.certificationId || "",
         medicalFitnessRequired: editingPosition.medicalFitnessRequired === true,
         employmentType: editingPosition.employmentType || "",
         contractualPeriod: editingPosition.contractualPeriod || "",
@@ -172,6 +175,10 @@ const AddPosition = () => {
       toast.error("Employment Type is required");
       return;
     }
+    if (form.employmentType === "CONTRACT" && !form.contractualPeriod.trim()) {
+      toast.error("Contractual Period is required for Contract employment");
+      return;
+    }
     if (!form.vacancies || Number(form.vacancies) < 1) {
       toast.error("Number of Positions to be Hired is required");
       return;
@@ -209,7 +216,7 @@ const AddPosition = () => {
         educationQualificationId: form.educationQualificationId || null,
         specializationId: form.specializationId || null,
         experienceYears: Number(form.experienceYears),
-        certifications: form.certifications || null,
+        certificationId: form.certificationId || null,
         medicalFitnessRequired: form.medicalFitnessRequired,
         employmentType: form.employmentType,
         contractualPeriod: form.employmentType === "CONTRACT" ? (form.contractualPeriod || null) : null,
@@ -326,12 +333,14 @@ const AddPosition = () => {
         </div>
         <div className="col-md-6 mb-3">
           <label className="form-label">Certifications (optional)</label>
-          <input
-            className="form-control"
-            placeholder="e.g. PMP, Six Sigma"
-            value={form.certifications}
-            onChange={(e) => setForm({ ...form, certifications: e.target.value })}
-          />
+          <select
+            className="form-select"
+            value={form.certificationId}
+            onChange={(e) => setForm({ ...form, certificationId: e.target.value })}
+          >
+            <option value="">Select</option>
+            {certifications.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
         </div>
       </div>
 
@@ -357,7 +366,7 @@ const AddPosition = () => {
         </div>
         {form.employmentType === "CONTRACT" && (
           <div className="col-md-4 mb-3">
-            <label className="form-label">Contractual Period</label>
+            <label className="form-label">Contractual Period <span className="text-danger">*</span></label>
             <input
               className="form-control"
               placeholder="e.g. 6 months"
@@ -416,30 +425,31 @@ const AddPosition = () => {
           />
         </div>
       )}
-      {!viewOnly && (
-        <div className="mb-3">
-          <label className="form-label">Upload Approval Email/Document <span className="text-danger">*</span></label>
-          <input
-            type="file"
-            className="form-control"
-            accept=".pdf,.docx,.png,.jpg,.jpeg"
-            onChange={handleApprovalDocChange}
-          />
-          <small className="text-muted">Scanned copy, email attachment, or screenshot of management approval.</small>
-        </div>
-      )}
-      {editingPosition?.approvalDocUrl && (
-        <div className="mb-3">
+      </fieldset>
+
+      <div className="mb-3">
+        <label className="form-label d-block">Upload Approval Email/Document <span className="text-danger">*</span></label>
+        {!viewOnly && (
+          <>
+            <input
+              type="file"
+              className="form-control"
+              accept=".pdf,.docx,.png,.jpg,.jpeg"
+              onChange={handleApprovalDocChange}
+            />
+            <small className="text-muted d-block">Scanned copy, email attachment, or screenshot of management approval.</small>
+          </>
+        )}
+        {editingPosition?.approvalDocUrl && (
           <button
             type="button"
-            className="btn btn-link p-0"
+            className="btn btn-link p-0 mt-1"
             onClick={() => filePreview.openFile(editingPosition.approvalDocUrl, "Approval Document")}
           >
-            <i className="bi bi-file-earmark-text me-1" /> View currently uploaded document
+            <i className="bi bi-file-earmark-text me-1" /> View {viewOnly ? "" : "currently "}uploaded document
           </button>
-        </div>
-      )}
-      </fieldset>
+        )}
+      </div>
 
       <div className="d-flex justify-content-end gap-2 mt-3">
         <button className="btn btn-outline-secondary" onClick={() => navigate("/job-postings")}>

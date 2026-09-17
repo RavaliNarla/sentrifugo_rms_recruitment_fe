@@ -22,6 +22,7 @@ import LocationsPage from "../modules/admin/LocationsPage";
 import PositionTitlesPage from "../modules/admin/PositionTitlesPage";
 import EducationQualificationsPage from "../modules/admin/EducationQualificationsPage";
 import SpecializationsPage from "../modules/admin/SpecializationsPage";
+import CertificationsPage from "../modules/admin/CertificationsPage";
 
 function withLayout(element) {
   return <Layout>{element}</Layout>;
@@ -53,7 +54,8 @@ function App() {
           path="/job-postings/create-requisition"
           element={
             <PrivateRoute>
-              <PrivilegeRoute privilege="JobPostings">{withLayout(<CreateRequisition />)}</PrivilegeRoute>
+              {/* Also reachable read-only from Requisition Approvals, so L1/L2 approvers without JobPostings need access too. */}
+              <PrivilegeRoute privilegesRequired={["JobPostings", "L1Approval", "L2Approval"]}>{withLayout(<CreateRequisition />)}</PrivilegeRoute>
             </PrivateRoute>
           }
         />
@@ -61,7 +63,8 @@ function App() {
           path="/job-postings/:requisitionId/add-position"
           element={
             <PrivateRoute>
-              <PrivilegeRoute privilege="JobPostings">{withLayout(<AddPosition />)}</PrivilegeRoute>
+              {/* Also reachable read-only from Requisition Approvals, so L1/L2 approvers without JobPostings need access too. */}
+              <PrivilegeRoute privilegesRequired={["JobPostings", "L1Approval", "L2Approval"]}>{withLayout(<AddPosition />)}</PrivilegeRoute>
             </PrivateRoute>
           }
         />
@@ -138,6 +141,10 @@ function App() {
         <Route
           path="/admin/specializations"
           element={<PrivateRoute><PrivilegeRoute privilege="Admin">{withLayout(<SpecializationsPage />)}</PrivilegeRoute></PrivateRoute>}
+        />
+        <Route
+          path="/admin/certifications"
+          element={<PrivateRoute><PrivilegeRoute privilege="Admin">{withLayout(<CertificationsPage />)}</PrivilegeRoute></PrivateRoute>}
         />
 
         <Route path="/" element={<Navigate to="/dashboard" replace />} />

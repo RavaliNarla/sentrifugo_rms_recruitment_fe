@@ -6,7 +6,7 @@ import React from "react";
  * (e.g. `{open && <ConfirmModal ... />}`); pass `show` explicitly for callers
  * that keep the element always mounted and toggle visibility via state.
  */
-const ConfirmModal = ({ show = true, title, message, confirmLabel = "Yes", cancelLabel = "No", onConfirm, onCancel }) => {
+const ConfirmModal = ({ show = true, title = "Please Confirm", message, confirmLabel = "Yes", cancelLabel = "No", onConfirm, onCancel }) => {
   if (!show) return null;
   return (
     <div className="modal show d-block" style={{ background: "rgba(15,60,30,0.45)" }}>

@@ -1,17 +1,20 @@
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import ConfirmModal from "./ConfirmModal";
+import masterApiService from "../../core/masterApiService";
+import ConfirmModal from "../../shared/ConfirmModal";
+
+const EMPTY_FORM = { name: "" };
 
 /**
- * Generic list + add/edit/delete screen for simple "id + name" master data
- * (Departments, Position Titles, Education Qualifications).
+ * Certification master (e.g. "NCCBM Certified Quality Controller") - optional,
+ * single-select field on Add Position, replacing the old free-text input.
  */
-const NamedMasterCrudPage = ({ title, getAll, add, update, remove }) => {
+const CertificationsPage = () => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
-  const [name, setName] = useState("");
+  const [form, setForm] = useState(EMPTY_FORM);
   const [confirmState, setConfirmState] = useState({ show: false, message: "", onConfirm: null });
 
   const askConfirm = (message, action) => setConfirmState({ show: true, message, onConfirm: action });
@@ -20,7 +23,7 @@ const NamedMasterCrudPage = ({ title, getAll, add, update, remove }) => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const res = await getAll();
+      const res = await masterApiService.getCertifications();
       setItems(res.data.data || []);
     } catch (e) {
       toast.error(e.response?.data?.message || "Failed to load data");
@@ -31,33 +34,32 @@ const NamedMasterCrudPage = ({ title, getAll, add, update, remove }) => {
 
   useEffect(() => {
     loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const openAdd = () => {
     setEditing(null);
-    setName("");
+    setForm(EMPTY_FORM);
     setShowModal(true);
   };
 
   const openEdit = (item) => {
     setEditing(item);
-    setName(item.name);
+    setForm({ name: item.name });
     setShowModal(true);
   };
 
   const handleSave = async () => {
-    if (!name.trim()) {
+    if (!form.name.trim()) {
       toast.error("Name is required");
       return;
     }
     try {
       if (editing) {
-        await update(editing.id, { name });
-        toast.success(`${title} updated successfully`);
+        await masterApiService.updateCertification(editing.id, form);
+        toast.success("Certification updated successfully");
       } else {
-        await add({ name });
-        toast.success(`${title} added successfully`);
+        await masterApiService.addCertification(form);
+        toast.success("Certification added successfully");
       }
       setShowModal(false);
       loadData();
@@ -67,11 +69,11 @@ const NamedMasterCrudPage = ({ title, getAll, add, update, remove }) => {
   };
 
   const handleDelete = (item) => {
-    askConfirm(`Are you sure you want to delete the ${title.toLowerCase()} "${item.name}"?`, async () => {
+    askConfirm(`Are you sure you want to delete the certification "${item.name}"?`, async () => {
       closeConfirm();
       try {
-        await remove(item.id);
-        toast.success(`${title} deleted successfully`);
+        await masterApiService.deleteCertification(item.id);
+        toast.success("Certification deleted successfully");
         loadData();
       } catch (e) {
         toast.error(e.response?.data?.message || "Delete failed");
@@ -84,7 +86,7 @@ const NamedMasterCrudPage = ({ title, getAll, add, update, remove }) => {
       <div className="list-card-header">
         <div className="list-card-title-wrap">
           <i className="bi bi-collection-fill" />
-          <span className="list-card-title">{title} records</span>
+          <span className="list-card-title">Certification records</span>
           <span className="list-card-count">({items.length} record{items.length === 1 ? "" : "s"})</span>
         </div>
         <button className="btn btn-primary" onClick={openAdd}>
@@ -120,9 +122,7 @@ const NamedMasterCrudPage = ({ title, getAll, add, update, remove }) => {
             ))}
             {items.length === 0 && (
               <tr>
-                <td colSpan={3} className="text-center text-muted py-4">
-                  No records found
-                </td>
+                <td colSpan={3} className="text-center text-muted py-4">No records found</td>
               </tr>
             )}
           </tbody>
@@ -134,15 +134,15 @@ const NamedMasterCrudPage = ({ title, getAll, add, update, remove }) => {
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">{editing ? "Edit" : "Add"} {title}</h5>
+                <h5 className="modal-title">{editing ? "Edit" : "Add"} Certification</h5>
                 <button className="btn-close" onClick={() => setShowModal(false)} />
               </div>
               <div className="modal-body">
-                <label className="form-label">Name</label>
+                <label className="form-label">Name <span className="text-danger">*</span></label>
                 <input
                   className="form-control"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
                   autoFocus
                 />
               </div>
@@ -165,4 +165,4 @@ const NamedMasterCrudPage = ({ title, getAll, add, update, remove }) => {
   );
 };
 
-export default NamedMasterCrudPage;
+export default CertificationsPage;

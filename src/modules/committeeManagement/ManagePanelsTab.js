@@ -70,7 +70,7 @@ const ManagePanelsTab = () => {
   };
 
   const handleDelete = (panel) => {
-    askConfirm(`Delete panel "${panel.name}"?`, async () => {
+    askConfirm(`Are you sure you want to delete the panel "${panel.name}"?`, async () => {
       closeConfirm();
       try {
         await recruiterApiService.deletePanel(panel.id);

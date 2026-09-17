@@ -50,6 +50,7 @@ const JobPostings = () => {
   const [expanded, setExpanded] = useState({});
   const [selected, setSelected] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [yearFilter, setYearFilter] = useState("");
@@ -100,21 +101,24 @@ const JobPostings = () => {
 
   const handleSubmit = () => {
     if (selected.length === 0) return;
-    askConfirm(`Submit ${selected.length} requisition(s) for approval?`, async () => {
+    askConfirm(`Are you sure you want to submit ${selected.length} requisition(s) for approval?`, async () => {
       closeConfirm();
+      setSubmitting(true);
       try {
         await recruiterApiService.submitForApproval(selected);
         toast.success("Requisition(s) submitted for approval");
         setSelected([]);
-        loadRequisitions();
+        await loadRequisitions();
       } catch (e) {
         toast.error(e.response?.data?.message || "Submit failed");
+      } finally {
+        setSubmitting(false);
       }
     });
   };
 
   const handleFulfil = (id) => {
-    askConfirm("Mark this requisition as fulfilled?", async () => {
+    askConfirm("Are you sure you want to mark this requisition as fulfilled?", async () => {
       closeConfirm();
       try {
         await recruiterApiService.markFulfilled(id);
@@ -126,40 +130,46 @@ const JobPostings = () => {
     });
   };
 
-  const handleUnfulfil = async (id) => {
-    if (!window.confirm("Reopen this requisition (undo Mark Fulfilled)?")) return;
-    try {
-      await recruiterApiService.unmarkFulfilled(id);
-      toast.success("Requisition reopened");
-      loadRequisitions();
-    } catch (e) {
-      toast.error(e.response?.data?.message || "Action failed");
-    }
+  const handleUnfulfil = (id) => {
+    askConfirm("Are you sure you want to reopen this requisition (undo Mark Fulfilled)?", async () => {
+      closeConfirm();
+      try {
+        await recruiterApiService.unmarkFulfilled(id);
+        toast.success("Requisition reopened");
+        loadRequisitions();
+      } catch (e) {
+        toast.error(e.response?.data?.message || "Action failed");
+      }
+    });
   };
 
   // SCL_12: Edit/Delete for a requisition - Delete only while status = NEW (not yet submitted/approved).
-  const handleDeleteRequisition = async (req) => {
-    if (!window.confirm(`Delete requisition "${req.title}"? This cannot be undone.`)) return;
-    try {
-      await recruiterApiService.deleteRequisition(req.id);
-      toast.success("Requisition deleted successfully");
-      loadRequisitions();
-    } catch (e) {
-      toast.error(e.response?.data?.message || "Failed to delete requisition");
-    }
+  const handleDeleteRequisition = (req) => {
+    askConfirm(`Are you sure you want to delete the requisition "${req.title}"?`, async () => {
+      closeConfirm();
+      try {
+        await recruiterApiService.deleteRequisition(req.id);
+        toast.success("Requisition deleted successfully");
+        loadRequisitions();
+      } catch (e) {
+        toast.error(e.response?.data?.message || "Failed to delete requisition");
+      }
+    });
   };
 
   // SCL_13: Delete only for positions still in NEW status (parent requisition not yet approved).
-  const handleDeletePosition = async (pos, requisitionId) => {
-    if (!window.confirm(`Delete position "${pos.positionTitleName}"? This cannot be undone.`)) return;
-    try {
-      await recruiterApiService.deletePosition(pos.id);
-      toast.success("Position deleted successfully");
-      const r = await recruiterApiService.getPositionsByRequisition(requisitionId);
-      setPositionsByReq((prev) => ({ ...prev, [requisitionId]: r.data.data || [] }));
-    } catch (e) {
-      toast.error(e.response?.data?.message || "Failed to delete position");
-    }
+  const handleDeletePosition = (pos, requisitionId) => {
+    askConfirm(`Are you sure you want to delete the position "${pos.positionTitleName}"?`, async () => {
+      closeConfirm();
+      try {
+        await recruiterApiService.deletePosition(pos.id);
+        toast.success("Position deleted successfully");
+        const r = await recruiterApiService.getPositionsByRequisition(requisitionId);
+        setPositionsByReq((prev) => ({ ...prev, [requisitionId]: r.data.data || [] }));
+      } catch (e) {
+        toast.error(e.response?.data?.message || "Failed to delete position");
+      }
+    });
   };
 
   const years = Array.from(
@@ -232,7 +242,13 @@ const JobPostings = () => {
           <select
             className="form-select filter-pill"
             value={yearFilter}
-            onChange={(e) => { setYearFilter(e.target.value); setCustomYearFrom(""); setCustomYearTo(""); }}
+            onChange={(e) => {
+              const val = e.target.value;
+              setYearFilter(val);
+              setCustomYearFrom("");
+              setCustomYearTo("");
+              if (val === "CUSTOM") setMonthFilter("");
+            }}
           >
             <option value="">All Years</option>
             {years.map((y) => <option key={y} value={y}>{`Year - ${y}`}</option>)}
@@ -262,7 +278,12 @@ const JobPostings = () => {
           </>
         )}
         <div className="col-lg-auto col-md-4">
-          <select className="form-select filter-pill" value={monthFilter} onChange={(e) => setMonthFilter(e.target.value)}>
+          <select
+            className="form-select filter-pill"
+            value={monthFilter}
+            disabled={yearFilter === "CUSTOM"}
+            onChange={(e) => setMonthFilter(e.target.value)}
+          >
             {MONTH_OPTIONS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
           </select>
         </div>
@@ -323,8 +344,17 @@ const JobPostings = () => {
 
       {selected.length > 0 && (
         <div className="bulk-actions-bar">
-          <button className="btn btn-blue-dark" onClick={handleSubmit}>
-            <i className="bi bi-send me-1" /> Submit for Approval ({selected.length})
+          <button className="btn btn-blue-dark" onClick={handleSubmit} disabled={submitting}>
+            {submitting ? (
+              <>
+                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" />
+                Submitting...
+              </>
+            ) : (
+              <>
+                <i className="bi bi-send me-1" /> Submit for Approval ({selected.length})
+              </>
+            )}
           </button>
         </div>
       )}
@@ -404,6 +434,15 @@ const JobPostings = () => {
                       onClick={(e) => { e.stopPropagation(); navigate("/job-postings/create-requisition", { state: { requisition: req } }); }}
                     >
                       <i className="bi bi-pencil" />
+                    </button>
+                  )}
+                  {req.status !== "NEW" && (
+                    <button
+                      className="icon-btn-circle"
+                      title="View Requisition"
+                      onClick={(e) => { e.stopPropagation(); navigate("/job-postings/create-requisition", { state: { requisition: req, viewOnly: true } }); }}
+                    >
+                      <i className="bi bi-eye" />
                     </button>
                   )}
                   {req.status === "NEW" && (

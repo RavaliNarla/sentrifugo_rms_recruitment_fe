@@ -95,7 +95,7 @@ const PositionTitlesPage = () => {
   };
 
   const handleDelete = (item) => {
-    askConfirm(`Delete "${item.name}"?`, async () => {
+    askConfirm(`Are you sure you want to delete the position title "${item.name}"?`, async () => {
       closeConfirm();
       try {
         await masterApiService.deletePositionTitle(item.id);

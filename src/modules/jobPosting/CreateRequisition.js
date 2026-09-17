@@ -15,6 +15,7 @@ const CreateRequisition = () => {
   const navigate = useNavigate();
   const routeLocation = useLocation();
   const editingRequisition = routeLocation.state?.requisition;
+  const viewOnly = routeLocation.state?.viewOnly === true;
 
   const [form, setForm] = useState(
     editingRequisition
@@ -28,6 +29,7 @@ const CreateRequisition = () => {
   );
 
   const handleSave = async () => {
+    if (viewOnly) return;
     if (!form.title || !form.description || !form.startDate || !form.expectedFulfilmentDate) {
       toast.error("All fields are required");
       return;
@@ -62,14 +64,21 @@ const CreateRequisition = () => {
   return (
     <div className="app-card">
       <div className="list-card-title-wrap mb-1">
-        <i className="bi bi-file-earmark-plus-fill" />
-        <span className="list-card-title" style={{ fontSize: "1.1rem" }}>{editingRequisition ? "Edit Requisition" : "Create New Requisition"}</span>
+        <i className={`bi ${viewOnly ? "bi-eye-fill" : "bi-file-earmark-plus-fill"}`} />
+        <span className="list-card-title" style={{ fontSize: "1.1rem" }}>
+          {viewOnly ? "View Requisition" : editingRequisition ? "Edit Requisition" : "Create New Requisition"}
+        </span>
       </div>
       <div className="page-subtitle mb-4">
-        {editingRequisition ? "Update the requisition details below." : "Fill in the details below to raise a new hiring requisition."}
+        {viewOnly
+          ? "Requisition details."
+          : editingRequisition
+          ? "Update the requisition details below."
+          : "Fill in the details below to raise a new hiring requisition."}
       </div>
       <hr className="mb-4" style={{ borderColor: "var(--card-border)" }} />
 
+      <fieldset disabled={viewOnly} style={{ border: 0, padding: 0, margin: 0 }}>
       <div className="row">
         <div className="col-md-8 mb-3">
           <label className="form-label">Requisition Title <span className="text-danger">*</span></label>
@@ -112,10 +121,15 @@ const CreateRequisition = () => {
           <small className="text-muted">Target date by which this requirement should be filled.</small>
         </div>
       </div>
+      </fieldset>
 
       <div className="d-flex justify-content-end gap-2 mt-3">
-        <button className="btn btn-outline-secondary" onClick={() => navigate("/job-postings")}>Cancel</button>
-        <button className="btn btn-primary" onClick={handleSave}>{editingRequisition ? "Save Changes" : "Save & Add Position"}</button>
+        <button className="btn btn-outline-secondary" onClick={() => navigate("/job-postings")}>
+          {viewOnly ? "Back" : "Cancel"}
+        </button>
+        {!viewOnly && (
+          <button className="btn btn-primary" onClick={handleSave}>{editingRequisition ? "Save Changes" : "Save & Add Position"}</button>
+        )}
       </div>
     </div>
   );

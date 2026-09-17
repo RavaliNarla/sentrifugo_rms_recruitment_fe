@@ -39,6 +39,12 @@ const masterApiService = {
   updateSpecialization: (id, payload) => masterApi.put(`/specializations/update/${id}`, payload),
   deleteSpecialization: (id) => masterApi.delete(`/specializations/delete/${id}`),
 
+  // Certifications (optional, single-select field on Add Position)
+  getCertifications: () => masterApi.get("/certifications/all"),
+  addCertification: (payload) => masterApi.post("/certifications/add", payload),
+  updateCertification: (id, payload) => masterApi.put(`/certifications/update/${id}`, payload),
+  deleteCertification: (id) => masterApi.delete(`/certifications/delete/${id}`),
+
   // Dropdown data
   getStates: () => masterApi.get("/master-dd-data/get/states"),
   getApprovedByRoles: () => masterApi.get("/master-dd-data/get/approved-by-roles"),

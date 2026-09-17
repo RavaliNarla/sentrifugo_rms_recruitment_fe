@@ -70,7 +70,7 @@ const LocationsPage = () => {
   };
 
   const handleDelete = (loc) => {
-    askConfirm(`Delete "${loc.name}"?`, async () => {
+    askConfirm(`Are you sure you want to delete the location "${loc.name}"?`, async () => {
       closeConfirm();
       try {
         await masterApiService.deleteLocation(loc.id);

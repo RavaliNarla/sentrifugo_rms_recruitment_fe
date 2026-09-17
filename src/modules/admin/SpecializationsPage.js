@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import masterApiService from "../../core/masterApiService";
+import ConfirmModal from "../../shared/ConfirmModal";
 
 const EMPTY_FORM = { name: "", educationQualificationId: "" };
 
@@ -15,6 +16,10 @@ const SpecializationsPage = () => {
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
+  const [confirmState, setConfirmState] = useState({ show: false, message: "", onConfirm: null });
+
+  const askConfirm = (message, action) => setConfirmState({ show: true, message, onConfirm: action });
+  const closeConfirm = () => setConfirmState({ show: false, message: "", onConfirm: null });
 
   const loadData = async () => {
     setLoading(true);
@@ -68,15 +73,17 @@ const SpecializationsPage = () => {
     }
   };
 
-  const handleDelete = async (item) => {
-    if (!window.confirm(`Delete "${item.name}"?`)) return;
-    try {
-      await masterApiService.deleteSpecialization(item.id);
-      toast.success("Specialization deleted successfully");
-      loadData();
-    } catch (e) {
-      toast.error(e.response?.data?.message || "Delete failed");
-    }
+  const handleDelete = (item) => {
+    askConfirm(`Are you sure you want to delete the specialization "${item.name}"?`, async () => {
+      closeConfirm();
+      try {
+        await masterApiService.deleteSpecialization(item.id);
+        toast.success("Specialization deleted successfully");
+        loadData();
+      } catch (e) {
+        toast.error(e.response?.data?.message || "Delete failed");
+      }
+    });
   };
 
   return (
@@ -162,12 +169,19 @@ const SpecializationsPage = () => {
               </div>
               <div className="modal-footer">
                 <button className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
-                <button className="btn btn-primary" onClick={handleSave}>Save</button>
+                <button className="btn btn-primary" onClick={handleSave}>{editing ? "Update" : "Save"}</button>
               </div>
             </div>
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        show={confirmState.show}
+        message={confirmState.message}
+        onConfirm={confirmState.onConfirm}
+        onCancel={closeConfirm}
+      />
     </div>
   );
 };

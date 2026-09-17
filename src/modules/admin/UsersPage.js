@@ -66,7 +66,7 @@ const UsersPage = () => {
   };
 
   const handleDelete = (user) => {
-    askConfirm(`Delete user "${user.name}"?`, async () => {
+    askConfirm(`Are you sure you want to delete the user "${user.name}"?`, async () => {
       closeConfirm();
       try {
         await masterApiService.deleteUser(user.id);

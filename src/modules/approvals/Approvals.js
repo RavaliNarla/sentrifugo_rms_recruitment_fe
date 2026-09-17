@@ -1,20 +1,23 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import recruiterApiService from "../../core/recruiterApiService";
 import { formatDate } from "../../shared/dateFormat";
+import "../jobPosting/JobPostings.css";
 
-const STATUS_BADGE = {
-  NEW: "secondary",
-  L1_PENDING: "warning",
-  L2_PENDING: "warning",
-  APPROVED: "success",
-  L1_REJECTED: "danger",
-  L2_REJECTED: "danger",
-  FULFILLED: "info",
+const STATUS_PILL = {
+  NEW: "status-pill-secondary",
+  L1_PENDING: "status-pill-warning",
+  L2_PENDING: "status-pill-warning",
+  APPROVED: "status-pill-success",
+  L1_REJECTED: "status-pill-danger",
+  L2_REJECTED: "status-pill-danger",
+  FULFILLED: "status-pill-info",
 };
 
 const Approvals = () => {
+  const navigate = useNavigate();
   const privileges = useSelector((state) => state.user.privileges) || {};
   const isL2 = !!privileges.L2Approval;
   const isL1 = !!privileges.L1Approval;
@@ -79,7 +82,7 @@ const Approvals = () => {
   const pendingStatus = isL2 ? "L2_PENDING" : "L1_PENDING";
 
   return (
-    <div>
+    <div className="job-postings-page">
       <div className="d-flex justify-content-between align-items-center mb-3">
         <div className="list-card-title-wrap">
           <i className="bi bi-check2-square" />
@@ -106,53 +109,104 @@ const Approvals = () => {
       ) : (
         requisitions.map((req) => {
           const positions = positionsByReq[req.id] || [];
+          const departmentCount = new Set(positions.map((p) => p.departmentName)).size;
+          const vacancyCount = positions.reduce((sum, p) => sum + (p.vacancies || 0), 0);
+          const positionsGroupedByDept = positions.reduce((acc, pos) => {
+            const key = pos.departmentName || "Unassigned";
+            if (!acc[key]) acc[key] = [];
+            acc[key].push(pos);
+            return acc;
+          }, {});
+
           return (
-          <div className="card mb-2" key={req.id}>
-            <div className="card-body d-flex align-items-start gap-2">
-              {req.status === pendingStatus && (isL1 || isL2) && (
-                <input
-                  type="checkbox"
-                  className="form-check-input mt-1"
-                  checked={selected.includes(req.id)}
-                  onChange={() => toggleSelect(req.id)}
-                />
-              )}
-              <div className="flex-grow-1">
-                <div className="d-flex justify-content-between align-items-start">
+            <div className="requisition-card" key={req.id}>
+              <div className="d-flex justify-content-between align-items-start" style={{ cursor: "pointer" }} onClick={() => toggleExpand(req.id)}>
+                <div className="d-flex align-items-start gap-2">
+                  <input
+                    type="checkbox"
+                    className="form-check-input mt-1"
+                    checked={selected.includes(req.id)}
+                    disabled={req.status !== pendingStatus}
+                    onClick={(e) => e.stopPropagation()}
+                    onChange={() => toggleSelect(req.id)}
+                  />
                   <div>
-                    <span className="badge bg-light text-dark me-2">{req.requisitionCode}</span>
-                    <span className={`badge bg-${STATUS_BADGE[req.status] || "secondary"} me-2`}>{req.status}</span>
-                    <span className="fw-bold">{req.title}</span>
-                    <div className="text-muted small mt-1">{req.description}</div>
-                    <div className="text-muted small">Start: {formatDate(req.startDate)} | Expected Fulfilment: {formatDate(req.expectedFulfilmentDate)}</div>
-                    {req.comments && <div className="text-muted small">Last comments: {req.comments}</div>}
+                    <div className="d-flex align-items-center gap-2 mb-1">
+                      <span className="badge bg-light text-dark border">{req.requisitionCode}</span>
+                      <span className={`status-pill ${STATUS_PILL[req.status] || "status-pill-secondary"}`}>
+                        {req.status === "FULFILLED" ? "Fulfilled" : req.status.replace(/_/g, " ")}
+                      </span>
+                    </div>
+                    <div className="req-code">{req.title}</div>
+                    <div className="req-dates">
+                      <span><i className="bi bi-calendar-event" />Start: {formatDate(req.startDate)}</span>
+                      <span><i className="bi bi-calendar-check" />Expected Fulfilment: {formatDate(req.expectedFulfilmentDate)}</span>
+                    </div>
+                    {req.comments && <div className="text-muted fs-13 mt-1">Last comments: {req.comments}</div>}
                   </div>
-                  <button type="button" className="icon-btn-circle" onClick={() => toggleExpand(req.id)}>
+                </div>
+
+                <div className="d-flex align-items-center gap-3">
+                  <div className="req-meta d-none d-md-flex me-3">
+                    <span><i className="bi bi-diagram-3" />Departments - {departmentCount}</span>
+                    <span><i className="bi bi-briefcase" />Positions - {positions.length}</span>
+                    <span><i className="bi bi-people" />Vacancies - {vacancyCount}</span>
+                  </div>
+
+                  <button
+                    className="icon-btn-circle"
+                    title="View Requisition"
+                    onClick={(e) => { e.stopPropagation(); navigate("/job-postings/create-requisition", { state: { requisition: req, viewOnly: true } }); }}
+                  >
+                    <i className="bi bi-eye" />
+                  </button>
+                  <button className="icon-btn-circle" onClick={(e) => { e.stopPropagation(); toggleExpand(req.id); }}>
                     <i className={`bi bi-chevron-${expanded[req.id] ? "up" : "down"}`} />
                   </button>
                 </div>
-
-                {expanded[req.id] && (
-                  <div className="mt-2 pt-2 border-top">
-                    {positions.length === 0 && <div className="text-muted small">No positions added yet.</div>}
-                    {positions.map((pos) => (
-                      <div key={pos.id} className="small mb-1">
-                        <span className="fw-bold">{pos.positionTitleName}</span>
-                        {" — "}
-                        <span>{pos.departmentName}</span>
-                        {" · "}
-                        <span>{pos.locationName}</span>
-                        {" · "}
-                        <span>Vacancies: {pos.vacancies}</span>
-                        {" · "}
-                        <span>Experience: {pos.experienceYears ?? "-"} yrs</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
+
+              {expanded[req.id] && (
+                <div className="mt-3 pt-3 border-top">
+                  {Object.keys(positionsGroupedByDept).length === 0 && (
+                    <div className="text-muted">No positions added yet.</div>
+                  )}
+                  {Object.entries(positionsGroupedByDept).map(([deptName, deptPositions]) => (
+                    <div className="department-card" key={deptName}>
+                      <div className="department-header d-flex align-items-center gap-2">
+                        <i className="bi bi-diagram-3" /> {deptName}
+                        <span className="badge bg-white text-dark ms-2">{deptPositions.length} position{deptPositions.length !== 1 ? "s" : ""}</span>
+                      </div>
+                      {deptPositions.map((pos) => (
+                        <div className="position-card-inner" key={pos.id}>
+                          <div className="position-row">
+                            <div className="position-row-main">
+                              <div className="position-title">{pos.positionTitleName}</div>
+                              <div className="position-meta-inline">
+                                <span><b>Location:</b> {pos.locationName}</span>
+                                <span><b>Vacancies:</b> {pos.vacancies}</span>
+                                <span><b>Experience:</b> {pos.experienceYears ?? "-"} yrs</span>
+                                <span><b>Education:</b> {pos.educationQualificationName || "-"}</span>
+                              </div>
+                            </div>
+                            <div className="position-actions" onClick={(e) => e.stopPropagation()}>
+                              <button
+                                type="button"
+                                className="icon-btn-circle"
+                                title="View Position"
+                                onClick={() => navigate(`/job-postings/${req.id}/add-position`, { state: { position: pos, viewOnly: true } })}
+                              >
+                                <i className="bi bi-eye" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-          </div>
           );
         })
       )}
