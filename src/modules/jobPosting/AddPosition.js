@@ -64,19 +64,17 @@ const AddPosition = () => {
   };
 
   useEffect(() => {
-    Promise.all([
-      masterApiService.getDepartments(),
-      masterApiService.getLocations(),
-      masterApiService.getEducationQualifications(),
-      masterApiService.getApprovedByRoles(),
-      masterApiService.getCertifications(),
-    ]).then(([d, l, e, a, c]) => {
-      setDepartments(d.data.data || []);
-      setLocations(l.data.data || []);
-      setEducationQualifications(e.data.data || []);
-      setApprovedByRoles(a.data.data || []);
-      setCertifications(c.data.data || []);
-    }).catch(() => toast.error("Failed to load master data"));
+    // Load masters independently so one failure (e.g. certifications) does not blank all dropdowns.
+    const load = (label, promise, setter) =>
+      promise
+        .then((res) => setter(res.data.data || []))
+        .catch(() => toast.error(`Failed to load ${label}`));
+
+    load("departments", masterApiService.getDepartments(), setDepartments);
+    load("locations", masterApiService.getLocations(), setLocations);
+    load("education qualifications", masterApiService.getEducationQualifications(), setEducationQualifications);
+    load("approved-by roles", masterApiService.getApprovedByRoles(), setApprovedByRoles);
+    load("certifications", masterApiService.getCertifications(), setCertifications);
 
     if (editingPosition) {
       setForm({

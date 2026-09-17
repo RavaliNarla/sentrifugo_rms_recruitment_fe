@@ -43,11 +43,27 @@ const MONTH_OPTIONS = [
   { value: "12", label: "December" },
 ];
 
+/** SCL_53: BOB-style "09-09-2026 12.45pm" from ISO datetime. */
+const formatApprovalDateTime = (iso) => {
+  if (!iso) return "-";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return String(iso);
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const yyyy = d.getFullYear();
+  let hours = d.getHours();
+  const minutes = String(d.getMinutes()).padStart(2, "0");
+  const ampm = hours >= 12 ? "pm" : "am";
+  hours = hours % 12 || 12;
+  return `${dd}-${mm}-${yyyy} ${hours}.${minutes}${ampm}`;
+};
+
 const JobPostings = () => {
   const navigate = useNavigate();
   const [requisitions, setRequisitions] = useState([]);
   const [positionsByReq, setPositionsByReq] = useState({});
   const [expanded, setExpanded] = useState({});
+  const [historyModal, setHistoryModal] = useState({ show: false, requisition: null, rows: [], loading: false });
   const [selected, setSelected] = useState([]);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -156,6 +172,20 @@ const JobPostings = () => {
       }
     });
   };
+
+  const openApprovalHistory = async (req, e) => {
+    e.stopPropagation();
+    setHistoryModal({ show: true, requisition: req, rows: [], loading: true });
+    try {
+      const res = await recruiterApiService.getRequisitionApprovalHistory(req.id);
+      setHistoryModal({ show: true, requisition: req, rows: res.data.data || [], loading: false });
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to load approval history");
+      setHistoryModal({ show: true, requisition: req, rows: [], loading: false });
+    }
+  };
+
+  const closeApprovalHistory = () => setHistoryModal({ show: false, requisition: null, rows: [], loading: false });
 
   // SCL_13: Delete only for positions still in NEW status (parent requisition not yet approved).
   const handleDeletePosition = (pos, requisitionId) => {
@@ -395,12 +425,21 @@ const JobPostings = () => {
                         {req.status === "FULFILLED" ? "Fulfilled" : req.status.replace(/_/g, " ")}
                       </span>
                     </div>
-                    <div className="req-code">{req.title}</div>
+                    <div className="d-flex align-items-center gap-2">
+                      <div className="req-code">{req.title}</div>
+                      <button
+                        type="button"
+                        className="btn btn-link p-0 lh-1 history-icon-btn"
+                        title="Approval History"
+                        onClick={(e) => openApprovalHistory(req, e)}
+                      >
+                        <i className="bi bi-clock-history" />
+                      </button>
+                    </div>
                     <div className="req-dates">
                       <span><i className="bi bi-calendar-event" />Start: {formatDate(req.startDate)}</span>
                       <span><i className="bi bi-calendar-check" />Expected Fulfilment: {formatDate(req.expectedFulfilmentDate)}</span>
                     </div>
-                    {req.comments && <div className="text-muted fs-13 mt-1">Comments: {req.comments}</div>}
                   </div>
                 </div>
 
@@ -544,6 +583,58 @@ const JobPostings = () => {
         onConfirm={confirmState.onConfirm}
         onCancel={closeConfirm}
       />
+
+      {historyModal.show && (
+        <div className="modal show d-block" style={{ background: "rgba(15,60,30,0.45)" }} onClick={closeApprovalHistory}>
+          <div className="modal-dialog modal-dialog-centered modal-lg" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-content">
+              <div className="modal-header">
+                <div>
+                  <h5 className="modal-title mb-0">Approval History</h5>
+                  <div className="text-muted fs-13">
+                    Track approvals and decisions
+                    {historyModal.requisition ? ` — ${historyModal.requisition.requisitionCode}` : ""}
+                  </div>
+                </div>
+                <button type="button" className="btn-close" onClick={closeApprovalHistory} />
+              </div>
+              <div className="modal-body">
+                {historyModal.loading ? (
+                  <div className="text-muted">Loading...</div>
+                ) : historyModal.rows.length === 0 ? (
+                  <div className="text-muted text-center py-4">No approval history yet for this requisition.</div>
+                ) : (
+                  <div className="table-responsive">
+                    <table className="table table-bordered align-middle mb-0 approval-history-table">
+                      <thead>
+                        <tr>
+                          <th>Approver</th>
+                          <th>Approval Date</th>
+                          <th>Status</th>
+                          <th>Comments</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {historyModal.rows.map((row) => (
+                          <tr key={row.id}>
+                            <td>{row.approverName || "-"}</td>
+                            <td>{formatApprovalDateTime(row.approvalDate)}</td>
+                            <td>{(row.status || "").replace(/_/g, " ")}</td>
+                            <td>{row.comments?.trim() ? row.comments : "-"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={closeApprovalHistory}>Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

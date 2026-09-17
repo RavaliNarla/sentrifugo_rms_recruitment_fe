@@ -1,76 +1,110 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import recruiterApiService from "../../../core/recruiterApiService";
-import { formatDate } from "../../../shared/dateFormat";
-
-const computeCapacity = (window) => {
-  if (!window.interviewDate || !window.startTime || !window.endTime || !window.durationMinutes) return 0;
-  const start = toMinutes(window.startTime);
-  const end = toMinutes(window.endTime);
-  const duration = Number(window.durationMinutes);
-  if (duration <= 0 || end <= start) return 0;
-  return Math.floor((end - start) / duration);
-};
 
 const toMinutes = (time) => {
+  if (!time) return 0;
   const [h, m] = time.split(":").map(Number);
   return h * 60 + m;
 };
 
-const EMPTY_WINDOW = { panelId: "", interviewDate: "", startTime: "", endTime: "", durationMinutes: 30 };
+const slotCount = (startTime, endTime, durationMinutes) => {
+  const duration = Number(durationMinutes);
+  if (!startTime || !endTime || !duration || duration <= 0) return 0;
+  const start = toMinutes(startTime);
+  const end = toMinutes(endTime);
+  if (end <= start) return 0;
+  return Math.floor((end - start) / duration);
+};
 
-const ScheduleInterviewModal = ({ positionId, candidates, onClose, onScheduled }) => {
+/** Build a short preview of assigned times for the selected candidates. */
+const previewSlots = (startTime, endTime, durationMinutes, count) => {
+  const duration = Number(durationMinutes);
+  const start = toMinutes(startTime);
+  const end = toMinutes(endTime);
+  if (!duration || end <= start) return [];
+  const slots = [];
+  for (let cursor = start; cursor + duration <= end && slots.length < count; cursor += duration) {
+    const sH = String(Math.floor(cursor / 60)).padStart(2, "0");
+    const sM = String(cursor % 60).padStart(2, "0");
+    const e = cursor + duration;
+    const eH = String(Math.floor(e / 60)).padStart(2, "0");
+    const eM = String(e % 60).padStart(2, "0");
+    slots.push(`${sH}:${sM} – ${eH}:${eM}`);
+  }
+  return slots;
+};
+
+/**
+ * Simple one-day schedule: one panel, one date, one time window.
+ * Default end 17:00, duration 30 minutes. Capacity is derived from the window.
+ */
+const ScheduleInterviewModal = ({ candidates, round = 1, onClose, onScheduled }) => {
   const [panels, setPanels] = useState([]);
-  const [windows, setWindows] = useState([{ ...EMPTY_WINDOW }]);
+  const [panelId, setPanelId] = useState("");
+  const [interviewDate, setInterviewDate] = useState("");
+  const [startTime, setStartTime] = useState("09:00");
+  const [endTime, setEndTime] = useState("17:00");
+  const [durationMinutes, setDurationMinutes] = useState(30);
   const [saving, setSaving] = useState(false);
+  const interviewRound = Number(round) > 0 ? Number(round) : 1;
 
   useEffect(() => {
-    recruiterApiService.getActivePanelsByPosition(positionId)
+    recruiterApiService.getPanels()
       .then((res) => setPanels(res.data.data || []))
-      .catch(() => toast.error("Failed to load assigned panels"));
-  }, [positionId]);
+      .catch(() => toast.error("Failed to load panels"));
+  }, []);
 
-  const updateWindow = (idx, field, value) => {
-    setWindows((prev) => prev.map((w, i) => (i === idx ? { ...w, [field]: value } : w)));
-  };
+  const capacity = useMemo(
+    () => slotCount(startTime, endTime, durationMinutes),
+    [startTime, endTime, durationMinutes]
+  );
 
-  const addWindow = () => setWindows((prev) => [...prev, { ...EMPTY_WINDOW }]);
-  const removeWindow = (idx) => setWindows((prev) => prev.filter((_, i) => i !== idx));
+  const previews = useMemo(
+    () => previewSlots(startTime, endTime, durationMinutes, candidates.length),
+    [startTime, endTime, durationMinutes, candidates.length]
+  );
 
-  const totalCapacity = windows.reduce((sum, w) => sum + computeCapacity(w), 0);
-
-  const selectedPanel = (panelId) => panels.find((p) => p.panelId === panelId);
+  const selectedPanel = panels.find((p) => p.id === panelId);
+  const enoughSlots = capacity >= candidates.length;
 
   const handleSchedule = async () => {
-    if (windows.some((w) => !w.panelId || !w.interviewDate || !w.startTime || !w.endTime)) {
-      toast.error("Fill in all panel window fields");
+    if (!panelId) {
+      toast.error("Select a panel");
       return;
     }
-    if (windows.some((w) => !w.durationMinutes || Number(w.durationMinutes) <= 0)) {
+    if (!interviewDate) {
+      toast.error("Select an interview date");
+      return;
+    }
+    if (!startTime || !endTime) {
+      toast.error("Start and end time are required");
+      return;
+    }
+    if (toMinutes(endTime) <= toMinutes(startTime)) {
+      toast.error("End time must be after start time");
+      return;
+    }
+    if (!durationMinutes || Number(durationMinutes) <= 0) {
       toast.error("Duration must be greater than 0 minutes");
       return;
     }
-    if (windows.some((w) => toMinutes(w.endTime) <= toMinutes(w.startTime))) {
-      toast.error("End time must be after start time for each panel window");
-      return;
-    }
-    if (totalCapacity < candidates.length) {
-      toast.error(`Not enough slots (${totalCapacity}) for ${candidates.length} candidate(s). Add more panel time.`);
+    if (!enoughSlots) {
+      toast.error(`Only ${capacity} slot(s) fit in this window, but ${candidates.length} candidate(s) are selected.`);
       return;
     }
     setSaving(true);
     try {
       await recruiterApiService.scheduleInterviews({
         candidateIds: candidates.map((c) => c.id),
-        panelWindows: windows.map((w) => ({
-          panelId: w.panelId,
-          interviewDate: w.interviewDate,
-          startTime: w.startTime,
-          endTime: w.endTime,
-          durationMinutes: Number(w.durationMinutes),
-        })),
+        panelId,
+        interviewDate,
+        startTime: startTime.length === 5 ? `${startTime}:00` : startTime,
+        endTime: endTime.length === 5 ? `${endTime}:00` : endTime,
+        durationMinutes: Number(durationMinutes),
+        round: interviewRound,
       });
-      toast.success(`Scheduled ${candidates.length} candidate(s) for interview`);
+      toast.success(`Scheduled ${candidates.length} candidate(s) for Round ${interviewRound}. Each will receive an email.`);
       onScheduled();
     } catch (e) {
       toast.error(e.response?.data?.message || "Failed to schedule interviews");
@@ -80,81 +114,102 @@ const ScheduleInterviewModal = ({ positionId, candidates, onClose, onScheduled }
   };
 
   return (
-    <div className="modal show d-block" style={{ background: "rgba(0,0,0,0.5)" }}>
-      <div className="modal-dialog modal-lg modal-dialog-centered">
+    <div className="modal show d-block" style={{ background: "rgba(15,60,30,0.45)" }}>
+      <div className="modal-dialog modal-dialog-centered modal-lg">
         <div className="modal-content">
           <div className="modal-header">
-            <h5 className="modal-title">Schedule Interview for {candidates.length} candidate(s)</h5>
-            <button className="btn-close" onClick={onClose} />
+            <div>
+              <h5 className="modal-title mb-0">Schedule Interviews</h5>
+              <div className="text-muted small">
+                {candidates.length} candidate(s) · Round {interviewRound} · one day at a time
+              </div>
+            </div>
+            <button type="button" className="btn-close" onClick={onClose} />
           </div>
           <div className="modal-body">
             {panels.length === 0 && (
-              <div className="alert alert-warning">
-                No panels are assigned to this position yet. Assign one from Committee Management first.
+              <div className="alert alert-warning py-2">
+                No panels yet. Create one under Committee Management → Manage Panels.
               </div>
             )}
 
-            {windows.map((w, idx) => {
-              const panel = selectedPanel(w.panelId);
-              return (
-                <div key={idx} className="border rounded p-3 mb-2">
-                  <div className="row g-2 align-items-end">
-                    <div className="col-md-3">
-                      <label className="form-label small">Panel</label>
-                      <select className="form-select form-select-sm" value={w.panelId} onChange={(e) => updateWindow(idx, "panelId", e.target.value)}>
-                        <option value="">Select Panel</option>
-                        {panels.map((p) => <option key={p.id} value={p.panelId}>{p.panelName}</option>)}
-                      </select>
-                      {panel && <small className="text-muted">{formatDate(panel.startDate)} to {formatDate(panel.endDate)}</small>}
-                    </div>
-                    <div className="col-md-2">
-                      <label className="form-label small">Date</label>
-                      <input
-                        type="date"
-                        className="form-control form-control-sm"
-                        min={panel?.startDate}
-                        max={panel?.endDate}
-                        value={w.interviewDate}
-                        onChange={(e) => updateWindow(idx, "interviewDate", e.target.value)}
-                      />
-                    </div>
-                    <div className="col-md-2">
-                      <label className="form-label small">Start Time</label>
-                      <input type="time" className="form-control form-control-sm" value={w.startTime} onChange={(e) => updateWindow(idx, "startTime", e.target.value)} />
-                    </div>
-                    <div className="col-md-2">
-                      <label className="form-label small">End Time</label>
-                      <input type="time" className="form-control form-control-sm" value={w.endTime} onChange={(e) => updateWindow(idx, "endTime", e.target.value)} />
-                    </div>
-                    <div className="col-md-2">
-                      <label className="form-label small">Duration (mins)</label>
-                      <select className="form-select form-select-sm" value={w.durationMinutes} onChange={(e) => updateWindow(idx, "durationMinutes", e.target.value)}>
-                        {[10, 15, 30, 45, 60].map((d) => <option key={d} value={d}>{d}</option>)}
-                      </select>
-                    </div>
-                    <div className="col-md-1">
-                      <button className="btn btn-sm btn-outline-danger" onClick={() => removeWindow(idx)} disabled={windows.length === 1}>
-                        <i className="bi bi-trash" />
-                      </button>
-                    </div>
-                  </div>
-                  <small className="text-muted">Capacity: {computeCapacity(w)} slot(s)</small>
-                </div>
-              );
-            })}
+            <div className="mb-3">
+              <span className="badge text-bg-light border text-app-primary">
+                Round {interviewRound}{interviewRound > 1 ? " (next round)" : ""}
+              </span>
+            </div>
 
-            <button className="btn btn-sm btn-outline-primary" onClick={addWindow}>
-              <i className="bi bi-plus-lg" /> Add Panel
-            </button>
+            <div className="row g-3">
+              <div className="col-md-6">
+                <label className="form-label">Panel <span className="text-danger">*</span></label>
+                <select className="form-select" value={panelId} onChange={(e) => setPanelId(e.target.value)}>
+                  <option value="">Select panel</option>
+                  {panels.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}{(p.memberNames || []).length ? ` (${p.memberNames.length} members)` : ""}
+                    </option>
+                  ))}
+                </select>
+                {selectedPanel?.memberNames?.length > 0 && (
+                  <div className="text-muted small mt-1">Members: {selectedPanel.memberNames.join(", ")}</div>
+                )}
+              </div>
+              <div className="col-md-6">
+                <label className="form-label">Interview date <span className="text-danger">*</span></label>
+                <input
+                  type="date"
+                  className="form-control"
+                  min={new Date().toISOString().slice(0, 10)}
+                  value={interviewDate}
+                  onChange={(e) => setInterviewDate(e.target.value)}
+                />
+              </div>
+              <div className="col-md-4">
+                <label className="form-label">Start time <span className="text-danger">*</span></label>
+                <input type="time" className="form-control" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
+              </div>
+              <div className="col-md-4">
+                <label className="form-label">End time <span className="text-danger">*</span></label>
+                <input type="time" className="form-control" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
+                <div className="text-muted small mt-1">Default 5:00 PM</div>
+              </div>
+              <div className="col-md-4">
+                <label className="form-label">Each interview (mins)</label>
+                <select className="form-select" value={durationMinutes} onChange={(e) => setDurationMinutes(Number(e.target.value))}>
+                  {[15, 20, 30, 45, 60].map((d) => <option key={d} value={d}>{d} minutes</option>)}
+                </select>
+              </div>
+            </div>
+
+            <div className={`mt-3 p-3 rounded ${enoughSlots ? "bg-light" : "alert alert-warning mb-0"}`}>
+              <div className="fw-semibold mb-1">
+                {capacity} interview slot(s) fit · {candidates.length} candidate(s) selected
+                {!enoughSlots && " — not enough room"}
+              </div>
+              {enoughSlots && previews.length > 0 && (
+                <div className="small text-muted">
+                  Planned times: {previews.join(", ")}
+                  {capacity > candidates.length ? ` (+${capacity - candidates.length} spare)` : ""}
+                </div>
+              )}
+            </div>
 
             <div className="mt-3">
-              <b>Total capacity: {totalCapacity}</b> / {candidates.length} candidate(s) selected
+              <div className="small text-muted mb-1">Candidates</div>
+              <ul className="mb-0 ps-3">
+                {candidates.map((c) => <li key={c.id}>{c.name}</li>)}
+              </ul>
             </div>
           </div>
           <div className="modal-footer">
-            <button className="btn btn-secondary" onClick={onClose}>Cancel</button>
-            <button className="btn btn-primary" disabled={saving || panels.length === 0} onClick={handleSchedule}>
-              {saving ? "Scheduling..." : "Apply to All"}
+            <button type="button" className="btn btn-secondary" onClick={onClose}>Cancel</button>
+            <button
+              type="button"
+              className="btn btn-primary"
+              disabled={saving || panels.length === 0 || !enoughSlots}
+              onClick={handleSchedule}
+            >
+              {saving ? "Scheduling..." : "Schedule & email candidates"}
             </button>
           </div>
         </div>

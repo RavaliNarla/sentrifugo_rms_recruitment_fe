@@ -27,8 +27,8 @@ const tomorrowStr = () => {
   return d.toISOString().split("T")[0];
 };
 
-// Offers in these states are still recruiter-editable (draft/rejected-and-redo); anything past that is locked (SCL_41).
-const REGENERATABLE = ["GENERATED", "L1_REJECTED", "L2_REJECTED"];
+// SCL_41: selectable until candidate accepts or rejects (SENT can be regenerated/resent).
+const LOCKED_OFFER_STATUSES = ["ACCEPTED", "REJECTED"];
 
 const OfferPoolTab = ({ positionId }) => {
   const [candidates, setCandidates] = useState([]);
@@ -81,25 +81,22 @@ const OfferPoolTab = ({ positionId }) => {
 
   const canSelect = (c) => {
     const offer = offers[c.id];
-    return !offer || REGENERATABLE.includes(offer.status);
+    return !offer || !LOCKED_OFFER_STATUSES.includes(offer.status);
   };
 
   const toggleSelect = (id) => {
     setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   };
 
+  // SCL_36: template-only preview with placeholders when no candidate is selected.
   const handlePreview = async () => {
     if (!templateId) {
       setErrors((prev) => ({ ...prev, templateId: "Select an offer template" }));
       return;
     }
-    if (selected.length === 0) {
-      toast.error("Select at least one candidate to preview");
-      return;
-    }
     try {
       const res = await recruiterApiService.previewOffer({
-        candidateId: selected[0],
+        candidateId: selected[0] || null,
         templateId,
         acceptBeforeDate: acceptBeforeDate || null,
         joiningDate: joiningDate || null,
@@ -175,9 +172,9 @@ const OfferPoolTab = ({ positionId }) => {
             {templates.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
           </select>
           {errors.templateId && <div className="text-danger fs-13 mt-1">{errors.templateId}</div>}
-          {/* SCL_36: preview the selected template before generating/sending. */}
+          {/* SCL_36: preview template with placeholders, or with selected candidate values. */}
           <button type="button" className="btn btn-link btn-sm p-0 mt-1" onClick={handlePreview}>
-            <i className="bi bi-eye me-1" /> Preview
+            <i className="bi bi-eye me-1" /> Preview{selected.length === 0 ? " template" : ""}
           </button>
         </div>
         <div className="col-md-3">

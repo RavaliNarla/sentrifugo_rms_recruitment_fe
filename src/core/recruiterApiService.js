@@ -16,6 +16,7 @@ const recruiterApiService = {
   approveOrReject: (payload) => recruiterApi.post("/job-requisitions/approve-reject", payload),
   markFulfilled: (id) => recruiterApi.post(`/job-requisitions/${id}/fulfil`),
   unmarkFulfilled: (id) => recruiterApi.post(`/job-requisitions/${id}/unfulfil`),
+  getRequisitionApprovalHistory: (id) => recruiterApi.get(`/job-requisitions/${id}/approval-history`),
 
   // Positions
   createPosition: (formData) => recruiterMultipartApi.post("/job-positions/create", formData),
@@ -62,13 +63,9 @@ const recruiterApiService = {
   deletePanel: (id) => recruiterApi.delete(`/interview-panels/delete/${id}`),
   getPanels: () => recruiterApi.get("/interview-panels/all"),
 
-  assignPanelToPosition: (payload) => recruiterApi.post("/position-panels/assign", payload),
-  removePanelFromPosition: (id) => recruiterApi.delete(`/position-panels/${id}`),
-  getPanelsByPosition: (positionId) => recruiterApi.get(`/position-panels/by-position/${positionId}`),
-  getActivePanelsByPosition: (positionId) => recruiterApi.get(`/position-panels/active-by-position/${positionId}`),
-
   // Interview scheduling
   scheduleInterviews: (payload) => recruiterApi.post("/interview-scheduling/schedule", payload),
+  getInterviewSchedules: (params) => recruiterApi.get("/interview-scheduling/schedules", { params }),
 
   // Interview pool
   searchInterviewPool: (params) => recruiterApi.get("/interview-pool/search", { params }),

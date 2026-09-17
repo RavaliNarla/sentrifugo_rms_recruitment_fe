@@ -696,6 +696,34 @@ a {
   opacity: 0.6;
 }
 
+.interviewer-scores-hint {
+  position: relative;
+  display: inline-block;
+}
+.interviewer-scores-popover {
+  display: none;
+  position: absolute;
+  right: 0;
+  left: auto;
+  top: calc(100% + 6px);
+  z-index: 20;
+  min-width: 240px;
+  max-width: 320px;
+  max-height: 280px;
+  overflow-y: auto;
+  padding: 10px 12px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+  color: #334155;
+  white-space: normal;
+}
+.interviewer-scores-hint:hover .interviewer-scores-popover,
+.interviewer-scores-hint:focus-within .interviewer-scores-popover {
+  display: block;
+}
+
 @media (max-width: 860px) {
   .sidebar { width: 66px; }
   .sidebar-nav a span.label,

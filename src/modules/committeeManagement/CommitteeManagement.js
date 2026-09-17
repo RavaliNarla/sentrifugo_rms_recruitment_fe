@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import ManagePanelsTab from "./ManagePanelsTab";
-import AssignToPositionsTab from "./AssignToPositionsTab";
+import InterviewSchedulesTab from "./InterviewSchedulesTab";
 import "./CommitteeManagement.css";
 
 const CommitteeManagement = () => {
@@ -9,16 +9,22 @@ const CommitteeManagement = () => {
   return (
     <div className="committee-page">
       <div className="committee-tabs">
-        <button className={`committee-tab ${activeTab === "MANAGE_PANELS" ? "active" : ""}`} onClick={() => setActiveTab("MANAGE_PANELS")}>
+        <button
+          className={`committee-tab ${activeTab === "MANAGE_PANELS" ? "active" : ""}`}
+          onClick={() => setActiveTab("MANAGE_PANELS")}
+        >
           <i className="bi bi-people" /> Manage Panels
         </button>
-        <button className={`committee-tab ${activeTab === "ASSIGN" ? "active" : ""}`} onClick={() => setActiveTab("ASSIGN")}>
-          <i className="bi bi-file-earmark-text" /> Assign to Positions
+        <button
+          className={`committee-tab ${activeTab === "SCHEDULES" ? "active" : ""}`}
+          onClick={() => setActiveTab("SCHEDULES")}
+        >
+          <i className="bi bi-calendar3" /> Interview Schedules
         </button>
       </div>
 
       <div className="mt-4">
-        {activeTab === "MANAGE_PANELS" ? <ManagePanelsTab /> : <AssignToPositionsTab />}
+        {activeTab === "MANAGE_PANELS" ? <ManagePanelsTab /> : <InterviewSchedulesTab />}
       </div>
     </div>
   );

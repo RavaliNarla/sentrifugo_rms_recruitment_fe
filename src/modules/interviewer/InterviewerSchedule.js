@@ -44,8 +44,14 @@ const InterviewerSchedule = () => {
       // SCL_29: redisplay the interviewer's own previously-saved score/rationale/decision, not blank fields.
       const initial = {};
       data.forEach((r) => {
+        // Keep decimal precision from BE (e.g. 7.5), strip useless trailing zeros.
+        let scoreStr = "";
+        if (r.myScore != null && r.myScore !== "") {
+          const n = Number(r.myScore);
+          scoreStr = Number.isNaN(n) ? String(r.myScore) : String(n);
+        }
         initial[r.candidateId] = {
-          score: r.myScore != null ? String(r.myScore) : "",
+          score: scoreStr,
           rationale: r.myRationale || "",
           decision: r.myDecision || "",
         };
@@ -68,9 +74,21 @@ const InterviewerSchedule = () => {
   };
 
   const handleSubmit = async () => {
-    const requests = Object.entries(scores)
-      .filter(([, v]) => v.score !== "" && v.score !== undefined)
-      .map(([candidateId, v]) => ({ candidateId, score: Number(v.score), rationale: v.rationale, decision: v.decision || null }));
+    const requests = [];
+    for (const [candidateId, v] of Object.entries(scores)) {
+      if (v.score === "" || v.score === undefined) continue;
+      const score = Number(v.score);
+      if (Number.isNaN(score) || score < 1 || score > 10) {
+        toast.error("Ratings must be between 1 and 10 (decimals like 7.5 allowed)");
+        return;
+      }
+      requests.push({
+        candidateId,
+        score,
+        rationale: v.rationale,
+        decision: v.decision || null,
+      });
+    }
 
     if (requests.length === 0) {
       toast.error("Enter at least one score before submitting");
@@ -121,6 +139,7 @@ const InterviewerSchedule = () => {
                 <thead className="table-light">
                   <tr>
                     <th>Candidate</th>
+                    <th>Round</th>
                     <th>Date</th>
                     <th>Time</th>
                     <th>Status</th>
@@ -133,6 +152,7 @@ const InterviewerSchedule = () => {
                   {rows.map((r) => (
                     <tr key={r.candidateId}>
                       <td>{r.candidateName}</td>
+                      <td>{r.round != null ? r.round : 1}</td>
                       <td>{formatDate(r.interviewDate)}</td>
                       <td>{r.startTime} - {r.endTime}</td>
                       <td><span className="badge bg-secondary">{r.applicationStatus}</span></td>
@@ -141,6 +161,7 @@ const InterviewerSchedule = () => {
                           type="number"
                           min={1}
                           max={10}
+                          step="0.1"
                           className="form-control form-control-sm"
                           value={scores[r.candidateId]?.score ?? ""}
                           onChange={(e) => updateScore(r.candidateId, "score", e.target.value)}
@@ -166,7 +187,7 @@ const InterviewerSchedule = () => {
                     </tr>
                   ))}
                   {rows.length === 0 && (
-                    <tr><td colSpan={7} className="text-center text-muted py-4">No candidates scheduled with your panel for this position{dateFilter ? " on this date" : ""}.</td></tr>
+                    <tr><td colSpan={8} className="text-center text-muted py-4">No candidates scheduled with your panel for this position{dateFilter ? " on this date" : ""}.</td></tr>
                   )}
                 </tbody>
               </table>

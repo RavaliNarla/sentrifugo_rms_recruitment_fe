@@ -25,7 +25,7 @@ const ROUTES = [
   {
     prefix: "/committee-management",
     title: "Committee Management",
-    subtitle: "Manage interview panels and assign them to positions",
+    subtitle: "Create interview panels and look ahead at upcoming schedules",
   },
   {
     prefix: "/approvals",

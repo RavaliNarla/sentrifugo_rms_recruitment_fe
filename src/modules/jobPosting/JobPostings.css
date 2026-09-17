@@ -156,3 +156,26 @@
   gap: 6px;
   min-width: 34px;
 }
+
+/* SCL_53: history clock next to requisition title (theme green, not BOB orange) */
+.history-icon-btn {
+  color: var(--brand-primary) !important;
+  font-size: 1.05rem;
+  text-decoration: none !important;
+  vertical-align: middle;
+}
+.history-icon-btn:hover {
+  color: var(--brand-primary-d) !important;
+  opacity: 0.85;
+}
+
+.approval-history-table thead th {
+  background: var(--brand-primary-d);
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.approval-history-table td {
+  font-size: 0.85rem;
+}

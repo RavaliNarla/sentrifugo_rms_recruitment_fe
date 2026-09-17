@@ -72,14 +72,10 @@ const CandidateProfileModal = ({ candidate, onClose, onDecide, onViewFile }) => 
           </div>
           <div className="modal-footer">
             <button className="btn btn-secondary" onClick={onClose}>Close</button>
-            {/* SCL_25: shortlist decision is Yes / No / On Hold, not a single Shortlist button. */}
-            {(candidate.status === "ADDED" || candidate.status === "ON_HOLD") && (
-              <>
-                <button className="btn btn-outline-secondary" onClick={() => onDecide(candidate.id, "HOLD")}>On Hold</button>
-                <button className="btn btn-outline-danger" onClick={() => onDecide(candidate.id, "REJECT")}>No</button>
-                <button className="btn btn-primary" onClick={() => onDecide(candidate.id, "SHORTLIST")}>Yes - Shortlist</button>
-              </>
-            )}
+            {/* Always allow re-decide so status can be corrected (e.g. On Hold → Shortlisted). */}
+            <button className="btn btn-outline-secondary" onClick={() => onDecide(candidate.id, "HOLD")}>On Hold</button>
+            <button className="btn btn-outline-danger" onClick={() => onDecide(candidate.id, "REJECT")}>No</button>
+            <button className="btn btn-primary" onClick={() => onDecide(candidate.id, "SHORTLIST")}>Yes - Shortlist</button>
           </div>
         </div>
       </div>

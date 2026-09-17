@@ -194,7 +194,6 @@ const CandidatePoolTab = ({ requisitionId, positionId }) => {
                   )}
                   {c.status === "ADDED" && (
                     <>
-                      <button className="btn btn-sm btn-outline-primary me-2" onClick={() => setProfileCandidate(c)}>Decide</button>
                       <button className="icon-btn-circle me-2" title="Edit Candidate" onClick={() => { setEditingCandidate(c); setShowAddModal(true); }}>
                         <i className="bi bi-pencil" />
                       </button>
@@ -245,7 +244,6 @@ const CandidatePoolTab = ({ requisitionId, positionId }) => {
 
       {showScheduleModal && (
         <ScheduleInterviewModal
-          positionId={positionId}
           candidates={selectedCandidates}
           onClose={() => setShowScheduleModal(false)}
           onScheduled={() => { setShowScheduleModal(false); setSelected([]); load(); }}

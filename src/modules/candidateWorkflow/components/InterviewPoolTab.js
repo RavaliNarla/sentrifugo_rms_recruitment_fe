@@ -3,11 +3,49 @@ import { toast } from "react-toastify";
 import recruiterApiService from "../../../core/recruiterApiService";
 import Pagination from "../../../shared/Pagination";
 import { formatDate } from "../../../shared/dateFormat";
+import ScheduleInterviewModal from "./ScheduleInterviewModal";
 
 const STATUS_PILL = {
   SCHEDULED: "status-pill-info",
   QUALIFIED: "status-pill-success",
   DISQUALIFIED: "status-pill-danger",
+};
+
+const decisionLabel = (d) => {
+  if (!d) return "-";
+  if (d === "SELECT") return "Select (Recommend)";
+  if (d === "REJECT") return "Reject";
+  if (d === "HOLD") return "Hold";
+  return d;
+};
+
+const formatScore = (s) => {
+  if (s == null || s === "") return "-";
+  const n = Number(s);
+  return Number.isNaN(n) ? String(s) : (Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/\.?0+$/, ""));
+};
+
+const InterviewerScoresHint = ({ scores }) => {
+  if (!scores || scores.length === 0) return null;
+  return (
+    <span className="ms-1 interviewer-scores-hint" title="">
+      <i className="bi bi-info-circle text-app-primary" style={{ cursor: "pointer" }} />
+      <span className="interviewer-scores-popover">
+        <div className="fw-semibold mb-1">Interviewer markings</div>
+        <div className="text-muted mb-2" style={{ fontSize: "0.72rem" }}>
+          Status uses average score only (pass ≥ 5). Decisions below are advisory.
+        </div>
+        {scores.map((s, idx) => (
+          <div key={idx} className="mb-2 pb-2 border-bottom" style={{ fontSize: "0.8rem" }}>
+            <div className="fw-semibold">{s.interviewerName || "Interviewer"}</div>
+            <div>Rating: {formatScore(s.score)}</div>
+            <div>Rationale: {s.rationale?.trim() ? s.rationale : "-"}</div>
+            <div>Decision: {decisionLabel(s.decision)}</div>
+          </div>
+        ))}
+      </span>
+    </span>
+  );
 };
 
 const InterviewPoolTab = ({ positionId }) => {
@@ -17,6 +55,7 @@ const InterviewPoolTab = ({ positionId }) => {
   const [totalPages, setTotalPages] = useState(0);
   const [selected, setSelected] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [showNextRoundModal, setShowNextRoundModal] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -44,6 +83,16 @@ const InterviewPoolTab = ({ positionId }) => {
   const selectedRows = rows.filter((r) => selected.includes(r.candidateId));
   const canMove = selectedRows.length > 0 && selectedRows.every((r) => r.applicationStatus === "QUALIFIED");
 
+  const sharedRound = (() => {
+    if (selectedRows.length === 0) return null;
+    if (!selectedRows.every((r) => r.applicationStatus === "QUALIFIED")) return null;
+    const rounds = selectedRows.map((r) => r.round ?? 1);
+    const first = rounds[0];
+    return rounds.every((x) => x === first) ? first : null;
+  })();
+  const nextRound = sharedRound != null ? sharedRound + 1 : null;
+  const canScheduleNext = nextRound != null;
+
   const handleMoveToCompensation = async () => {
     try {
       await recruiterApiService.moveToCompensation(selected);
@@ -61,11 +110,18 @@ const InterviewPoolTab = ({ positionId }) => {
         {selected.length > 0 ? (
           <span className="badge rounded-pill text-bg-light border text-app-primary fs-13">{selected.length} Candidates Selected</span>
         ) : <span />}
-        {canMove && (
-          <button className="btn btn-blue-dark" onClick={handleMoveToCompensation}>
-            Move to Compensation Pool ({selected.length})
-          </button>
-        )}
+        <div className="d-flex gap-2">
+          {canScheduleNext && (
+            <button className="btn btn-outline-primary" onClick={() => setShowNextRoundModal(true)}>
+              Schedule Next Round ({selected.length})
+            </button>
+          )}
+          {canMove && (
+            <button className="btn btn-blue-dark" onClick={handleMoveToCompensation}>
+              Move to Compensation Pool ({selected.length})
+            </button>
+          )}
+        </div>
       </div>
 
       {loading ? <div>Loading...</div> : (
@@ -74,6 +130,7 @@ const InterviewPoolTab = ({ positionId }) => {
             <tr className="text-muted fs-13">
               <th></th>
               <th>Candidate</th>
+              <th>Round</th>
               <th>Date</th>
               <th>Time</th>
               <th>Panel</th>
@@ -90,24 +147,39 @@ const InterviewPoolTab = ({ positionId }) => {
                   )}
                 </td>
                 <td>{r.candidateName}</td>
+                <td>{r.round != null ? r.round : 1}</td>
                 <td>{formatDate(r.interviewDate)}</td>
                 <td>{r.startTime ? `${r.startTime} - ${r.endTime}` : "-"}</td>
                 <td>{r.panelName || "-"}</td>
                 <td>
-                  {r.finalScore != null ? r.finalScore : "-"}
+                  {r.finalScore != null ? formatScore(r.finalScore) : "-"}
                   <small className="text-muted ms-1">({r.membersScored}/{r.membersTotal} scored)</small>
+                  {(r.membersScored > 0) && <InterviewerScoresHint scores={r.memberScores} />}
                 </td>
                 <td><span className={`status-pill ${STATUS_PILL[r.applicationStatus] || "status-pill-secondary"}`}>{r.applicationStatus}</span></td>
               </tr>
             ))}
             {rows.length === 0 && (
-              <tr><td colSpan={7} className="text-center text-muted py-4">No candidates in the interview pool.</td></tr>
+              <tr><td colSpan={8} className="text-center text-muted py-4">No candidates in the interview pool.</td></tr>
             )}
           </tbody>
         </table>
       )}
 
       <Pagination page={page} totalPages={totalPages} onChange={setPage} size={size} onSizeChange={(s) => { setSize(s); setPage(0); }} />
+
+      {showNextRoundModal && canScheduleNext && (
+        <ScheduleInterviewModal
+          candidates={selectedRows.map((r) => ({ id: r.candidateId, name: r.candidateName }))}
+          round={nextRound}
+          onClose={() => setShowNextRoundModal(false)}
+          onScheduled={() => {
+            setShowNextRoundModal(false);
+            setSelected([]);
+            load();
+          }}
+        />
+      )}
     </div>
   );
 };
