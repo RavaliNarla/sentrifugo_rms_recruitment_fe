@@ -219,8 +219,13 @@ const CandidatePoolTab = ({ requisitionId, positionId }) => {
           requisitionId={requisitionId}
           positionId={positionId}
           editingCandidate={editingCandidate}
+          onViewFile={filePreview.openFile}
           onClose={() => { setShowAddModal(false); setEditingCandidate(null); }}
           onSaved={() => { setShowAddModal(false); setEditingCandidate(null); load(); }}
+          onDocumentsChanged={(updated) => {
+            if (updated) setEditingCandidate((prev) => (prev ? { ...prev, ...updated } : prev));
+            load();
+          }}
         />
       )}
 

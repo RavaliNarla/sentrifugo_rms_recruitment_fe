@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import recruiterApiService from "../../../core/recruiterApiService";
+import ConfirmModal from "../../../shared/ConfirmModal";
 
 const EMPTY_FORM = { name: "", phone: "", email: "" };
 
@@ -17,7 +18,30 @@ const getFileExtension = (fileName) => {
   return idx === -1 ? "" : fileName.slice(idx).toLowerCase();
 };
 
-const AddCandidateModal = ({ requisitionId, positionId, editingCandidate, onClose, onSaved }) => {
+const docsFromCandidate = (c) => ({
+  hasPhoto: !!c?.hasPhoto,
+  photoUrl: c?.photoUrl || null,
+  hasResume: !!c?.hasResume,
+  resumeUrl: c?.resumeUrl || null,
+  hasIdProof: !!c?.hasIdProof,
+  idProofUrl: c?.idProofUrl || null,
+});
+
+const DOC_LABELS = {
+  photo: "photo",
+  resume: "resume",
+  "id-proof": "ID proof",
+};
+
+const AddCandidateModal = ({
+  requisitionId,
+  positionId,
+  editingCandidate,
+  onClose,
+  onSaved,
+  onViewFile,
+  onDocumentsChanged,
+}) => {
   const [form, setForm] = useState(
     editingCandidate
       ? { name: editingCandidate.name, phone: editingCandidate.phone, email: editingCandidate.email }
@@ -26,8 +50,11 @@ const AddCandidateModal = ({ requisitionId, positionId, editingCandidate, onClos
   const [resume, setResume] = useState(null);
   const [idProof, setIdProof] = useState(null);
   const [photo, setPhoto] = useState(null);
+  const [existingDocs, setExistingDocs] = useState(() => docsFromCandidate(editingCandidate));
+  const [existingPhotoBlob, setExistingPhotoBlob] = useState(null);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
+  const [confirmDelete, setConfirmDelete] = useState({ show: false, type: null });
   const submittingRef = useRef(false);
 
   const setField = (field, value) => {
@@ -38,6 +65,32 @@ const AddCandidateModal = ({ requisitionId, positionId, editingCandidate, onClos
   // Local preview URL for the selected photo file - revoked on change/unmount to avoid leaks.
   const photoPreviewUrl = useMemo(() => (photo ? URL.createObjectURL(photo) : null), [photo]);
   useEffect(() => () => { if (photoPreviewUrl) URL.revokeObjectURL(photoPreviewUrl); }, [photoPreviewUrl]);
+
+  // Load existing uploaded photo into the avatar when editing (until a new file is chosen).
+  useEffect(() => {
+    let blobUrl;
+    let cancelled = false;
+    if (editingCandidate && existingDocs.hasPhoto && existingDocs.photoUrl && !photo) {
+      recruiterApiService.fetchFileBlobUrl(existingDocs.photoUrl)
+        .then((url) => {
+          if (cancelled) {
+            URL.revokeObjectURL(url);
+            return;
+          }
+          blobUrl = url;
+          setExistingPhotoBlob(url);
+        })
+        .catch(() => {
+          if (!cancelled) setExistingPhotoBlob(null);
+        });
+    } else {
+      setExistingPhotoBlob(null);
+    }
+    return () => {
+      cancelled = true;
+      if (blobUrl) URL.revokeObjectURL(blobUrl);
+    };
+  }, [editingCandidate, existingDocs.hasPhoto, existingDocs.photoUrl, photo]);
 
   const handlePhotoChange = (e) => {
     const file = e.target.files[0];
@@ -119,9 +172,61 @@ const AddCandidateModal = ({ requisitionId, positionId, editingCandidate, onClos
     }
   };
 
+  const askDeleteDocument = (type) => {
+    setConfirmDelete({ show: true, type });
+  };
+
+  const closeDeleteConfirm = () => setConfirmDelete({ show: false, type: null });
+
+  const confirmDeleteDocument = async () => {
+    const type = confirmDelete.type;
+    closeDeleteConfirm();
+    if (!editingCandidate?.id || !type) return;
+    try {
+      const res = await recruiterApiService.deleteCandidateDocument(editingCandidate.id, type);
+      const updated = res.data?.data;
+      setExistingDocs(docsFromCandidate(updated || {
+        ...existingDocs,
+        ...(type === "photo" ? { hasPhoto: false, photoUrl: null } : {}),
+        ...(type === "resume" ? { hasResume: false, resumeUrl: null } : {}),
+        ...(type === "id-proof" ? { hasIdProof: false, idProofUrl: null } : {}),
+      }));
+      if (type === "photo") setPhoto(null);
+      if (type === "resume") setResume(null);
+      if (type === "id-proof") setIdProof(null);
+      toast.success(`${DOC_LABELS[type] || "Document"} deleted successfully`);
+      onDocumentsChanged?.(updated);
+    } catch (e) {
+      toast.error(e.response?.data?.message || "Failed to delete document");
+    }
+  };
+
+  const avatarSrc = photoPreviewUrl || existingPhotoBlob;
+  const showExistingPhotoLink = editingCandidate && existingDocs.hasPhoto && existingDocs.photoUrl && !photo;
+  const showExistingResumeLink = editingCandidate && existingDocs.hasResume && existingDocs.resumeUrl && !resume;
+  const showExistingIdProofLink = editingCandidate && existingDocs.hasIdProof && existingDocs.idProofUrl && !idProof;
+
+  const ExistingDocActions = ({ label, onView, onDelete }) => (
+    <div className="d-flex align-items-center gap-2 mt-1">
+      <button type="button" className="btn btn-link p-0 fs-13 text-decoration-underline" onClick={onView}>
+        {label}
+      </button>
+      <button
+        type="button"
+        className="btn btn-link p-0 text-danger lh-1"
+        title={`Delete ${label}`}
+        aria-label={`Delete ${label}`}
+        onClick={onDelete}
+        style={{ fontSize: "0.85rem" }}
+      >
+        <i className="bi bi-trash-fill" />
+      </button>
+    </div>
+  );
+
   return (
     <div className="modal show d-block" style={{ background: "rgba(15,60,30,0.45)" }}>
-      <div className="modal-dialog modal-dialog-centered">
+      <div className="modal-dialog modal-dialog-centered modal-lg">
         <div className="modal-content">
           <div className="modal-header">
             <h5 className="modal-title">{editingCandidate ? "Edit Candidate" : "Add Candidate"}</h5>
@@ -165,16 +270,23 @@ const AddCandidateModal = ({ requisitionId, positionId, editingCandidate, onClos
               <div className="col-md-4 d-flex flex-column align-items-center">
                 <label className="form-label align-self-start">Photo (optional)</label>
                 <div className="candidate-photo-preview mb-2">
-                  {photoPreviewUrl ? (
-                    <img src={photoPreviewUrl} alt="Candidate preview" />
+                  {avatarSrc ? (
+                    <img src={avatarSrc} alt="Candidate preview" />
                   ) : (
                     <i className="bi bi-person-fill" />
                   )}
                 </div>
                 <label className="btn btn-outline-brand btn-sm w-100 mb-0" style={{ cursor: "pointer" }}>
-                  <i className="bi bi-camera-fill me-1" /> {photo ? "Change Photo" : "Upload Photo"}
+                  <i className="bi bi-camera-fill me-1" /> {photo || existingDocs.hasPhoto ? "Change Photo" : "Upload Photo"}
                   <input type="file" accept=".png,.jpg,.jpeg" hidden onChange={handlePhotoChange} />
                 </label>
+                {showExistingPhotoLink && (
+                  <ExistingDocActions
+                    label="View Uploaded Photo"
+                    onView={() => onViewFile?.(existingDocs.photoUrl, "Photo Preview")}
+                    onDelete={() => askDeleteDocument("photo")}
+                  />
+                )}
                 {errors.photo && <div className="text-danger fs-13 mt-1">{errors.photo}</div>}
               </div>
             </div>
@@ -188,6 +300,13 @@ const AddCandidateModal = ({ requisitionId, positionId, editingCandidate, onClos
                   accept=".pdf,.doc,.docx"
                   onChange={handleResumeChange}
                 />
+                {showExistingResumeLink && (
+                  <ExistingDocActions
+                    label="View Uploaded Resume"
+                    onView={() => onViewFile?.(existingDocs.resumeUrl, "Resume Preview")}
+                    onDelete={() => askDeleteDocument("resume")}
+                  />
+                )}
                 {errors.resume && <div className="text-danger fs-13 mt-1">{errors.resume}</div>}
               </div>
               <div className="col-md-6 mb-3">
@@ -198,6 +317,13 @@ const AddCandidateModal = ({ requisitionId, positionId, editingCandidate, onClos
                   accept=".pdf,.png,.jpg,.jpeg"
                   onChange={handleIdProofChange}
                 />
+                {showExistingIdProofLink && (
+                  <ExistingDocActions
+                    label="View Uploaded ID Proof"
+                    onView={() => onViewFile?.(existingDocs.idProofUrl, "ID Proof Preview")}
+                    onDelete={() => askDeleteDocument("id-proof")}
+                  />
+                )}
                 {errors.idProof && <div className="text-danger fs-13 mt-1">{errors.idProof}</div>}
               </div>
             </div>
@@ -210,6 +336,18 @@ const AddCandidateModal = ({ requisitionId, positionId, editingCandidate, onClos
           </div>
         </div>
       </div>
+
+      <ConfirmModal
+        show={confirmDelete.show}
+        elevated
+        title="Delete Document"
+        message={`Are you sure you want to delete this ${DOC_LABELS[confirmDelete.type] || "document"}? This cannot be undone.`}
+        confirmLabel="Delete"
+        confirmVariant="danger"
+        cancelLabel="Cancel"
+        onConfirm={confirmDeleteDocument}
+        onCancel={closeDeleteConfirm}
+      />
     </div>
   );
 };

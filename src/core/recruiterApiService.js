@@ -30,6 +30,9 @@ const recruiterApiService = {
   addCandidate: (formData) => recruiterMultipartApi.post("/candidates/add", formData),
   updateCandidate: (id, formData) => recruiterMultipartApi.put(`/candidates/${id}`, formData),
   deleteCandidate: (id) => recruiterApi.delete(`/candidates/${id}`),
+  /** documentType: "photo" | "resume" | "id-proof" */
+  deleteCandidateDocument: (id, documentType) =>
+    recruiterApi.delete(`/candidates/${id}/documents/${documentType}`),
   searchCandidates: (params) => recruiterApi.get("/candidates/search", { params }),
   getCandidate: (id) => recruiterApi.get(`/candidates/${id}`),
   shortlistCandidate: (id) => recruiterApi.post(`/candidates/${id}/shortlist`),
