@@ -32,6 +32,13 @@ const masterApiService = {
   updateEducationQualification: (id, payload) => masterApi.put(`/education-qualifications/update/${id}`, payload),
   deleteEducationQualification: (id) => masterApi.delete(`/education-qualifications/delete/${id}`),
 
+  // Specializations (optional, linked to an education level - e.g. "Computer Science and Engineering" for B.Tech)
+  getSpecializations: () => masterApi.get("/specializations/all"),
+  getSpecializationsByEducation: (educationQualificationId) => masterApi.get(`/specializations/by-education/${educationQualificationId}`),
+  addSpecialization: (payload) => masterApi.post("/specializations/add", payload),
+  updateSpecialization: (id, payload) => masterApi.put(`/specializations/update/${id}`, payload),
+  deleteSpecialization: (id) => masterApi.delete(`/specializations/delete/${id}`),
+
   // Dropdown data
   getStates: () => masterApi.get("/master-dd-data/get/states"),
   getApprovedByRoles: () => masterApi.get("/master-dd-data/get/approved-by-roles"),

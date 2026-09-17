@@ -6,6 +6,7 @@ const recruiterApiService = {
   // Requisitions
   createRequisition: (payload) => recruiterApi.post("/job-requisitions/create", payload),
   updateRequisition: (id, payload) => recruiterApi.put(`/job-requisitions/${id}`, payload),
+  deleteRequisition: (id) => recruiterApi.delete(`/job-requisitions/${id}`),
   getRequisition: (id) => recruiterApi.get(`/job-requisitions/${id}`),
   getRequisitions: (page = 0, size = 20) => recruiterApi.get(`/job-requisitions?page=${page}&size=${size}`),
   getApprovedRequisitions: () => recruiterApi.get("/job-requisitions/approved"),
@@ -14,6 +15,7 @@ const recruiterApiService = {
   submitForApproval: (requisitionIds) => recruiterApi.post("/job-requisitions/submit-for-approval", requisitionIds),
   approveOrReject: (payload) => recruiterApi.post("/job-requisitions/approve-reject", payload),
   markFulfilled: (id) => recruiterApi.post(`/job-requisitions/${id}/fulfil`),
+  unmarkFulfilled: (id) => recruiterApi.post(`/job-requisitions/${id}/unfulfil`),
 
   // Positions
   createPosition: (formData) => recruiterMultipartApi.post("/job-positions/create", formData),
@@ -25,11 +27,15 @@ const recruiterApiService = {
 
   // Candidates
   addCandidate: (formData) => recruiterMultipartApi.post("/candidates/add", formData),
+  updateCandidate: (id, formData) => recruiterMultipartApi.put(`/candidates/${id}`, formData),
+  deleteCandidate: (id) => recruiterApi.delete(`/candidates/${id}`),
   searchCandidates: (params) => recruiterApi.get("/candidates/search", { params }),
   getCandidate: (id) => recruiterApi.get(`/candidates/${id}`),
   shortlistCandidate: (id) => recruiterApi.post(`/candidates/${id}/shortlist`),
+  /** decision: "SHORTLIST" | "REJECT" | "HOLD" (FRS: Yes / No / On Hold). */
+  decideCandidate: (id, decision) => recruiterApi.post(`/candidates/${id}/decision`, { decision }),
 
-  // Files — stored locally on disk; fetch with auth and return a blob URL for preview
+  // Files - stored locally on disk; fetch with auth and return a blob URL for preview
   fetchFileBlobUrl: async (relativePath) => {
     if (!relativePath) throw new Error("No file path");
     const response = await recruiterApi.get(buildFilePath(relativePath), { responseType: "blob" });
@@ -66,18 +72,23 @@ const recruiterApiService = {
 
   // Interview pool
   searchInterviewPool: (params) => recruiterApi.get("/interview-pool/search", { params }),
-  getMyInterviews: (positionId) => recruiterApi.get("/interview-pool/my-interviews", { params: { positionId } }),
+  getMyInterviews: (positionId, interviewDate) =>
+    recruiterApi.get("/interview-pool/my-interviews", { params: { positionId, interviewDate: interviewDate || undefined } }),
   submitScore: (payload) => recruiterApi.post("/interview-pool/score", payload),
   submitScoreBatch: (payload) => recruiterApi.post("/interview-pool/score-batch", payload),
 
-  // Compensation
+  // Compensation Management
   moveToCompensation: (candidateIds) => recruiterApi.post("/compensation-pool/move-in", candidateIds),
-  updateSalary: (candidateId, salary) => recruiterApi.put(`/compensation-pool/${candidateId}/salary`, null, { params: { salary } }),
+  updateCompensationDetails: (candidateId, details) => recruiterApi.put(`/compensation-pool/${candidateId}/details`, details),
   moveToOffer: (candidateIds) => recruiterApi.post("/compensation-pool/move-to-offer", candidateIds),
   searchCompensationPool: (params) => recruiterApi.get("/compensation-pool/search", { params }),
 
-  // Offers
+  // Offers (draft -> submit for L1/L2 approval -> auto-emailed on L2 approval)
   generateOffers: (payload) => recruiterApi.post("/offers/generate", payload),
+  previewOffer: (payload) => recruiterApi.post("/offers/preview", payload),
+  submitOffersForApproval: (candidateIds) => recruiterApi.post("/offers/submit-for-approval", candidateIds),
+  approveOrRejectOffers: (payload) => recruiterApi.post("/offers/approve-reject", payload),
+  getPendingOfferApprovals: () => recruiterApi.get("/offers/pending-approval"),
   getOfferByCandidate: (candidateId) => recruiterApi.get(`/offers/by-candidate/${candidateId}`),
 
   // Dashboard

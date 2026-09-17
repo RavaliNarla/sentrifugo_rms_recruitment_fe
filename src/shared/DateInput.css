@@ -1,0 +1,41 @@
+.date-input-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.date-input-native {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  z-index: 2;
+  cursor: pointer;
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.date-input-native:disabled {
+  cursor: not-allowed;
+}
+
+.date-input-display {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  pointer-events: none;
+  width: 100%;
+}
+
+.date-input-display i {
+  color: var(--brand-primary, #6c757d);
+  margin-left: 8px;
+}
+
+.date-input-display.disabled {
+  background-color: #e9ecef;
+  opacity: 0.75;
+}

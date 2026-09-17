@@ -116,6 +116,42 @@ const JobPostings = () => {
     }
   };
 
+  const handleUnfulfil = async (id) => {
+    if (!window.confirm("Reopen this requisition (undo Mark Fulfilled)?")) return;
+    try {
+      await recruiterApiService.unmarkFulfilled(id);
+      toast.success("Requisition reopened");
+      loadRequisitions();
+    } catch (e) {
+      toast.error(e.response?.data?.message || "Action failed");
+    }
+  };
+
+  // SCL_12: Edit/Delete for a requisition - Delete only while status = NEW (not yet submitted/approved).
+  const handleDeleteRequisition = async (req) => {
+    if (!window.confirm(`Delete requisition "${req.title}"? This cannot be undone.`)) return;
+    try {
+      await recruiterApiService.deleteRequisition(req.id);
+      toast.success("Requisition deleted successfully");
+      loadRequisitions();
+    } catch (e) {
+      toast.error(e.response?.data?.message || "Failed to delete requisition");
+    }
+  };
+
+  // SCL_13: Delete only for positions still in NEW status (parent requisition not yet approved).
+  const handleDeletePosition = async (pos, requisitionId) => {
+    if (!window.confirm(`Delete position "${pos.positionTitleName}"? This cannot be undone.`)) return;
+    try {
+      await recruiterApiService.deletePosition(pos.id);
+      toast.success("Position deleted successfully");
+      const r = await recruiterApiService.getPositionsByRequisition(requisitionId);
+      setPositionsByReq((prev) => ({ ...prev, [requisitionId]: r.data.data || [] }));
+    } catch (e) {
+      toast.error(e.response?.data?.message || "Failed to delete position");
+    }
+  };
+
   const years = Array.from(
     new Set(requisitions.filter((r) => r.startDate).map((r) => r.startDate.slice(0, 4)))
   ).sort((a, b) => b.localeCompare(a));
@@ -346,6 +382,29 @@ const JobPostings = () => {
                       Mark Fulfilled
                     </button>
                   )}
+                  {req.status === "FULFILLED" && (
+                    <button className="btn btn-sm btn-outline-secondary" onClick={(e) => { e.stopPropagation(); handleUnfulfil(req.id); }}>
+                      Undo Fulfilled
+                    </button>
+                  )}
+                  {selectableStatuses.includes(req.status) && (
+                    <button
+                      className="icon-btn-circle"
+                      title="Edit Requisition"
+                      onClick={(e) => { e.stopPropagation(); navigate("/job-postings/create-requisition", { state: { requisition: req } }); }}
+                    >
+                      <i className="bi bi-pencil" />
+                    </button>
+                  )}
+                  {req.status === "NEW" && (
+                    <button
+                      className="icon-btn-circle danger"
+                      title="Delete Requisition"
+                      onClick={(e) => { e.stopPropagation(); handleDeleteRequisition(req); }}
+                    >
+                      <i className="bi bi-trash" />
+                    </button>
+                  )}
                   <button className="icon-btn-circle" onClick={(e) => { e.stopPropagation(); toggleExpand(req.id); }}>
                     <i className={`bi bi-chevron-${expanded[req.id] ? "up" : "down"}`} />
                   </button>
@@ -396,6 +455,16 @@ const JobPostings = () => {
                                     onClick={() => navigate(`/job-postings/${req.id}/add-position`, { state: { position: pos, viewOnly: true } })}
                                   >
                                     <i className="bi bi-eye" />
+                                  </button>
+                                )}
+                                {pos.status === "NEW" && (
+                                  <button
+                                    type="button"
+                                    className="icon-btn-circle danger"
+                                    title="Delete Position"
+                                    onClick={() => handleDeletePosition(pos, req.id)}
+                                  >
+                                    <i className="bi bi-trash" />
                                   </button>
                                 )}
                               </div>

@@ -4,8 +4,16 @@ import recruiterApiService from "../../../core/recruiterApiService";
 
 const EMPTY_FORM = { name: "", phone: "", email: "" };
 
-const AddCandidateModal = ({ requisitionId, positionId, onClose, onSaved }) => {
-  const [form, setForm] = useState(EMPTY_FORM);
+// SCL_24: Email/Phone fields were allowing invalid text formats.
+const EMAIL_REGEX = /^[\w.+-]+@[\w-]+\.[a-zA-Z]{2,}$/;
+const PHONE_REGEX = /^[0-9]{10}$/;
+
+const AddCandidateModal = ({ requisitionId, positionId, editingCandidate, onClose, onSaved }) => {
+  const [form, setForm] = useState(
+    editingCandidate
+      ? { name: editingCandidate.name, phone: editingCandidate.phone, email: editingCandidate.email }
+      : EMPTY_FORM
+  );
   const [resume, setResume] = useState(null);
   const [idProof, setIdProof] = useState(null);
   const [photo, setPhoto] = useState(null);
@@ -20,6 +28,14 @@ const AddCandidateModal = ({ requisitionId, positionId, onClose, onSaved }) => {
       toast.error("Name, Phone and Email are required");
       return;
     }
+    if (!EMAIL_REGEX.test(form.email)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+    if (!PHONE_REGEX.test(form.phone)) {
+      toast.error("Please enter a valid 10-digit phone number");
+      return;
+    }
     setSaving(true);
     try {
       const formData = new FormData();
@@ -27,11 +43,16 @@ const AddCandidateModal = ({ requisitionId, positionId, onClose, onSaved }) => {
       if (resume) formData.append("resume", resume);
       if (idProof) formData.append("idProof", idProof);
       if (photo) formData.append("photo", photo);
-      await recruiterApiService.addCandidate(formData);
-      toast.success("Candidate added successfully");
+      if (editingCandidate) {
+        await recruiterApiService.updateCandidate(editingCandidate.id, formData);
+        toast.success("Candidate updated successfully");
+      } else {
+        await recruiterApiService.addCandidate(formData);
+        toast.success("Candidate added successfully");
+      }
       onSaved();
     } catch (e) {
-      toast.error(e.response?.data?.message || "Failed to add candidate");
+      toast.error(e.response?.data?.message || "Failed to save candidate");
     } finally {
       setSaving(false);
     }
@@ -42,7 +63,7 @@ const AddCandidateModal = ({ requisitionId, positionId, onClose, onSaved }) => {
       <div className="modal-dialog modal-dialog-centered">
         <div className="modal-content">
           <div className="modal-header">
-            <h5 className="modal-title">Add Candidate</h5>
+            <h5 className="modal-title">{editingCandidate ? "Edit Candidate" : "Add Candidate"}</h5>
             <button className="btn-close" onClick={onClose} />
           </div>
           <div className="modal-body">
@@ -91,7 +112,9 @@ const AddCandidateModal = ({ requisitionId, positionId, onClose, onSaved }) => {
           </div>
           <div className="modal-footer">
             <button className="btn btn-secondary" onClick={onClose}>Cancel</button>
-            <button className="btn btn-primary" disabled={saving} onClick={handleSave}>{saving ? "Adding..." : "Add"}</button>
+            <button className="btn btn-primary" disabled={saving} onClick={handleSave}>
+              {saving ? "Saving..." : editingCandidate ? "Save Changes" : "Add"}
+            </button>
           </div>
         </div>
       </div>

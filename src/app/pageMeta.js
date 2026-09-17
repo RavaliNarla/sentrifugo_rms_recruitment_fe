@@ -39,6 +39,12 @@ const ROUTES = [
     subtitle: "Review and approve or reject requisition requests",
   },
   {
+    prefix: "/offer-approvals",
+    section: "Approvals",
+    title: "Offer Approvals",
+    subtitle: "Review and approve or reject offer letter requests before they're emailed",
+  },
+  {
     prefix: "/interviewer",
     section: "Interviews",
     title: "My Interview Schedule",
@@ -73,6 +79,12 @@ const ROUTES = [
     section: "Administration",
     title: "Education Qualifications",
     subtitle: "Manage education qualification master data",
+  },
+  {
+    prefix: "/admin/specializations",
+    section: "Administration",
+    title: "Specializations",
+    subtitle: "Manage specialization master data (optional, linked to an education level)",
   },
 ];
 

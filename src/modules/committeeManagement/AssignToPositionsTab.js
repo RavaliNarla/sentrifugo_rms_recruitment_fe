@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import recruiterApiService from "../../core/recruiterApiService";
+import DateInput from "../../shared/DateInput";
+
+const todayStr = () => new Date().toISOString().split("T")[0];
 
 const AssignToPositionsTab = () => {
   const [requisitions, setRequisitions] = useState([]);
@@ -43,6 +46,15 @@ const AssignToPositionsTab = () => {
   const handleAssign = async () => {
     if (!selectedPanelId || !startDate || !endDate) {
       toast.error("Select a panel and both dates");
+      return;
+    }
+    // SCL_26: no past dates, and end date must be greater than (or equal to) the start date.
+    if (startDate < todayStr()) {
+      toast.error("Start Date cannot be in the past");
+      return;
+    }
+    if (endDate < startDate) {
+      toast.error("End Date must be on or after the Start Date");
       return;
     }
     try {
@@ -114,11 +126,11 @@ const AssignToPositionsTab = () => {
               </div>
               <div className="col-md-3">
                 <label className="form-label fs-14">Start Date</label>
-                <input type="date" className="form-control form-control-sm" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                <DateInput value={startDate} min={todayStr()} onChange={setStartDate} />
               </div>
               <div className="col-md-3">
                 <label className="form-label fs-14">End Date</label>
-                <input type="date" className="form-control form-control-sm" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                <DateInput value={endDate} min={startDate || todayStr()} onChange={setEndDate} />
               </div>
               <div className="col-md-2">
                 <button className="btn btn-sm btn-primary w-100" onClick={handleAssign}>Assign</button>

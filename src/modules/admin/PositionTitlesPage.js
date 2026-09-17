@@ -122,7 +122,7 @@ const PositionTitlesPage = () => {
               <th>#</th>
               <th>Department</th>
               <th>Position Title</th>
-              <th>Job Description</th>
+              <th>Roles & Responsibilities</th>
               <th style={{ width: 140 }}>Actions</th>
             </tr>
           </thead>
@@ -208,7 +208,7 @@ const PositionTitlesPage = () => {
                   </div>
 
                   <div className="mb-3">
-                    <label className="form-label">Job Description</label>
+                    <label className="form-label">Roles &amp; Responsibilities</label>
                     <textarea
                       className="form-control"
                       rows={3}

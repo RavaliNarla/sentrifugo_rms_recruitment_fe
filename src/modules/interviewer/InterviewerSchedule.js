@@ -1,12 +1,21 @@
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import recruiterApiService from "../../core/recruiterApiService";
+import DateInput from "../../shared/DateInput";
+
+const DECISION_OPTIONS = [
+  { value: "", label: "Select" },
+  { value: "SELECT", label: "Select (Recommend)" },
+  { value: "REJECT", label: "Reject" },
+  { value: "HOLD", label: "Hold" },
+];
 
 const InterviewerSchedule = () => {
   const [requisitions, setRequisitions] = useState([]);
   const [positions, setPositions] = useState([]);
   const [requisitionId, setRequisitionId] = useState("");
   const [positionId, setPositionId] = useState("");
+  const [dateFilter, setDateFilter] = useState("");
   const [rows, setRows] = useState([]);
   const [scores, setScores] = useState({});
   const [loading, setLoading] = useState(false);
@@ -28,10 +37,18 @@ const InterviewerSchedule = () => {
     if (!positionId) { setRows([]); return; }
     setLoading(true);
     try {
-      const res = await recruiterApiService.getMyInterviews(positionId);
-      setRows(res.data.data || []);
+      const res = await recruiterApiService.getMyInterviews(positionId, dateFilter || undefined);
+      const data = res.data.data || [];
+      setRows(data);
+      // SCL_29: redisplay the interviewer's own previously-saved score/rationale/decision, not blank fields.
       const initial = {};
-      (res.data.data || []).forEach((r) => { initial[r.candidateId] = { score: "", comments: "" }; });
+      data.forEach((r) => {
+        initial[r.candidateId] = {
+          score: r.myScore != null ? String(r.myScore) : "",
+          rationale: r.myRationale || "",
+          decision: r.myDecision || "",
+        };
+      });
       setScores(initial);
     } catch (e) {
       toast.error("Failed to load your interviews");
@@ -43,7 +60,7 @@ const InterviewerSchedule = () => {
   useEffect(() => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [positionId]);
+  }, [positionId, dateFilter]);
 
   const updateScore = (candidateId, field, value) => {
     setScores((prev) => ({ ...prev, [candidateId]: { ...prev[candidateId], [field]: value } }));
@@ -52,7 +69,7 @@ const InterviewerSchedule = () => {
   const handleSubmit = async () => {
     const requests = Object.entries(scores)
       .filter(([, v]) => v.score !== "" && v.score !== undefined)
-      .map(([candidateId, v]) => ({ candidateId, score: Number(v.score), comments: v.comments }));
+      .map(([candidateId, v]) => ({ candidateId, score: Number(v.score), rationale: v.rationale, decision: v.decision || null }));
 
     if (requests.length === 0) {
       toast.error("Enter at least one score before submitting");
@@ -74,19 +91,23 @@ const InterviewerSchedule = () => {
     <div>
       <div className="app-card mb-3">
         <div className="row">
-          <div className="col-md-6">
+          <div className="col-md-4">
             <label className="form-label">Requisition</label>
             <select className="form-select" value={requisitionId} onChange={(e) => setRequisitionId(e.target.value)}>
               <option value="">Select Requisition</option>
               {requisitions.map((r) => <option key={r.id} value={r.id}>{r.requisitionCode} - {r.title}</option>)}
             </select>
           </div>
-          <div className="col-md-6">
+          <div className="col-md-4">
             <label className="form-label">Position</label>
             <select className="form-select" value={positionId} onChange={(e) => setPositionId(e.target.value)} disabled={!requisitionId}>
               <option value="">Select Position</option>
               {positions.map((p) => <option key={p.id} value={p.id}>{p.positionTitleName} - {p.locationName}</option>)}
             </select>
+          </div>
+          <div className="col-md-4">
+            <label className="form-label">Interview Date</label>
+            <DateInput value={dateFilter} onChange={setDateFilter} placeholder="All dates" />
           </div>
         </div>
       </div>
@@ -102,8 +123,9 @@ const InterviewerSchedule = () => {
                     <th>Date</th>
                     <th>Time</th>
                     <th>Status</th>
-                    <th style={{ width: 140 }}>Score (0-100)</th>
-                    <th>Comments</th>
+                    <th style={{ width: 110 }}>Rating (1-10)</th>
+                    <th>Rationale</th>
+                    <th style={{ width: 160 }}>Decision</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -116,8 +138,8 @@ const InterviewerSchedule = () => {
                       <td>
                         <input
                           type="number"
-                          min={0}
-                          max={100}
+                          min={1}
+                          max={10}
                           className="form-control form-control-sm"
                           value={scores[r.candidateId]?.score ?? ""}
                           onChange={(e) => updateScore(r.candidateId, "score", e.target.value)}
@@ -126,14 +148,24 @@ const InterviewerSchedule = () => {
                       <td>
                         <input
                           className="form-control form-control-sm"
-                          value={scores[r.candidateId]?.comments ?? ""}
-                          onChange={(e) => updateScore(r.candidateId, "comments", e.target.value)}
+                          placeholder="Why this score?"
+                          value={scores[r.candidateId]?.rationale ?? ""}
+                          onChange={(e) => updateScore(r.candidateId, "rationale", e.target.value)}
                         />
+                      </td>
+                      <td>
+                        <select
+                          className="form-select form-select-sm"
+                          value={scores[r.candidateId]?.decision ?? ""}
+                          onChange={(e) => updateScore(r.candidateId, "decision", e.target.value)}
+                        >
+                          {DECISION_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                        </select>
                       </td>
                     </tr>
                   ))}
                   {rows.length === 0 && (
-                    <tr><td colSpan={6} className="text-center text-muted py-4">No candidates scheduled with your panel for this position.</td></tr>
+                    <tr><td colSpan={7} className="text-center text-muted py-4">No candidates scheduled with your panel for this position{dateFilter ? " on this date" : ""}.</td></tr>
                   )}
                 </tbody>
               </table>

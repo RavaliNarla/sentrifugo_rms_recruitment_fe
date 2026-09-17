@@ -20,6 +20,8 @@ const Approvals = () => {
   const level = isL2 ? "L2" : "L1";
 
   const [requisitions, setRequisitions] = useState([]);
+  const [positionsByReq, setPositionsByReq] = useState({});
+  const [expanded, setExpanded] = useState({});
   const [selected, setSelected] = useState([]);
   const [comments, setComments] = useState("");
   const [loading, setLoading] = useState(false);
@@ -28,12 +30,27 @@ const Approvals = () => {
     setLoading(true);
     try {
       const res = isL2 ? await recruiterApiService.getL2Requisitions() : await recruiterApiService.getL1Requisitions();
-      setRequisitions(res.data.data || []);
+      const content = res.data.data || [];
+      setRequisitions(content);
+
+      // SCL_20: position details were not shown under a requisition in the approver's view.
+      const positionResults = await Promise.all(
+        content.map((req) =>
+          recruiterApiService.getPositionsByRequisition(req.id).then((r) => [req.id, r.data.data]).catch(() => [req.id, []])
+        )
+      );
+      const map = {};
+      positionResults.forEach(([id, positions]) => { map[id] = positions; });
+      setPositionsByReq(map);
     } catch (e) {
       toast.error("Failed to load requisitions for approval");
     } finally {
       setLoading(false);
     }
+  };
+
+  const toggleExpand = (requisitionId) => {
+    setExpanded((prev) => ({ ...prev, [requisitionId]: !prev[requisitionId] }));
   };
 
   useEffect(() => {
@@ -86,7 +103,9 @@ const Approvals = () => {
       {loading ? (
         <div>Loading...</div>
       ) : (
-        requisitions.map((req) => (
+        requisitions.map((req) => {
+          const positions = positionsByReq[req.id] || [];
+          return (
           <div className="card mb-2" key={req.id}>
             <div className="card-body d-flex align-items-start gap-2">
               {req.status === pendingStatus && (isL1 || isL2) && (
@@ -97,17 +116,44 @@ const Approvals = () => {
                   onChange={() => toggleSelect(req.id)}
                 />
               )}
-              <div>
-                <span className="badge bg-light text-dark me-2">{req.requisitionCode}</span>
-                <span className={`badge bg-${STATUS_BADGE[req.status] || "secondary"} me-2`}>{req.status}</span>
-                <span className="fw-bold">{req.title}</span>
-                <div className="text-muted small mt-1">{req.description}</div>
-                <div className="text-muted small">Start: {req.startDate} | Expected Fulfilment: {req.expectedFulfilmentDate}</div>
-                {req.comments && <div className="text-muted small">Last comments: {req.comments}</div>}
+              <div className="flex-grow-1">
+                <div className="d-flex justify-content-between align-items-start">
+                  <div>
+                    <span className="badge bg-light text-dark me-2">{req.requisitionCode}</span>
+                    <span className={`badge bg-${STATUS_BADGE[req.status] || "secondary"} me-2`}>{req.status}</span>
+                    <span className="fw-bold">{req.title}</span>
+                    <div className="text-muted small mt-1">{req.description}</div>
+                    <div className="text-muted small">Start: {req.startDate} | Expected Fulfilment: {req.expectedFulfilmentDate}</div>
+                    {req.comments && <div className="text-muted small">Last comments: {req.comments}</div>}
+                  </div>
+                  <button type="button" className="icon-btn-circle" onClick={() => toggleExpand(req.id)}>
+                    <i className={`bi bi-chevron-${expanded[req.id] ? "up" : "down"}`} />
+                  </button>
+                </div>
+
+                {expanded[req.id] && (
+                  <div className="mt-2 pt-2 border-top">
+                    {positions.length === 0 && <div className="text-muted small">No positions added yet.</div>}
+                    {positions.map((pos) => (
+                      <div key={pos.id} className="small mb-1">
+                        <span className="fw-bold">{pos.positionTitleName}</span>
+                        {" — "}
+                        <span>{pos.departmentName}</span>
+                        {" · "}
+                        <span>{pos.locationName}</span>
+                        {" · "}
+                        <span>Vacancies: {pos.vacancies}</span>
+                        {" · "}
+                        <span>Experience: {pos.experienceYears ?? "-"} yrs</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
-        ))
+          );
+        })
       )}
       {!loading && requisitions.length === 0 && (
         <div className="text-center text-muted py-5">No requisitions in your approval queue.</div>

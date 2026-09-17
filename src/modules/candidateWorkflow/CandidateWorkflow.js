@@ -20,7 +20,7 @@ const CandidateWorkflow = () => {
   const tabs = [
     { key: "CANDIDATE_POOL", label: "Candidate Pool", privilege: "CandidatePool" },
     { key: "INTERVIEW_POOL", label: "Interview Pool", privilege: "InterviewPool" },
-    { key: "COMPENSATION_POOL", label: "Compensation Pool", privilege: "CompensationPool" },
+    { key: "COMPENSATION_POOL", label: "Compensation Management", privilege: "CompensationPool" },
     { key: "OFFER_POOL", label: "Offer Pool", privilege: "OfferPool" },
   ].filter((t) => privileges[t.privilege]);
 

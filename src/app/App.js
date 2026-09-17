@@ -12,6 +12,7 @@ import JobPostings from "../modules/jobPosting/JobPostings";
 import CreateRequisition from "../modules/jobPosting/CreateRequisition";
 import AddPosition from "../modules/jobPosting/AddPosition";
 import Approvals from "../modules/approvals/Approvals";
+import OfferApprovals from "../modules/offerApprovals/OfferApprovals";
 import CandidateWorkflow from "../modules/candidateWorkflow/CandidateWorkflow";
 import CommitteeManagement from "../modules/committeeManagement/CommitteeManagement";
 import InterviewerSchedule from "../modules/interviewer/InterviewerSchedule";
@@ -20,6 +21,7 @@ import DepartmentsPage from "../modules/admin/DepartmentsPage";
 import LocationsPage from "../modules/admin/LocationsPage";
 import PositionTitlesPage from "../modules/admin/PositionTitlesPage";
 import EducationQualificationsPage from "../modules/admin/EducationQualificationsPage";
+import SpecializationsPage from "../modules/admin/SpecializationsPage";
 
 function withLayout(element) {
   return <Layout>{element}</Layout>;
@@ -74,6 +76,15 @@ function App() {
         />
 
         <Route
+          path="/offer-approvals"
+          element={
+            <PrivateRoute>
+              <PrivilegeRoute privilegesRequired={["L1Approval", "L2Approval"]}>{withLayout(<OfferApprovals />)}</PrivilegeRoute>
+            </PrivateRoute>
+          }
+        />
+
+        <Route
           path="/candidate-workflow"
           element={
             <PrivateRoute>
@@ -123,6 +134,10 @@ function App() {
         <Route
           path="/admin/education-qualifications"
           element={<PrivateRoute><PrivilegeRoute privilege="Admin">{withLayout(<EducationQualificationsPage />)}</PrivilegeRoute></PrivateRoute>}
+        />
+        <Route
+          path="/admin/specializations"
+          element={<PrivateRoute><PrivilegeRoute privilege="Admin">{withLayout(<SpecializationsPage />)}</PrivilegeRoute></PrivateRoute>}
         />
 
         <Route path="/" element={<Navigate to="/dashboard" replace />} />

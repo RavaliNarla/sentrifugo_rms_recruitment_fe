@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useMsal } from "@azure/msal-react";
 import { InteractionStatus } from "@azure/msal-browser";
 import { toast } from "react-toastify";
@@ -10,6 +10,22 @@ import "./Login.css";
 const Login = () => {
   const { instance, inProgress } = useMsal();
   const [loggingIn, setLoggingIn] = useState(false);
+
+  // SCL_01: after loginRedirect() navigates away, some browsers restore this page
+  // from the back/forward cache (bfcache) on Back, without re-running JS - so the
+  // `loggingIn=true` set right before navigating away survives and leaves the
+  // button stuck disabled/"Redirecting...". Reset on every mount and on bfcache
+  // restore (pageshow with event.persisted) so the button always comes back.
+  useEffect(() => {
+    setLoggingIn(false);
+    const handlePageShow = (event) => {
+      if (event.persisted) {
+        setLoggingIn(false);
+      }
+    };
+    window.addEventListener("pageshow", handlePageShow);
+    return () => window.removeEventListener("pageshow", handlePageShow);
+  }, []);
 
   const handleLogin = async () => {
     setLoggingIn(true);

@@ -11,6 +11,8 @@ import ScheduleInterviewModal from "./ScheduleInterviewModal";
 const STATUS_PILL = {
   ADDED: "status-pill-secondary",
   SHORTLISTED: "status-pill-warning",
+  NOT_SHORTLISTED: "status-pill-danger",
+  ON_HOLD: "status-pill-warning",
   SCHEDULED: "status-pill-info",
   QUALIFIED: "status-pill-success",
   DISQUALIFIED: "status-pill-danger",
@@ -18,10 +20,12 @@ const STATUS_PILL = {
   MOVED_TO_OFFER: "status-pill-secondary",
 };
 
-const STATUS_OPTIONS = ["ADDED", "SHORTLISTED", "SCHEDULED", "QUALIFIED", "DISQUALIFIED", "COMPENSATION_PENDING", "MOVED_TO_OFFER"];
+const STATUS_OPTIONS = ["ADDED", "SHORTLISTED", "NOT_SHORTLISTED", "ON_HOLD", "SCHEDULED", "QUALIFIED", "DISQUALIFIED", "COMPENSATION_PENDING", "MOVED_TO_OFFER"];
 
 const STATUS_LABELS = {
   ADDED: "Applied",
+  NOT_SHORTLISTED: "Not Shortlisted",
+  ON_HOLD: "On Hold",
 };
 
 export const getStatusLabel = (status) => STATUS_LABELS[status] || status.replace(/_/g, " ");
@@ -33,6 +37,7 @@ const CandidatePoolTab = ({ requisitionId, positionId }) => {
   const [totalPages, setTotalPages] = useState(0);
   const [selected, setSelected] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingCandidate, setEditingCandidate] = useState(null);
   const [profileCandidate, setProfileCandidate] = useState(null);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -84,14 +89,27 @@ const CandidatePoolTab = ({ requisitionId, positionId }) => {
     setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   };
 
-  const handleShortlist = async (id) => {
+  // SCL_25: shortlist decision is Yes / No / On Hold (decision: "SHORTLIST" | "REJECT" | "HOLD").
+  const handleDecide = async (id, decision) => {
     try {
-      await recruiterApiService.shortlistCandidate(id);
-      toast.success("Candidate shortlisted successfully");
+      await recruiterApiService.decideCandidate(id, decision);
+      toast.success("Decision recorded successfully");
       setProfileCandidate(null);
       load();
     } catch (e) {
-      toast.error(e.response?.data?.message || "Failed to shortlist candidate");
+      toast.error(e.response?.data?.message || "Failed to record decision");
+    }
+  };
+
+  // SCL_42: Edit/Delete are only available for newly-added candidates.
+  const handleDelete = async (c) => {
+    if (!window.confirm(`Delete candidate "${c.name}"? This cannot be undone.`)) return;
+    try {
+      await recruiterApiService.deleteCandidate(c.id);
+      toast.success("Candidate deleted successfully");
+      load();
+    } catch (e) {
+      toast.error(e.response?.data?.message || "Failed to delete candidate");
     }
   };
 
@@ -123,7 +141,7 @@ const CandidatePoolTab = ({ requisitionId, positionId }) => {
               Schedule Interview ({selected.length})
             </button>
           )}
-          <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>
+          <button className="btn btn-primary" onClick={() => { setEditingCandidate(null); setShowAddModal(true); }}>
             <i className="bi bi-plus-lg" /> Add Candidate
           </button>
         </div>
@@ -168,7 +186,15 @@ const CandidatePoolTab = ({ requisitionId, positionId }) => {
                     </button>
                   )}
                   {c.status === "ADDED" && (
-                    <button className="btn btn-sm btn-outline-primary" onClick={() => handleShortlist(c.id)}>Shortlist</button>
+                    <>
+                      <button className="btn btn-sm btn-outline-primary me-2" onClick={() => setProfileCandidate(c)}>Decide</button>
+                      <button className="icon-btn-circle me-2" title="Edit Candidate" onClick={() => { setEditingCandidate(c); setShowAddModal(true); }}>
+                        <i className="bi bi-pencil" />
+                      </button>
+                      <button className="icon-btn-circle danger" title="Delete Candidate" onClick={() => handleDelete(c)}>
+                        <i className="bi bi-trash" />
+                      </button>
+                    </>
                   )}
                 </td>
               </tr>
@@ -186,8 +212,9 @@ const CandidatePoolTab = ({ requisitionId, positionId }) => {
         <AddCandidateModal
           requisitionId={requisitionId}
           positionId={positionId}
-          onClose={() => setShowAddModal(false)}
-          onSaved={() => { setShowAddModal(false); load(); }}
+          editingCandidate={editingCandidate}
+          onClose={() => { setShowAddModal(false); setEditingCandidate(null); }}
+          onSaved={() => { setShowAddModal(false); setEditingCandidate(null); load(); }}
         />
       )}
 
@@ -195,7 +222,7 @@ const CandidatePoolTab = ({ requisitionId, positionId }) => {
         <CandidateProfileModal
           candidate={profileCandidate}
           onClose={() => setProfileCandidate(null)}
-          onShortlist={handleShortlist}
+          onDecide={handleDecide}
           onViewFile={filePreview.openFile}
         />
       )}

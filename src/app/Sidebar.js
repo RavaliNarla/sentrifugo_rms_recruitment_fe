@@ -65,6 +65,10 @@ const Sidebar = () => {
               <i className="bi bi-check2-square" />
               <span className="label">Requisition Approvals</span>
             </NavLink>
+            <NavLink to="/offer-approvals" className={({ isActive }) => (isActive ? "active" : "")}>
+              <i className="bi bi-envelope-paper-fill" />
+              <span className="label">Offer Approvals</span>
+            </NavLink>
           </>
         )}
 
@@ -100,6 +104,10 @@ const Sidebar = () => {
             <NavLink to="/admin/education-qualifications" className={({ isActive }) => (isActive ? "active" : "")}>
               <i className="bi bi-mortarboard-fill" />
               <span className="label">Education Qualifications</span>
+            </NavLink>
+            <NavLink to="/admin/specializations" className={({ isActive }) => (isActive ? "active" : "")}>
+              <i className="bi bi-mortarboard" />
+              <span className="label">Specializations</span>
             </NavLink>
           </>
         )}
