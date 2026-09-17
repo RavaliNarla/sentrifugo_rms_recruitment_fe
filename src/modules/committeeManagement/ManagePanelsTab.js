@@ -88,11 +88,11 @@ const ManagePanelsTab = () => {
         <div className="card-subtitle mb-3">Create and manage interview panels</div>
 
         <div className="mb-3">
-          <label className="form-label fs-14">Panel Name *</label>
+          <label className="form-label fs-14">Panel Name <span className="text-danger">*</span></label>
           <input className="form-control" value={name} onChange={(e) => setName(e.target.value)} placeholder="Enter Panel Name" />
         </div>
         <div className="mb-3">
-          <label className="form-label fs-14">Panel Members *</label>
+          <label className="form-label fs-14">Panel Members <span className="text-danger">*</span></label>
           <div className="member-checklist">
             {members.map((m) => (
               <div key={m.id} className="form-check">

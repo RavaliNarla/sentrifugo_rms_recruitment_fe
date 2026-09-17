@@ -164,37 +164,37 @@ const AddPosition = () => {
       <fieldset disabled={viewOnly} style={{ border: 0, padding: 0, margin: 0 }}>
       <div className="row">
         <div className="col-md-6 mb-3">
-          <label className="form-label">Department *</label>
+          <label className="form-label">Department <span className="text-danger">*</span></label>
           <select className="form-select" value={form.departmentId} onChange={(e) => handleDepartmentChange(e.target.value)}>
             <option value="">Select</option>
             {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
           </select>
         </div>
         <div className="col-md-6 mb-3">
-          <label className="form-label">Location *</label>
-          <select className="form-select" value={form.locationId} onChange={(e) => setForm({ ...form, locationId: e.target.value })}>
-            <option value="">Select</option>
-            {locations.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
+          <label className="form-label">Position Title <span className="text-danger">*</span></label>
+          <select
+            className="form-select"
+            value={form.positionTitleId}
+            onChange={(e) => handlePositionTitleChange(e.target.value)}
+            disabled={!form.departmentId}
+          >
+            <option value="">{form.departmentId ? "Select" : "Select a Department first"}</option>
+            {positionTitles.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
+          <small className="text-muted">Picking a title prefills job description and experience below from the Position Master — you can still edit them.</small>
         </div>
       </div>
 
       <div className="mb-3">
-        <label className="form-label">Position Title *</label>
-        <select
-          className="form-select"
-          value={form.positionTitleId}
-          onChange={(e) => handlePositionTitleChange(e.target.value)}
-          disabled={!form.departmentId}
-        >
-          <option value="">{form.departmentId ? "Select" : "Select a Department first"}</option>
-          {positionTitles.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+        <label className="form-label">Location <span className="text-danger">*</span></label>
+        <select className="form-select" value={form.locationId} onChange={(e) => setForm({ ...form, locationId: e.target.value })}>
+          <option value="">Select</option>
+          {locations.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
         </select>
-        <small className="text-muted">Picking a title prefills job description and experience below from the Position Master — you can still edit them.</small>
       </div>
 
       <div className="mb-3">
-        <label className="form-label">Job Description *</label>
+        <label className="form-label">Job Description <span className="text-danger">*</span></label>
         <textarea
           className="form-control"
           rows={4}

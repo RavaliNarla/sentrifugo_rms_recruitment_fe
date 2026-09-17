@@ -706,6 +706,10 @@ a {
   box-shadow: 0 0 0 0.2rem rgba(31, 138, 60, 0.15);
 }
 
+.form-check-input {
+  border-color: #94a3b8;
+  border-width: 1.5px;
+}
 .form-check-input:checked {
   background-color: var(--brand-primary);
   border-color: var(--brand-primary);
@@ -713,6 +717,9 @@ a {
 .form-check-input:focus {
   border-color: var(--brand-primary);
   box-shadow: 0 0 0 0.2rem rgba(31, 138, 60, 0.15);
+}
+.form-check-input:disabled {
+  opacity: 0.6;
 }
 
 @media (max-width: 860px) {

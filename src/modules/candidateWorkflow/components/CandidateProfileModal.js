@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import recruiterApiService from "../../../core/recruiterApiService";
+import { getStatusLabel } from "./CandidatePoolTab";
 
 const CandidateProfileModal = ({ candidate, onClose, onShortlist, onViewFile }) => {
   const [photoUrl, setPhotoUrl] = useState(null);
@@ -38,7 +39,7 @@ const CandidateProfileModal = ({ candidate, onClose, onShortlist, onViewFile }) 
               </div>
               <div>
                 <div className="fw-bold fs-5">{candidate.name}</div>
-                <span className="status-pill status-pill-secondary">{candidate.status}</span>
+                <span className="status-pill status-pill-secondary">{getStatusLabel(candidate.status)}</span>
               </div>
             </div>
 

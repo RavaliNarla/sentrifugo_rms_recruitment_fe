@@ -23,7 +23,7 @@ const ROUTES = [
   {
     prefix: "/candidate-workflow",
     section: "Recruitment",
-    title: "Candidate Workflow",
+    title: "Candidate Management",
     subtitle: "Manage candidates through screening, interview, compensation and offer",
   },
   {

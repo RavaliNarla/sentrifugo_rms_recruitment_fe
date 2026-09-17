@@ -20,6 +20,12 @@ const STATUS_PILL = {
 
 const STATUS_OPTIONS = ["ADDED", "SHORTLISTED", "SCHEDULED", "QUALIFIED", "DISQUALIFIED", "COMPENSATION_PENDING", "MOVED_TO_OFFER"];
 
+const STATUS_LABELS = {
+  ADDED: "Applied",
+};
+
+export const getStatusLabel = (status) => STATUS_LABELS[status] || status.replace(/_/g, " ");
+
 const CandidatePoolTab = ({ requisitionId, positionId }) => {
   const [candidates, setCandidates] = useState([]);
   const [page, setPage] = useState(0);
@@ -100,7 +106,7 @@ const CandidatePoolTab = ({ requisitionId, positionId }) => {
           <button className="btn btn-link fs-14 text-danger p-0 text-decoration-none" onClick={clearFilters}>Clear all</button>
           <select className="form-select form-select-sm" style={{ width: 170 }} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
             <option value="">All Statuses</option>
-            {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s.replace(/_/g, " ")}</option>)}
+            {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{getStatusLabel(s)}</option>)}
           </select>
           <div className="search-boxpost">
             <i className="bi bi-search" />
@@ -146,7 +152,7 @@ const CandidatePoolTab = ({ requisitionId, positionId }) => {
                 <td>{c.name}</td>
                 <td>{c.phone}</td>
                 <td>{c.email}</td>
-                <td><span className={`status-pill ${STATUS_PILL[c.status] || "status-pill-secondary"}`}>{c.status.replace(/_/g, " ")}</span></td>
+                <td><span className={`status-pill ${STATUS_PILL[c.status] || "status-pill-secondary"}`}>{getStatusLabel(c.status)}</span></td>
                 <td>
                   <button className="icon-btn-circle me-2" title="View Profile" onClick={() => setProfileCandidate(c)}>
                     <i className="bi bi-person" />

@@ -37,7 +37,7 @@ const CreateRequisition = () => {
 
       <div className="row">
         <div className="col-md-8 mb-3">
-          <label className="form-label">Requisition Title *</label>
+          <label className="form-label">Requisition Title <span className="text-danger">*</span></label>
           <input
             className="form-control"
             placeholder="Enter Requisition Title"
@@ -47,7 +47,7 @@ const CreateRequisition = () => {
           <small className="text-muted">Use a clear, searchable title.</small>
         </div>
         <div className="col-md-4 mb-3">
-          <label className="form-label">Start Date *</label>
+          <label className="form-label">Start Date <span className="text-danger">*</span></label>
           <input
             type="date"
             className="form-control"
@@ -59,7 +59,7 @@ const CreateRequisition = () => {
 
       <div className="row">
         <div className="col-md-8 mb-3">
-          <label className="form-label">Description *</label>
+          <label className="form-label">Description <span className="text-danger">*</span></label>
           <textarea
             className="form-control"
             rows={5}
@@ -69,7 +69,7 @@ const CreateRequisition = () => {
           />
         </div>
         <div className="col-md-4 mb-3">
-          <label className="form-label">Expected Fulfilment Date *</label>
+          <label className="form-label">Expected Fulfilment Date <span className="text-danger">*</span></label>
           <input
             type="date"
             className="form-control"

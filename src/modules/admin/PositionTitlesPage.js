@@ -175,7 +175,7 @@ const PositionTitlesPage = () => {
                 <div className="modal-body">
                   <div className="row">
                     <div className="col-md-6 mb-3">
-                      <label className="form-label">Department *</label>
+                      <label className="form-label">Department <span className="text-danger">*</span></label>
                       <select
                         className="form-select"
                         value={form.departmentId}
@@ -186,7 +186,7 @@ const PositionTitlesPage = () => {
                       </select>
                     </div>
                     <div className="col-md-6 mb-3">
-                      <label className="form-label">Position Title *</label>
+                      <label className="form-label">Position Title <span className="text-danger">*</span></label>
                       <input
                         className="form-control"
                         value={form.name}

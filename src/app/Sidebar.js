@@ -48,7 +48,7 @@ const Sidebar = () => {
         {showCandidateWorkflow && (
           <NavLink to="/candidate-workflow" className={({ isActive }) => (isActive ? "active" : "")}>
             <i className="bi bi-people-fill" />
-            <span className="label">Candidate Workflow</span>
+            <span className="label">Candidate Management</span>
           </NavLink>
         )}
         {privileges.CommitteeManagement && (

@@ -49,15 +49,15 @@ const AddCandidateModal = ({ requisitionId, positionId, onClose, onSaved }) => {
             <div className="row">
               <div className="col-md-8">
                 <div className="mb-3">
-                  <label className="form-label">Name *</label>
+                  <label className="form-label">Name <span className="text-danger">*</span></label>
                   <input className="form-control" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
                 </div>
                 <div className="mb-3">
-                  <label className="form-label">Phone *</label>
+                  <label className="form-label">Phone <span className="text-danger">*</span></label>
                   <input className="form-control" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
                 </div>
                 <div className="mb-3">
-                  <label className="form-label">Email *</label>
+                  <label className="form-label">Email <span className="text-danger">*</span></label>
                   <input type="email" className="form-control" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
                 </div>
               </div>
