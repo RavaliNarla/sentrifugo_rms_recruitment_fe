@@ -15,6 +15,7 @@ const CertificationsPage = () => {
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
+  const [nameError, setNameError] = useState("");
   const [confirmState, setConfirmState] = useState({ show: false, message: "", onConfirm: null });
 
   const askConfirm = (message, action) => setConfirmState({ show: true, message, onConfirm: action });
@@ -39,18 +40,20 @@ const CertificationsPage = () => {
   const openAdd = () => {
     setEditing(null);
     setForm(EMPTY_FORM);
+    setNameError("");
     setShowModal(true);
   };
 
   const openEdit = (item) => {
     setEditing(item);
     setForm({ name: item.name });
+    setNameError("");
     setShowModal(true);
   };
 
   const handleSave = async () => {
     if (!form.name.trim()) {
-      toast.error("Name is required");
+      setNameError("Name is required");
       return;
     }
     try {
@@ -140,11 +143,12 @@ const CertificationsPage = () => {
               <div className="modal-body">
                 <label className="form-label">Name <span className="text-danger">*</span></label>
                 <input
-                  className="form-control"
+                  className={`form-control ${nameError ? "is-invalid" : ""}`}
                   value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  onChange={(e) => { setForm({ ...form, name: e.target.value }); setNameError(""); }}
                   autoFocus
                 />
+                {nameError && <div className="text-danger fs-13 mt-1">{nameError}</div>}
               </div>
               <div className="modal-footer">
                 <button className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>

@@ -27,25 +27,36 @@ const CreateRequisition = () => {
         }
       : { title: "", description: "", startDate: "", expectedFulfilmentDate: "" }
   );
+  const [errors, setErrors] = useState({});
+
+  const setField = (field, value) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+    setErrors((prev) => (prev[field] ? { ...prev, [field]: undefined } : prev));
+  };
+
+  const validate = () => {
+    const next = {};
+    if (!form.title.trim()) next.title = "Requisition Title is required";
+    if (!form.description.trim()) next.description = "Description is required";
+    if (!form.startDate) {
+      next.startDate = "Start Date is required";
+    } else if (form.startDate < tomorrowStr()) {
+      next.startDate = "Start Date must be a future date";
+    }
+    if (!form.expectedFulfilmentDate) {
+      next.expectedFulfilmentDate = "Expected Fulfilment Date is required";
+    } else if (form.expectedFulfilmentDate < tomorrowStr()) {
+      next.expectedFulfilmentDate = "Expected Fulfilment Date must be a future date";
+    } else if (form.startDate && form.expectedFulfilmentDate < form.startDate) {
+      next.expectedFulfilmentDate = "Expected Fulfilment Date cannot be before the Start Date";
+    }
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  };
 
   const handleSave = async () => {
     if (viewOnly) return;
-    if (!form.title || !form.description || !form.startDate || !form.expectedFulfilmentDate) {
-      toast.error("All fields are required");
-      return;
-    }
-    if (form.startDate < tomorrowStr()) {
-      toast.error("Start Date must be a future date");
-      return;
-    }
-    if (form.expectedFulfilmentDate < tomorrowStr()) {
-      toast.error("Expected Fulfilment Date must be a future date");
-      return;
-    }
-    if (form.expectedFulfilmentDate < form.startDate) {
-      toast.error("Expected Fulfilment Date cannot be before the Start Date");
-      return;
-    }
+    if (!validate()) return;
     try {
       if (editingRequisition) {
         await recruiterApiService.updateRequisition(editingRequisition.id, form);
@@ -83,20 +94,25 @@ const CreateRequisition = () => {
         <div className="col-md-8 mb-3">
           <label className="form-label">Requisition Title <span className="text-danger">*</span></label>
           <input
-            className="form-control"
+            className={`form-control ${errors.title ? "is-invalid" : ""}`}
             placeholder="Enter Requisition Title"
             value={form.title}
-            onChange={(e) => setForm({ ...form, title: e.target.value })}
+            onChange={(e) => setField("title", e.target.value)}
           />
-          <small className="text-muted">Use a clear, searchable title.</small>
+          {errors.title ? (
+            <div className="text-danger fs-13 mt-1">{errors.title}</div>
+          ) : (
+            <small className="text-muted">Use a clear, searchable title.</small>
+          )}
         </div>
         <div className="col-md-4 mb-3">
           <label className="form-label">Start Date <span className="text-danger">*</span></label>
           <DateInput
             value={form.startDate}
             min={tomorrowStr()}
-            onChange={(v) => setForm({ ...form, startDate: v })}
+            onChange={(v) => setField("startDate", v)}
           />
+          {errors.startDate && <div className="text-danger fs-13 mt-1">{errors.startDate}</div>}
         </div>
       </div>
 
@@ -104,21 +120,26 @@ const CreateRequisition = () => {
         <div className="col-md-8 mb-3">
           <label className="form-label">Description <span className="text-danger">*</span></label>
           <textarea
-            className="form-control"
+            className={`form-control ${errors.description ? "is-invalid" : ""}`}
             rows={5}
             placeholder="Enter Requisition Description"
             value={form.description}
-            onChange={(e) => setForm({ ...form, description: e.target.value })}
+            onChange={(e) => setField("description", e.target.value)}
           />
+          {errors.description && <div className="text-danger fs-13 mt-1">{errors.description}</div>}
         </div>
         <div className="col-md-4 mb-3">
           <label className="form-label">Expected Fulfilment Date <span className="text-danger">*</span></label>
           <DateInput
             value={form.expectedFulfilmentDate}
             min={form.startDate || tomorrowStr()}
-            onChange={(v) => setForm({ ...form, expectedFulfilmentDate: v })}
+            onChange={(v) => setField("expectedFulfilmentDate", v)}
           />
-          <small className="text-muted">Target date by which this requirement should be filled.</small>
+          {errors.expectedFulfilmentDate ? (
+            <div className="text-danger fs-13 mt-1">{errors.expectedFulfilmentDate}</div>
+          ) : (
+            <small className="text-muted">Target date by which this requirement should be filled.</small>
+          )}
         </div>
       </div>
       </fieldset>

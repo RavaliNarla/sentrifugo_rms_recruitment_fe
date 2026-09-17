@@ -27,6 +27,12 @@ const AddCandidateModal = ({ requisitionId, positionId, editingCandidate, onClos
   const [idProof, setIdProof] = useState(null);
   const [photo, setPhoto] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState({});
+
+  const setField = (field, value) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+    setErrors((prev) => (prev[field] ? { ...prev, [field]: undefined } : prev));
+  };
 
   // Local preview URL for the selected photo file - revoked on change/unmount to avoid leaks.
   const photoPreviewUrl = useMemo(() => (photo ? URL.createObjectURL(photo) : null), [photo]);
@@ -34,8 +40,9 @@ const AddCandidateModal = ({ requisitionId, positionId, editingCandidate, onClos
 
   const handlePhotoChange = (e) => {
     const file = e.target.files[0];
+    setErrors((prev) => (prev.photo ? { ...prev, photo: undefined } : prev));
     if (file && !PHOTO_EXTENSIONS.includes(getFileExtension(file.name))) {
-      toast.error("Photo must be an image file (.png, .jpg, .jpeg)");
+      setErrors((prev) => ({ ...prev, photo: "Photo must be an image file (.png, .jpg, .jpeg)" }));
       e.target.value = "";
       setPhoto(null);
       return;
@@ -45,8 +52,9 @@ const AddCandidateModal = ({ requisitionId, positionId, editingCandidate, onClos
 
   const handleResumeChange = (e) => {
     const file = e.target.files[0];
+    setErrors((prev) => (prev.resume ? { ...prev, resume: undefined } : prev));
     if (file && !RESUME_EXTENSIONS.includes(getFileExtension(file.name))) {
-      toast.error("Resume must be a PDF or Word document (.pdf, .doc, .docx)");
+      setErrors((prev) => ({ ...prev, resume: "Resume must be a PDF or Word document (.pdf, .doc, .docx)" }));
       e.target.value = "";
       setResume(null);
       return;
@@ -56,8 +64,9 @@ const AddCandidateModal = ({ requisitionId, positionId, editingCandidate, onClos
 
   const handleIdProofChange = (e) => {
     const file = e.target.files[0];
+    setErrors((prev) => (prev.idProof ? { ...prev, idProof: undefined } : prev));
     if (file && !ID_PROOF_EXTENSIONS.includes(getFileExtension(file.name))) {
-      toast.error("ID Proof must be a PDF or image file (.pdf, .png, .jpg, .jpeg)");
+      setErrors((prev) => ({ ...prev, idProof: "ID Proof must be a PDF or image file (.pdf, .png, .jpg, .jpeg)" }));
       e.target.value = "";
       setIdProof(null);
       return;
@@ -65,19 +74,25 @@ const AddCandidateModal = ({ requisitionId, positionId, editingCandidate, onClos
     setIdProof(file || null);
   };
 
+  const validate = () => {
+    const next = {};
+    if (!form.name.trim()) next.name = "Name is required";
+    if (!form.phone.trim()) {
+      next.phone = "Phone is required";
+    } else if (!PHONE_REGEX.test(form.phone)) {
+      next.phone = "Please enter a valid 10-digit phone number";
+    }
+    if (!form.email.trim()) {
+      next.email = "Email is required";
+    } else if (!EMAIL_REGEX.test(form.email)) {
+      next.email = "Please enter a valid email address";
+    }
+    setErrors((prev) => ({ ...prev, name: next.name, phone: next.phone, email: next.email }));
+    return !next.name && !next.phone && !next.email;
+  };
+
   const handleSave = async () => {
-    if (!form.name || !form.phone || !form.email) {
-      toast.error("Name, Phone and Email are required");
-      return;
-    }
-    if (!EMAIL_REGEX.test(form.email)) {
-      toast.error("Please enter a valid email address");
-      return;
-    }
-    if (!PHONE_REGEX.test(form.phone)) {
-      toast.error("Please enter a valid 10-digit phone number");
-      return;
-    }
+    if (!validate()) return;
     setSaving(true);
     try {
       const formData = new FormData();
@@ -113,21 +128,33 @@ const AddCandidateModal = ({ requisitionId, positionId, editingCandidate, onClos
               <div className="col-md-8">
                 <div className="mb-3">
                   <label className="form-label">Name <span className="text-danger">*</span></label>
-                  <input className="form-control" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+                  <input
+                    className={`form-control ${errors.name ? "is-invalid" : ""}`}
+                    value={form.name}
+                    onChange={(e) => setField("name", e.target.value)}
+                  />
+                  {errors.name && <div className="text-danger fs-13 mt-1">{errors.name}</div>}
                 </div>
                 <div className="mb-3">
                   <label className="form-label">Phone <span className="text-danger">*</span></label>
                   <input
                     type="tel"
-                    className="form-control"
+                    className={`form-control ${errors.phone ? "is-invalid" : ""}`}
                     maxLength={10}
                     value={form.phone}
-                    onChange={(e) => setForm({ ...form, phone: e.target.value.replace(/\D/g, "").slice(0, 10) })}
+                    onChange={(e) => setField("phone", e.target.value.replace(/\D/g, "").slice(0, 10))}
                   />
+                  {errors.phone && <div className="text-danger fs-13 mt-1">{errors.phone}</div>}
                 </div>
                 <div className="mb-3">
                   <label className="form-label">Email <span className="text-danger">*</span></label>
-                  <input type="email" className="form-control" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+                  <input
+                    type="email"
+                    className={`form-control ${errors.email ? "is-invalid" : ""}`}
+                    value={form.email}
+                    onChange={(e) => setField("email", e.target.value)}
+                  />
+                  {errors.email && <div className="text-danger fs-13 mt-1">{errors.email}</div>}
                 </div>
               </div>
 
@@ -144,17 +171,30 @@ const AddCandidateModal = ({ requisitionId, positionId, editingCandidate, onClos
                   <i className="bi bi-camera-fill me-1" /> {photo ? "Change Photo" : "Upload Photo"}
                   <input type="file" accept=".png,.jpg,.jpeg" hidden onChange={handlePhotoChange} />
                 </label>
+                {errors.photo && <div className="text-danger fs-13 mt-1">{errors.photo}</div>}
               </div>
             </div>
 
             <div className="row">
               <div className="col-md-6 mb-3">
                 <label className="form-label">Resume (optional)</label>
-                <input type="file" className="form-control" accept=".pdf,.doc,.docx" onChange={handleResumeChange} />
+                <input
+                  type="file"
+                  className={`form-control ${errors.resume ? "is-invalid" : ""}`}
+                  accept=".pdf,.doc,.docx"
+                  onChange={handleResumeChange}
+                />
+                {errors.resume && <div className="text-danger fs-13 mt-1">{errors.resume}</div>}
               </div>
               <div className="col-md-6 mb-3">
                 <label className="form-label">ID Proof (optional)</label>
-                <input type="file" className="form-control" accept=".pdf,.png,.jpg,.jpeg" onChange={handleIdProofChange} />
+                <input
+                  type="file"
+                  className={`form-control ${errors.idProof ? "is-invalid" : ""}`}
+                  accept=".pdf,.png,.jpg,.jpeg"
+                  onChange={handleIdProofChange}
+                />
+                {errors.idProof && <div className="text-danger fs-13 mt-1">{errors.idProof}</div>}
               </div>
             </div>
           </div>

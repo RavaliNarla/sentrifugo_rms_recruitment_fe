@@ -55,6 +55,12 @@ const AddPosition = () => {
   const [approvalDoc, setApprovalDoc] = useState(null);
   const [saving, setSaving] = useState(false);
   const [autofillPrompt, setAutofillPrompt] = useState(null);
+  const [errors, setErrors] = useState({});
+
+  const setField = (field, value) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+    setErrors((prev) => (prev[field] ? { ...prev, [field]: undefined } : prev));
+  };
 
   useEffect(() => {
     Promise.all([
@@ -148,8 +154,9 @@ const AddPosition = () => {
 
   const handleApprovalDocChange = (e) => {
     const file = e.target.files[0];
+    setErrors((prev) => (prev.approvalDoc ? { ...prev, approvalDoc: undefined } : prev));
     if (file && !APPROVAL_DOC_EXTENSIONS.includes(getFileExtension(file.name))) {
-      toast.error("Approval document must be a PNG, JPEG, DOCX or PDF file");
+      setErrors((prev) => ({ ...prev, approvalDoc: "Approval document must be a PNG, JPEG, DOCX or PDF file" }));
       e.target.value = "";
       setApprovalDoc(null);
       return;
@@ -157,52 +164,40 @@ const AddPosition = () => {
     setApprovalDoc(file || null);
   };
 
-  const handleSave = async () => {
-    if (viewOnly) return;
-    if (!form.departmentId || !form.locationId || !form.positionTitleId || !form.jobDescription) {
-      toast.error("Department, Location, Position Title and Roles & Responsibilities are required");
-      return;
-    }
-    if (!form.educationQualificationId) {
-      toast.error("Education Requirement is required");
-      return;
-    }
-    if (form.experienceYears === "") {
-      toast.error("Experience Required (years) is required");
-      return;
-    }
-    if (!form.employmentType) {
-      toast.error("Employment Type is required");
-      return;
-    }
+  const validate = () => {
+    const next = {};
+    if (!form.departmentId) next.departmentId = "Department is required";
+    if (!form.positionTitleId) next.positionTitleId = "Position Title is required";
+    if (!form.locationId) next.locationId = "Location is required";
+    if (!form.jobDescription.trim()) next.jobDescription = "Roles & Responsibilities is required";
+    if (!form.educationQualificationId) next.educationQualificationId = "Education Requirement is required";
+    if (form.experienceYears === "") next.experienceYears = "Experience Required (years) is required";
+    if (!form.employmentType) next.employmentType = "Employment Type is required";
     if (form.employmentType === "CONTRACT" && !form.contractualPeriod.trim()) {
-      toast.error("Contractual Period is required for Contract employment");
-      return;
+      next.contractualPeriod = "Contractual Period is required for Contract employment";
     }
     if (!form.vacancies || Number(form.vacancies) < 1) {
-      toast.error("Number of Positions to be Hired is required");
-      return;
+      next.vacancies = "Number of Positions to be Hired is required";
     }
-    if (!form.approvedById) {
-      toast.error("Approved By is required");
-      return;
-    }
+    if (!form.approvedById) next.approvedById = "Approved By is required";
     if (isApprovedByOthers && !form.approvedByOtherText.trim()) {
-      toast.error("Please enter the approver's name for 'Others'");
-      return;
+      next.approvedByOtherText = "Please enter the approver's name for 'Others'";
     }
     if (!form.approvedOn) {
-      toast.error("Approved On is required");
-      return;
-    }
-    if (form.approvedOn > todayStr()) {
-      toast.error("Approved On cannot be a future date");
-      return;
+      next.approvedOn = "Approved On is required";
+    } else if (form.approvedOn > todayStr()) {
+      next.approvedOn = "Approved On cannot be a future date";
     }
     if (!approvalDoc && !editingPosition?.approvalDocUrl) {
-      toast.error("Upload Approval Email/Document is required");
-      return;
+      next.approvalDoc = "Upload Approval Email/Document is required";
     }
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  };
+
+  const handleSave = async () => {
+    if (viewOnly) return;
+    if (!validate()) return;
 
     setSaving(true);
     try {
@@ -264,50 +259,55 @@ const AddPosition = () => {
       <div className="row">
         <div className="col-md-6 mb-3">
           <label className="form-label">Department <span className="text-danger">*</span></label>
-          <select className="form-select" value={form.departmentId} onChange={(e) => handleDepartmentChange(e.target.value)}>
+          <select className={`form-select ${errors.departmentId ? "is-invalid" : ""}`} value={form.departmentId} onChange={(e) => { handleDepartmentChange(e.target.value); setErrors((prev) => (prev.departmentId ? { ...prev, departmentId: undefined } : prev)); }}>
             <option value="">Select</option>
             {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
           </select>
+          {errors.departmentId && <div className="text-danger fs-13 mt-1">{errors.departmentId}</div>}
         </div>
         <div className="col-md-6 mb-3">
           <label className="form-label">Position Title <span className="text-danger">*</span></label>
           <select
-            className="form-select"
+            className={`form-select ${errors.positionTitleId ? "is-invalid" : ""}`}
             value={form.positionTitleId}
-            onChange={(e) => handlePositionTitleChange(e.target.value)}
+            onChange={(e) => { handlePositionTitleChange(e.target.value); setErrors((prev) => (prev.positionTitleId ? { ...prev, positionTitleId: undefined } : prev)); }}
             disabled={!form.departmentId}
           >
             <option value="">{form.departmentId ? "Select" : "Select a Department first"}</option>
             {positionTitles.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
+          {errors.positionTitleId && <div className="text-danger fs-13 mt-1">{errors.positionTitleId}</div>}
         </div>
       </div>
 
       <div className="mb-3">
         <label className="form-label">Location <span className="text-danger">*</span></label>
-        <select className="form-select" value={form.locationId} onChange={(e) => setForm({ ...form, locationId: e.target.value })}>
+        <select className={`form-select ${errors.locationId ? "is-invalid" : ""}`} value={form.locationId} onChange={(e) => setField("locationId", e.target.value)}>
           <option value="">Select</option>
           {locations.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
         </select>
+        {errors.locationId && <div className="text-danger fs-13 mt-1">{errors.locationId}</div>}
       </div>
 
       <div className="mb-3">
         <label className="form-label">Roles &amp; Responsibilities <span className="text-danger">*</span></label>
         <textarea
-          className="form-control"
+          className={`form-control ${errors.jobDescription ? "is-invalid" : ""}`}
           rows={4}
           value={form.jobDescription}
-          onChange={(e) => setForm({ ...form, jobDescription: e.target.value })}
+          onChange={(e) => setField("jobDescription", e.target.value)}
         />
+        {errors.jobDescription && <div className="text-danger fs-13 mt-1">{errors.jobDescription}</div>}
       </div>
 
       <div className="row">
         <div className="col-md-6 mb-3">
           <label className="form-label">Education Requirement <span className="text-danger">*</span></label>
-          <select className="form-select" value={form.educationQualificationId} onChange={(e) => setForm({ ...form, educationQualificationId: e.target.value, specializationId: "" })}>
+          <select className={`form-select ${errors.educationQualificationId ? "is-invalid" : ""}`} value={form.educationQualificationId} onChange={(e) => { setForm({ ...form, educationQualificationId: e.target.value, specializationId: "" }); setErrors((prev) => (prev.educationQualificationId ? { ...prev, educationQualificationId: undefined } : prev)); }}>
             <option value="">Select</option>
             {educationQualifications.map((e2) => <option key={e2.id} value={e2.id}>{e2.name}</option>)}
           </select>
+          {errors.educationQualificationId && <div className="text-danger fs-13 mt-1">{errors.educationQualificationId}</div>}
         </div>
         <div className="col-md-6 mb-3">
           <label className="form-label">Specialization (optional)</label>
@@ -326,10 +326,11 @@ const AddPosition = () => {
       <div className="row">
         <div className="col-md-6 mb-3">
           <label className="form-label">Experience Required (years) <span className="text-danger">*</span></label>
-          <select className="form-select" value={form.experienceYears} onChange={(e) => setForm({ ...form, experienceYears: e.target.value })}>
+          <select className={`form-select ${errors.experienceYears ? "is-invalid" : ""}`} value={form.experienceYears} onChange={(e) => setField("experienceYears", e.target.value)}>
             <option value="">Select</option>
             {EXPERIENCE_YEARS.map((y) => <option key={y} value={y}>{y} {y === 1 ? "year" : "years"}</option>)}
           </select>
+          {errors.experienceYears && <div className="text-danger fs-13 mt-1">{errors.experienceYears}</div>}
         </div>
         <div className="col-md-6 mb-3">
           <label className="form-label">Certifications (optional)</label>
@@ -348,7 +349,7 @@ const AddPosition = () => {
         <div className="col-md-4 mb-3">
           <label className="form-label">Employment Type <span className="text-danger">*</span></label>
           <select
-            className="form-select"
+            className={`form-select ${errors.employmentType ? "is-invalid" : ""}`}
             value={form.employmentType}
             onChange={(e) => {
               const employmentType = e.target.value;
@@ -357,22 +358,25 @@ const AddPosition = () => {
                 employmentType,
                 contractualPeriod: employmentType === "CONTRACT" ? prev.contractualPeriod : "",
               }));
+              setErrors((prev) => (prev.employmentType ? { ...prev, employmentType: undefined } : prev));
             }}
           >
             <option value="">Select</option>
             <option value="REGULAR">Regular</option>
             <option value="CONTRACT">Contract</option>
           </select>
+          {errors.employmentType && <div className="text-danger fs-13 mt-1">{errors.employmentType}</div>}
         </div>
         {form.employmentType === "CONTRACT" && (
           <div className="col-md-4 mb-3">
             <label className="form-label">Contractual Period <span className="text-danger">*</span></label>
             <input
-              className="form-control"
+              className={`form-control ${errors.contractualPeriod ? "is-invalid" : ""}`}
               placeholder="e.g. 6 months"
               value={form.contractualPeriod}
-              onChange={(e) => setForm({ ...form, contractualPeriod: e.target.value })}
+              onChange={(e) => setField("contractualPeriod", e.target.value)}
             />
+            {errors.contractualPeriod && <div className="text-danger fs-13 mt-1">{errors.contractualPeriod}</div>}
           </div>
         )}
         <div className="col-md-4 mb-3">
@@ -380,11 +384,12 @@ const AddPosition = () => {
           <input
             type="number"
             min={1}
-            className="form-control"
+            className={`form-control ${errors.vacancies ? "is-invalid" : ""}`}
             placeholder="Enter number"
             value={form.vacancies}
-            onChange={(e) => setForm({ ...form, vacancies: e.target.value })}
+            onChange={(e) => setField("vacancies", e.target.value)}
           />
+          {errors.vacancies && <div className="text-danger fs-13 mt-1">{errors.vacancies}</div>}
         </div>
       </div>
 
@@ -404,25 +409,28 @@ const AddPosition = () => {
       <div className="row">
         <div className="col-md-6 mb-3">
           <label className="form-label">Approved By <span className="text-danger">*</span></label>
-          <select className="form-select" value={form.approvedById} onChange={(e) => setForm({ ...form, approvedById: e.target.value })}>
+          <select className={`form-select ${errors.approvedById ? "is-invalid" : ""}`} value={form.approvedById} onChange={(e) => setField("approvedById", e.target.value)}>
             <option value="">Select</option>
             {approvedByRoles.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
           </select>
+          {errors.approvedById && <div className="text-danger fs-13 mt-1">{errors.approvedById}</div>}
         </div>
         <div className="col-md-6 mb-3">
           <label className="form-label">Approved On <span className="text-danger">*</span></label>
-          <DateInput value={form.approvedOn} max={todayStr()} onChange={(v) => setForm({ ...form, approvedOn: v })} />
+          <DateInput value={form.approvedOn} max={todayStr()} onChange={(v) => setField("approvedOn", v)} />
+          {errors.approvedOn && <div className="text-danger fs-13 mt-1">{errors.approvedOn}</div>}
         </div>
       </div>
       {isApprovedByOthers && (
         <div className="mb-3">
           <label className="form-label">Approver's Name <span className="text-danger">*</span></label>
           <input
-            className="form-control"
+            className={`form-control ${errors.approvedByOtherText ? "is-invalid" : ""}`}
             placeholder="Enter approver's name"
             value={form.approvedByOtherText}
-            onChange={(e) => setForm({ ...form, approvedByOtherText: e.target.value })}
+            onChange={(e) => setField("approvedByOtherText", e.target.value)}
           />
+          {errors.approvedByOtherText && <div className="text-danger fs-13 mt-1">{errors.approvedByOtherText}</div>}
         </div>
       )}
       </fieldset>
@@ -433,10 +441,11 @@ const AddPosition = () => {
           <>
             <input
               type="file"
-              className="form-control"
+              className={`form-control ${errors.approvalDoc ? "is-invalid" : ""}`}
               accept=".pdf,.docx,.png,.jpg,.jpeg"
               onChange={handleApprovalDocChange}
             />
+            {errors.approvalDoc && <div className="text-danger fs-13 mt-1">{errors.approvalDoc}</div>}
             <small className="text-muted d-block">Scanned copy, email attachment, or screenshot of management approval.</small>
           </>
         )}

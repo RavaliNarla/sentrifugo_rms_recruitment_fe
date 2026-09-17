@@ -45,6 +45,7 @@ const OfferPoolTab = ({ positionId }) => {
   const [generating, setGenerating] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [previewHtml, setPreviewHtml] = useState(null);
+  const [errors, setErrors] = useState({});
   const filePreview = useFilePreview();
 
   useEffect(() => {
@@ -88,8 +89,12 @@ const OfferPoolTab = ({ positionId }) => {
   };
 
   const handlePreview = async () => {
-    if (!templateId || selected.length === 0) {
-      toast.error("Select an offer template and at least one candidate to preview");
+    if (!templateId) {
+      setErrors((prev) => ({ ...prev, templateId: "Select an offer template" }));
+      return;
+    }
+    if (selected.length === 0) {
+      toast.error("Select at least one candidate to preview");
       return;
     }
     try {
@@ -105,15 +110,21 @@ const OfferPoolTab = ({ positionId }) => {
     }
   };
 
+  const validateGenerate = () => {
+    const next = {};
+    if (!templateId) next.templateId = "Select an offer template";
+    if (!acceptBeforeDate) {
+      next.acceptBeforeDate = "Accept Before Date is required";
+    } else if (acceptBeforeDate <= new Date().toISOString().split("T")[0]) {
+      next.acceptBeforeDate = "Accept Before Date must be a future date";
+    }
+    if (!joiningDate) next.joiningDate = "Joining Date is required";
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  };
+
   const handleGenerate = async () => {
-    if (!templateId || !acceptBeforeDate || !joiningDate) {
-      toast.error("Select an offer template, accept-before date and joining date");
-      return;
-    }
-    if (acceptBeforeDate <= new Date().toISOString().split("T")[0]) {
-      toast.error("Accept Before Date must be a future date");
-      return;
-    }
+    if (!validateGenerate()) return;
     if (selected.length === 0) return;
     setGenerating(true);
     try {
@@ -155,10 +166,15 @@ const OfferPoolTab = ({ positionId }) => {
       <div className="row mb-3">
         <div className="col-md-3">
           <label className="form-label small">Offer Template</label>
-          <select className="form-select" value={templateId} onChange={(e) => setTemplateId(e.target.value)}>
+          <select
+            className={`form-select ${errors.templateId ? "is-invalid" : ""}`}
+            value={templateId}
+            onChange={(e) => { setTemplateId(e.target.value); setErrors((prev) => (prev.templateId ? { ...prev, templateId: undefined } : prev)); }}
+          >
             <option value="">Select Template</option>
             {templates.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
           </select>
+          {errors.templateId && <div className="text-danger fs-13 mt-1">{errors.templateId}</div>}
           {/* SCL_36: preview the selected template before generating/sending. */}
           <button type="button" className="btn btn-link btn-sm p-0 mt-1" onClick={handlePreview}>
             <i className="bi bi-eye me-1" /> Preview
@@ -166,11 +182,13 @@ const OfferPoolTab = ({ positionId }) => {
         </div>
         <div className="col-md-3">
           <label className="form-label small">Accept Before Date</label>
-          <DateInput value={acceptBeforeDate} min={tomorrowStr()} onChange={setAcceptBeforeDate} />
+          <DateInput value={acceptBeforeDate} min={tomorrowStr()} onChange={(v) => { setAcceptBeforeDate(v); setErrors((prev) => (prev.acceptBeforeDate ? { ...prev, acceptBeforeDate: undefined } : prev)); }} />
+          {errors.acceptBeforeDate && <div className="text-danger fs-13 mt-1">{errors.acceptBeforeDate}</div>}
         </div>
         <div className="col-md-3">
           <label className="form-label small">Joining Date</label>
-          <DateInput value={joiningDate} min={tomorrowStr()} onChange={setJoiningDate} />
+          <DateInput value={joiningDate} min={tomorrowStr()} onChange={(v) => { setJoiningDate(v); setErrors((prev) => (prev.joiningDate ? { ...prev, joiningDate: undefined } : prev)); }} />
+          {errors.joiningDate && <div className="text-danger fs-13 mt-1">{errors.joiningDate}</div>}
         </div>
         <div className="col-md-3 d-flex align-items-end justify-content-end gap-2">
           {selected.length > 0 && (

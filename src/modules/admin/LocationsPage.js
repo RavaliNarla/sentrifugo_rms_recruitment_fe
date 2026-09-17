@@ -12,7 +12,13 @@ const LocationsPage = () => {
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
+  const [errors, setErrors] = useState({});
   const [confirmState, setConfirmState] = useState({ show: false, message: "", onConfirm: null });
+
+  const setField = (field, value) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+    setErrors((prev) => (prev[field] ? { ...prev, [field]: undefined } : prev));
+  };
 
   const askConfirm = (message, action) => setConfirmState({ show: true, message, onConfirm: action });
   const closeConfirm = () => setConfirmState({ show: false, message: "", onConfirm: null });
@@ -40,20 +46,27 @@ const LocationsPage = () => {
   const openAdd = () => {
     setEditing(null);
     setForm(EMPTY_FORM);
+    setErrors({});
     setShowModal(true);
   };
 
   const openEdit = (loc) => {
     setEditing(loc);
     setForm({ name: loc.name, stateId: loc.stateId, address: loc.address || "" });
+    setErrors({});
     setShowModal(true);
   };
 
+  const validate = () => {
+    const next = {};
+    if (!form.name.trim()) next.name = "Location Name is required";
+    if (!form.stateId) next.stateId = "State is required";
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  };
+
   const handleSave = async () => {
-    if (!form.name || !form.stateId) {
-      toast.error("Location name and state are required");
-      return;
-    }
+    if (!validate()) return;
     try {
       if (editing) {
         await masterApiService.updateLocation(editing.id, form);
@@ -144,23 +157,25 @@ const LocationsPage = () => {
               </div>
               <div className="modal-body">
                 <div className="mb-3">
-                  <label className="form-label">Location Name</label>
+                  <label className="form-label">Location Name <span className="text-danger">*</span></label>
                   <input
-                    className="form-control"
+                    className={`form-control ${errors.name ? "is-invalid" : ""}`}
                     value={form.name}
-                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    onChange={(e) => setField("name", e.target.value)}
                   />
+                  {errors.name && <div className="text-danger fs-13 mt-1">{errors.name}</div>}
                 </div>
                 <div className="mb-3">
-                  <label className="form-label">State</label>
+                  <label className="form-label">State <span className="text-danger">*</span></label>
                   <select
-                    className="form-select"
+                    className={`form-select ${errors.stateId ? "is-invalid" : ""}`}
                     value={form.stateId}
-                    onChange={(e) => setForm({ ...form, stateId: e.target.value })}
+                    onChange={(e) => setField("stateId", e.target.value)}
                   >
                     <option value="">Select State</option>
                     {states.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
                   </select>
+                  {errors.stateId && <div className="text-danger fs-13 mt-1">{errors.stateId}</div>}
                 </div>
                 <div className="mb-3">
                   <label className="form-label">Address</label>

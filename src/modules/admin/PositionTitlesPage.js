@@ -20,7 +20,13 @@ const PositionTitlesPage = () => {
   const [editing, setEditing] = useState(null);
   const [viewOnly, setViewOnly] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
+  const [errors, setErrors] = useState({});
   const [confirmState, setConfirmState] = useState({ show: false, message: "", onConfirm: null });
+
+  const setField = (field, value) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+    setErrors((prev) => (prev[field] ? { ...prev, [field]: undefined } : prev));
+  };
 
   const askConfirm = (message, action) => setConfirmState({ show: true, message, onConfirm: action });
   const closeConfirm = () => setConfirmState({ show: false, message: "", onConfirm: null });
@@ -48,6 +54,7 @@ const PositionTitlesPage = () => {
     setEditing(null);
     setViewOnly(false);
     setForm(EMPTY_FORM);
+    setErrors({});
     setShowModal(true);
   };
 
@@ -60,6 +67,7 @@ const PositionTitlesPage = () => {
       jobDescription: item.jobDescription || "",
       minimumExperienceYears: String(item.minimumExperienceYears ?? "0"),
     });
+    setErrors({});
     setShowModal(true);
   };
 
@@ -68,11 +76,16 @@ const PositionTitlesPage = () => {
     setViewOnly(true);
   };
 
+  const validate = () => {
+    const next = {};
+    if (!form.departmentId) next.departmentId = "Department is required";
+    if (!form.name.trim()) next.name = "Position Title is required";
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  };
+
   const handleSave = async () => {
-    if (!form.name.trim() || !form.departmentId) {
-      toast.error("Position Title and Department are required");
-      return;
-    }
+    if (!validate()) return;
     const payload = {
       name: form.name,
       departmentId: form.departmentId,
@@ -184,22 +197,24 @@ const PositionTitlesPage = () => {
                     <div className="col-md-6 mb-3">
                       <label className="form-label">Department <span className="text-danger">*</span></label>
                       <select
-                        className="form-select"
+                        className={`form-select ${errors.departmentId ? "is-invalid" : ""}`}
                         value={form.departmentId}
-                        onChange={(e) => setForm({ ...form, departmentId: e.target.value })}
+                        onChange={(e) => setField("departmentId", e.target.value)}
                       >
                         <option value="">Select</option>
                         {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
                       </select>
+                      {errors.departmentId && <div className="text-danger fs-13 mt-1">{errors.departmentId}</div>}
                     </div>
                     <div className="col-md-6 mb-3">
                       <label className="form-label">Position Title <span className="text-danger">*</span></label>
                       <input
-                        className="form-control"
+                        className={`form-control ${errors.name ? "is-invalid" : ""}`}
                         value={form.name}
-                        onChange={(e) => setForm({ ...form, name: e.target.value })}
+                        onChange={(e) => setField("name", e.target.value)}
                         autoFocus
                       />
+                      {errors.name && <div className="text-danger fs-13 mt-1">{errors.name}</div>}
                     </div>
                   </div>
 

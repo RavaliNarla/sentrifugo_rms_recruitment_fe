@@ -12,6 +12,7 @@ const NamedMasterCrudPage = ({ title, getAll, add, update, remove }) => {
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
   const [name, setName] = useState("");
+  const [nameError, setNameError] = useState("");
   const [confirmState, setConfirmState] = useState({ show: false, message: "", onConfirm: null });
 
   const askConfirm = (message, action) => setConfirmState({ show: true, message, onConfirm: action });
@@ -37,18 +38,20 @@ const NamedMasterCrudPage = ({ title, getAll, add, update, remove }) => {
   const openAdd = () => {
     setEditing(null);
     setName("");
+    setNameError("");
     setShowModal(true);
   };
 
   const openEdit = (item) => {
     setEditing(item);
     setName(item.name);
+    setNameError("");
     setShowModal(true);
   };
 
   const handleSave = async () => {
     if (!name.trim()) {
-      toast.error("Name is required");
+      setNameError("Name is required");
       return;
     }
     try {
@@ -140,11 +143,12 @@ const NamedMasterCrudPage = ({ title, getAll, add, update, remove }) => {
               <div className="modal-body">
                 <label className="form-label">Name</label>
                 <input
-                  className="form-control"
+                  className={`form-control ${nameError ? "is-invalid" : ""}`}
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={(e) => { setName(e.target.value); setNameError(""); }}
                   autoFocus
                 />
+                {nameError && <div className="text-danger fs-13 mt-1">{nameError}</div>}
               </div>
               <div className="modal-footer">
                 <button className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>

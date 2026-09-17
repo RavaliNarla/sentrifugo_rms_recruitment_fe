@@ -12,7 +12,13 @@ const UsersPage = () => {
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
+  const [errors, setErrors] = useState({});
   const [confirmState, setConfirmState] = useState({ show: false, message: "", onConfirm: null });
+
+  const setField = (field, value) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+    setErrors((prev) => (prev[field] ? { ...prev, [field]: undefined } : prev));
+  };
 
   const askConfirm = (message, action) => setConfirmState({ show: true, message, onConfirm: action });
   const closeConfirm = () => setConfirmState({ show: false, message: "", onConfirm: null });
@@ -36,20 +42,32 @@ const UsersPage = () => {
   const openAdd = () => {
     setEditing(null);
     setForm(EMPTY_FORM);
+    setErrors({});
     setShowModal(true);
   };
 
   const openEdit = (user) => {
     setEditing(user);
     setForm({ name: user.name, role: user.role, email: user.email });
+    setErrors({});
     setShowModal(true);
   };
 
-  const handleSave = async () => {
-    if (!form.name || !form.role || !form.email) {
-      toast.error("All fields are required");
-      return;
+  const validate = () => {
+    const next = {};
+    if (!form.name.trim()) next.name = "Full Name is required";
+    if (!form.role) next.role = "Role is required";
+    if (!form.email.trim()) {
+      next.email = "Email is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+      next.email = "Please enter a valid email address";
     }
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  };
+
+  const handleSave = async () => {
+    if (!validate()) return;
     try {
       if (editing) {
         await masterApiService.updateUser(editing.id, form);
@@ -142,33 +160,36 @@ const UsersPage = () => {
               </div>
               <div className="modal-body">
                 <div className="mb-3">
-                  <label className="form-label">Full Name</label>
+                  <label className="form-label">Full Name <span className="text-danger">*</span></label>
                   <input
-                    className="form-control"
+                    className={`form-control ${errors.name ? "is-invalid" : ""}`}
                     value={form.name}
-                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    onChange={(e) => setField("name", e.target.value)}
                   />
+                  {errors.name && <div className="text-danger fs-13 mt-1">{errors.name}</div>}
                 </div>
                 <div className="mb-3">
-                  <label className="form-label">Role</label>
+                  <label className="form-label">Role <span className="text-danger">*</span></label>
                   <select
-                    className="form-select"
+                    className={`form-select ${errors.role ? "is-invalid" : ""}`}
                     value={form.role}
-                    onChange={(e) => setForm({ ...form, role: e.target.value })}
+                    onChange={(e) => setField("role", e.target.value)}
                   >
                     <option value="">Select Role</option>
                     {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
                   </select>
+                  {errors.role && <div className="text-danger fs-13 mt-1">{errors.role}</div>}
                 </div>
                 <div className="mb-3">
-                  <label className="form-label">Email (must match their Azure AD account)</label>
+                  <label className="form-label">Email (must match their Azure AD account) <span className="text-danger">*</span></label>
                   <input
-                    className="form-control"
+                    className={`form-control ${errors.email ? "is-invalid" : ""}`}
                     type="email"
                     value={form.email}
                     disabled={!!editing}
-                    onChange={(e) => setForm({ ...form, email: e.target.value })}
+                    onChange={(e) => setField("email", e.target.value)}
                   />
+                  {errors.email && <div className="text-danger fs-13 mt-1">{errors.email}</div>}
                 </div>
               </div>
               <div className="modal-footer">

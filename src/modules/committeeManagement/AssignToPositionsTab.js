@@ -17,6 +17,7 @@ const AssignToPositionsTab = () => {
   const [selectedPanelId, setSelectedPanelId] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [errors, setErrors] = useState({});
   const [confirmState, setConfirmState] = useState({ show: false, message: "", onConfirm: null });
 
   const askConfirm = (message, action) => setConfirmState({ show: true, message, onConfirm: action });
@@ -49,26 +50,33 @@ const AssignToPositionsTab = () => {
   const assignedPanelIds = assignedPanels.map((p) => p.panelId);
   const availablePanels = allPanels.filter((p) => !assignedPanelIds.includes(p.id));
 
-  const handleAssign = async () => {
-    if (!selectedPanelId || !startDate || !endDate) {
-      toast.error("Select a panel and both dates");
-      return;
-    }
+  const validate = () => {
+    const next = {};
+    if (!selectedPanelId) next.panel = "Select a panel";
     // SCL_26: no past dates, and end date must be greater than (or equal to) the start date.
-    if (startDate < todayStr()) {
-      toast.error("Start Date cannot be in the past");
-      return;
+    if (!startDate) {
+      next.startDate = "Start Date is required";
+    } else if (startDate < todayStr()) {
+      next.startDate = "Start Date cannot be in the past";
     }
-    if (endDate < startDate) {
-      toast.error("End Date must be on or after the Start Date");
-      return;
+    if (!endDate) {
+      next.endDate = "End Date is required";
+    } else if (endDate < startDate) {
+      next.endDate = "End Date must be on or after the Start Date";
     }
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  };
+
+  const handleAssign = async () => {
+    if (!validate()) return;
     try {
       await recruiterApiService.assignPanelToPosition({ positionId, panelId: selectedPanelId, startDate, endDate });
       toast.success("Panel assigned to position successfully");
       setSelectedPanelId("");
       setStartDate("");
       setEndDate("");
+      setErrors({});
       loadAssigned();
     } catch (e) {
       toast.error(e.response?.data?.message || "Failed to assign panel");
@@ -127,18 +135,25 @@ const AssignToPositionsTab = () => {
             <div className="row g-2 align-items-end mb-4">
               <div className="col-md-4">
                 <label className="form-label fs-14">Panel</label>
-                <select className="form-select form-select-sm" value={selectedPanelId} onChange={(e) => setSelectedPanelId(e.target.value)}>
+                <select
+                  className={`form-select form-select-sm ${errors.panel ? "is-invalid" : ""}`}
+                  value={selectedPanelId}
+                  onChange={(e) => { setSelectedPanelId(e.target.value); setErrors((prev) => (prev.panel ? { ...prev, panel: undefined } : prev)); }}
+                >
                   <option value="">Select</option>
                   {availablePanels.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
                 </select>
+                {errors.panel && <div className="text-danger fs-13 mt-1">{errors.panel}</div>}
               </div>
               <div className="col-md-3">
                 <label className="form-label fs-14">Start Date</label>
-                <DateInput value={startDate} min={todayStr()} onChange={setStartDate} />
+                <DateInput value={startDate} min={todayStr()} onChange={(v) => { setStartDate(v); setErrors((prev) => (prev.startDate ? { ...prev, startDate: undefined } : prev)); }} />
+                {errors.startDate && <div className="text-danger fs-13 mt-1">{errors.startDate}</div>}
               </div>
               <div className="col-md-3">
                 <label className="form-label fs-14">End Date</label>
-                <DateInput value={endDate} min={startDate || todayStr()} onChange={setEndDate} />
+                <DateInput value={endDate} min={startDate || todayStr()} onChange={(v) => { setEndDate(v); setErrors((prev) => (prev.endDate ? { ...prev, endDate: undefined } : prev)); }} />
+                {errors.endDate && <div className="text-danger fs-13 mt-1">{errors.endDate}</div>}
               </div>
               <div className="col-md-2">
                 <button className="btn btn-sm btn-primary w-100" onClick={handleAssign}>Assign</button>

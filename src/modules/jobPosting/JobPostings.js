@@ -345,17 +345,20 @@ const JobPostings = () => {
       {selected.length > 0 && (
         <div className="bulk-actions-bar">
           <button className="btn btn-blue-dark" onClick={handleSubmit} disabled={submitting}>
-            {submitting ? (
-              <>
-                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" />
-                Submitting...
-              </>
-            ) : (
-              <>
-                <i className="bi bi-send me-1" /> Submit for Approval ({selected.length})
-              </>
-            )}
+            <i className="bi bi-send me-1" /> Submit for Approval ({selected.length})
           </button>
+        </div>
+      )}
+
+      {submitting && (
+        <div
+          className="d-flex align-items-center justify-content-center"
+          style={{ position: "fixed", inset: 0, background: "rgba(15,60,30,0.45)", zIndex: 2000 }}
+        >
+          <div className="d-flex flex-column align-items-center text-white">
+            <span className="spinner-border mb-2" role="status" aria-hidden="true" />
+            <span>Submitting for approval...</span>
+          </div>
         </div>
       )}
 

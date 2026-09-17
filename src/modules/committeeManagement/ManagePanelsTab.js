@@ -12,6 +12,7 @@ const ManagePanelsTab = () => {
   const [editing, setEditing] = useState(null);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
+  const [errors, setErrors] = useState({});
   const [confirmState, setConfirmState] = useState({ show: false, message: "", onConfirm: null });
 
   const askConfirm = (message, action) => setConfirmState({ show: true, message, onConfirm: action });
@@ -41,13 +42,19 @@ const ManagePanelsTab = () => {
     setEditing(null);
     setName("");
     setSelectedMembers([]);
+    setErrors({});
+  };
+
+  const validate = () => {
+    const next = {};
+    if (!name.trim()) next.name = "Panel Name is required";
+    if (selectedMembers.length === 0) next.members = "Select at least one panel member";
+    setErrors(next);
+    return Object.keys(next).length === 0;
   };
 
   const handleSave = async () => {
-    if (!name || selectedMembers.length === 0) {
-      toast.error("Panel name and at least one member are required");
-      return;
-    }
+    if (!validate()) return;
     try {
       if (editing) {
         await recruiterApiService.updatePanel(editing.id, { name, memberIds: selectedMembers });
@@ -67,6 +74,7 @@ const ManagePanelsTab = () => {
     setEditing(panel);
     setName(panel.name);
     setSelectedMembers(panel.memberIds);
+    setErrors({});
   };
 
   const handleDelete = (panel) => {
@@ -84,6 +92,7 @@ const ManagePanelsTab = () => {
 
   const toggleMember = (id) => {
     setSelectedMembers((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+    setErrors((prev) => (prev.members ? { ...prev, members: undefined } : prev));
   };
 
   const filteredPanels = panels.filter((p) => p.name.toLowerCase().includes(search.toLowerCase()));
@@ -96,7 +105,13 @@ const ManagePanelsTab = () => {
 
         <div className="mb-3">
           <label className="form-label fs-14">Panel Name <span className="text-danger">*</span></label>
-          <input className="form-control" value={name} onChange={(e) => setName(e.target.value)} placeholder="Enter Panel Name" />
+          <input
+            className={`form-control ${errors.name ? "is-invalid" : ""}`}
+            value={name}
+            onChange={(e) => { setName(e.target.value); setErrors((prev) => (prev.name ? { ...prev, name: undefined } : prev)); }}
+            placeholder="Enter Panel Name"
+          />
+          {errors.name && <div className="text-danger fs-13 mt-1">{errors.name}</div>}
         </div>
         <div className="mb-3">
           <label className="form-label fs-14">Panel Members <span className="text-danger">*</span></label>
@@ -113,6 +128,7 @@ const ManagePanelsTab = () => {
               </div>
             ))}
           </div>
+          {errors.members && <div className="text-danger fs-13 mt-1">{errors.members}</div>}
         </div>
         <div className="d-flex justify-content-end gap-2">
           {editing && <button className="btn btn-outline-secondary" onClick={resetForm}>Cancel</button>}
