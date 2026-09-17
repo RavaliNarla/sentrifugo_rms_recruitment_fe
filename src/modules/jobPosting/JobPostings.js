@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import recruiterApiService from "../../core/recruiterApiService";
+import ConfirmModal from "../../shared/ConfirmModal";
+import { formatDate } from "../../shared/dateFormat";
 import "./JobPostings.css";
 
 const STATUS_PILL = {
@@ -57,6 +59,10 @@ const JobPostings = () => {
   const [jobTitleFilter, setJobTitleFilter] = useState("");
   const [departmentFilter, setDepartmentFilter] = useState("");
   const [locationFilter, setLocationFilter] = useState("");
+  const [confirmState, setConfirmState] = useState({ show: false, message: "", onConfirm: null });
+
+  const askConfirm = (message, action) => setConfirmState({ show: true, message, onConfirm: action });
+  const closeConfirm = () => setConfirmState({ show: false, message: "", onConfirm: null });
 
   const loadRequisitions = async () => {
     setLoading(true);
@@ -92,28 +98,32 @@ const JobPostings = () => {
     setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (selected.length === 0) return;
-    if (!window.confirm(`Submit ${selected.length} requisition(s) for approval?`)) return;
-    try {
-      await recruiterApiService.submitForApproval(selected);
-      toast.success("Requisition(s) submitted for approval");
-      setSelected([]);
-      loadRequisitions();
-    } catch (e) {
-      toast.error(e.response?.data?.message || "Submit failed");
-    }
+    askConfirm(`Submit ${selected.length} requisition(s) for approval?`, async () => {
+      closeConfirm();
+      try {
+        await recruiterApiService.submitForApproval(selected);
+        toast.success("Requisition(s) submitted for approval");
+        setSelected([]);
+        loadRequisitions();
+      } catch (e) {
+        toast.error(e.response?.data?.message || "Submit failed");
+      }
+    });
   };
 
-  const handleFulfil = async (id) => {
-    if (!window.confirm("Mark this requisition as fulfilled?")) return;
-    try {
-      await recruiterApiService.markFulfilled(id);
-      toast.success("Requisition marked as fulfilled");
-      loadRequisitions();
-    } catch (e) {
-      toast.error(e.response?.data?.message || "Action failed");
-    }
+  const handleFulfil = (id) => {
+    askConfirm("Mark this requisition as fulfilled?", async () => {
+      closeConfirm();
+      try {
+        await recruiterApiService.markFulfilled(id);
+        toast.success("Requisition marked as fulfilled");
+        loadRequisitions();
+      } catch (e) {
+        toast.error(e.response?.data?.message || "Action failed");
+      }
+    });
   };
 
   const handleUnfulfil = async (id) => {
@@ -354,14 +364,14 @@ const JobPostings = () => {
                     </div>
                     <div className="req-code">{req.title}</div>
                     <div className="req-dates">
-                      <span><i className="bi bi-calendar-event" />Start: {req.startDate}</span>
-                      <span><i className="bi bi-calendar-check" />Expected Fulfilment: {req.expectedFulfilmentDate}</span>
+                      <span><i className="bi bi-calendar-event" />Start: {formatDate(req.startDate)}</span>
+                      <span><i className="bi bi-calendar-check" />Expected Fulfilment: {formatDate(req.expectedFulfilmentDate)}</span>
                     </div>
                     {req.comments && <div className="text-muted fs-13 mt-1">Comments: {req.comments}</div>}
                   </div>
                 </div>
 
-                <div className="d-flex align-items-center gap-2">
+                <div className="d-flex align-items-center gap-3">
                   <div className="req-meta d-none d-md-flex me-3">
                     <span><i className="bi bi-diagram-3" />Departments - {departmentCount}</span>
                     <span><i className="bi bi-briefcase" />Positions - {positions.length}</span>
@@ -378,7 +388,7 @@ const JobPostings = () => {
                     </button>
                   )}
                   {req.status === "APPROVED" && (
-                    <button className="btn btn-sm btn-outline-info" onClick={(e) => { e.stopPropagation(); handleFulfil(req.id); }}>
+                    <button className="btn btn-sm btn-blue-dark" onClick={(e) => { e.stopPropagation(); handleFulfil(req.id); }}>
                       Mark Fulfilled
                     </button>
                   )}
@@ -485,6 +495,13 @@ const JobPostings = () => {
           No requisitions found. <Link to="/job-postings/create-requisition">Create one</Link>.
         </div>
       )}
+
+      <ConfirmModal
+        show={confirmState.show}
+        message={confirmState.message}
+        onConfirm={confirmState.onConfirm}
+        onCancel={closeConfirm}
+      />
     </div>
   );
 };

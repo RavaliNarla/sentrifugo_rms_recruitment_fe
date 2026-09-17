@@ -26,29 +26,13 @@
   align-self: flex-start;
   display: inline-flex;
   align-items: center;
-  gap: 10px;
 }
-.auth-left-logo .chip {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: #ffffff;
-  border-radius: 10px;
-  padding: 6px;
-}
-.auth-left-logo .chip img { height: 46px; width: 46px; display: block; object-fit: contain; }
-.auth-left-logo .word {
-  color: #fff;
-  font-weight: 800;
-  font-size: 1.3rem;
-  letter-spacing: 0.3px;
-}
-.auth-left-logo .sub {
-  color: rgba(255,255,255,0.65);
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+.auth-left-brand-logo {
+  width: 320px;
+  max-width: 100%;
+  height: auto;
+  display: block;
+  object-fit: contain;
 }
 
 .auth-hero-wrap {

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import recruiterApiService from "../../../core/recruiterApiService";
+import { formatDate } from "../../../shared/dateFormat";
 
 const computeCapacity = (window) => {
   if (!window.interviewDate || !window.startTime || !window.endTime || !window.durationMinutes) return 0;
@@ -104,7 +105,7 @@ const ScheduleInterviewModal = ({ positionId, candidates, onClose, onScheduled }
                         <option value="">Select Panel</option>
                         {panels.map((p) => <option key={p.id} value={p.panelId}>{p.panelName}</option>)}
                       </select>
-                      {panel && <small className="text-muted">{panel.startDate} to {panel.endDate}</small>}
+                      {panel && <small className="text-muted">{formatDate(panel.startDate)} to {formatDate(panel.endDate)}</small>}
                     </div>
                     <div className="col-md-2">
                       <label className="form-label small">Date</label>

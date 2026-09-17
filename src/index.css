@@ -376,40 +376,15 @@ a {
 .sidebar-brand {
   display: flex;
   align-items: center;
-  gap: 10px;
   padding: 18px 16px;
   border-bottom: 1px solid var(--sb-divider);
   text-decoration: none;
 }
-.sidebar-logo-chip {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: #ffffff;
-  border-radius: 10px;
-  padding: 4px;
-  flex-shrink: 0;
-}
-.sidebar-logo-chip img { height: 38px; width: 38px; display: block; object-fit: contain; }
-
-.sidebar-brand-text {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.15;
-}
-.sidebar-brand-text .word {
-  color: #fff;
-  font-weight: 800;
-  font-size: 1.05rem;
-  letter-spacing: 0.3px;
-  font-family: 'Roboto', 'Segoe UI', system-ui, sans-serif;
-}
-.sidebar-brand-text .sub {
-  color: rgba(255,255,255,0.6);
-  font-size: 0.62rem;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+.sidebar-logo {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: contain;
 }
 
 .sidebar-nav {
@@ -470,7 +445,6 @@ a {
   flex-wrap: wrap;
   gap: 10px;
 }
-.topbar .breadcrumb-mini { color: var(--tb-sub); font-size: 0.75rem; margin-bottom: 2px; }
 .topbar .title { color: var(--tb-title); font-weight: 700; font-size: 1.15rem; }
 .topbar .sub { color: var(--tb-sub); font-size: 0.85rem; }
 
@@ -726,7 +700,6 @@ a {
   .sidebar { width: 66px; }
   .sidebar-nav a span.label,
   .sidebar-nav .sidebar-link span.label,
-  .sidebar-brand-text,
   .sidebar-footer { display: none; }
   .sidebar-brand { justify-content: center; padding: 18px 8px; }
   .page-content { margin-left: 66px; }

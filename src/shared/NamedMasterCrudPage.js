@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import ConfirmModal from "./ConfirmModal";
 
 /**
  * Generic list + add/edit/delete screen for simple "id + name" master data
@@ -11,6 +12,10 @@ const NamedMasterCrudPage = ({ title, getAll, add, update, remove }) => {
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
   const [name, setName] = useState("");
+  const [confirmState, setConfirmState] = useState({ show: false, message: "", onConfirm: null });
+
+  const askConfirm = (message, action) => setConfirmState({ show: true, message, onConfirm: action });
+  const closeConfirm = () => setConfirmState({ show: false, message: "", onConfirm: null });
 
   const loadData = async () => {
     setLoading(true);
@@ -61,15 +66,17 @@ const NamedMasterCrudPage = ({ title, getAll, add, update, remove }) => {
     }
   };
 
-  const handleDelete = async (item) => {
-    if (!window.confirm(`Delete "${item.name}"?`)) return;
-    try {
-      await remove(item.id);
-      toast.success(`${title} deleted successfully`);
-      loadData();
-    } catch (e) {
-      toast.error(e.response?.data?.message || "Delete failed");
-    }
+  const handleDelete = (item) => {
+    askConfirm(`Delete "${item.name}"?`, async () => {
+      closeConfirm();
+      try {
+        await remove(item.id);
+        toast.success(`${title} deleted successfully`);
+        loadData();
+      } catch (e) {
+        toast.error(e.response?.data?.message || "Delete failed");
+      }
+    });
   };
 
   return (
@@ -141,12 +148,19 @@ const NamedMasterCrudPage = ({ title, getAll, add, update, remove }) => {
               </div>
               <div className="modal-footer">
                 <button className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
-                <button className="btn btn-primary" onClick={handleSave}>Save</button>
+                <button className="btn btn-primary" onClick={handleSave}>{editing ? "Update" : "Save"}</button>
               </div>
             </div>
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        show={confirmState.show}
+        message={confirmState.message}
+        onConfirm={confirmState.onConfirm}
+        onCancel={closeConfirm}
+      />
     </div>
   );
 };

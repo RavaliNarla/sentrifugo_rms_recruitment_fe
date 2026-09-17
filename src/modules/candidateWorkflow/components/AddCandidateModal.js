@@ -8,6 +8,15 @@ const EMPTY_FORM = { name: "", phone: "", email: "" };
 const EMAIL_REGEX = /^[\w.+-]+@[\w-]+\.[a-zA-Z]{2,}$/;
 const PHONE_REGEX = /^[0-9]{10}$/;
 
+const RESUME_EXTENSIONS = [".pdf", ".doc", ".docx"];
+const ID_PROOF_EXTENSIONS = [".pdf", ".png", ".jpg", ".jpeg"];
+const PHOTO_EXTENSIONS = [".png", ".jpg", ".jpeg"];
+
+const getFileExtension = (fileName) => {
+  const idx = fileName.lastIndexOf(".");
+  return idx === -1 ? "" : fileName.slice(idx).toLowerCase();
+};
+
 const AddCandidateModal = ({ requisitionId, positionId, editingCandidate, onClose, onSaved }) => {
   const [form, setForm] = useState(
     editingCandidate
@@ -22,6 +31,39 @@ const AddCandidateModal = ({ requisitionId, positionId, editingCandidate, onClos
   // Local preview URL for the selected photo file - revoked on change/unmount to avoid leaks.
   const photoPreviewUrl = useMemo(() => (photo ? URL.createObjectURL(photo) : null), [photo]);
   useEffect(() => () => { if (photoPreviewUrl) URL.revokeObjectURL(photoPreviewUrl); }, [photoPreviewUrl]);
+
+  const handlePhotoChange = (e) => {
+    const file = e.target.files[0];
+    if (file && !PHOTO_EXTENSIONS.includes(getFileExtension(file.name))) {
+      toast.error("Photo must be an image file (.png, .jpg, .jpeg)");
+      e.target.value = "";
+      setPhoto(null);
+      return;
+    }
+    setPhoto(file || null);
+  };
+
+  const handleResumeChange = (e) => {
+    const file = e.target.files[0];
+    if (file && !RESUME_EXTENSIONS.includes(getFileExtension(file.name))) {
+      toast.error("Resume must be a PDF or Word document (.pdf, .doc, .docx)");
+      e.target.value = "";
+      setResume(null);
+      return;
+    }
+    setResume(file || null);
+  };
+
+  const handleIdProofChange = (e) => {
+    const file = e.target.files[0];
+    if (file && !ID_PROOF_EXTENSIONS.includes(getFileExtension(file.name))) {
+      toast.error("ID Proof must be a PDF or image file (.pdf, .png, .jpg, .jpeg)");
+      e.target.value = "";
+      setIdProof(null);
+      return;
+    }
+    setIdProof(file || null);
+  };
 
   const handleSave = async () => {
     if (!form.name || !form.phone || !form.email) {
@@ -75,7 +117,13 @@ const AddCandidateModal = ({ requisitionId, positionId, editingCandidate, onClos
                 </div>
                 <div className="mb-3">
                   <label className="form-label">Phone <span className="text-danger">*</span></label>
-                  <input className="form-control" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+                  <input
+                    type="tel"
+                    className="form-control"
+                    maxLength={10}
+                    value={form.phone}
+                    onChange={(e) => setForm({ ...form, phone: e.target.value.replace(/\D/g, "").slice(0, 10) })}
+                  />
                 </div>
                 <div className="mb-3">
                   <label className="form-label">Email <span className="text-danger">*</span></label>
@@ -94,7 +142,7 @@ const AddCandidateModal = ({ requisitionId, positionId, editingCandidate, onClos
                 </div>
                 <label className="btn btn-outline-brand btn-sm w-100 mb-0" style={{ cursor: "pointer" }}>
                   <i className="bi bi-camera-fill me-1" /> {photo ? "Change Photo" : "Upload Photo"}
-                  <input type="file" accept=".png,.jpg,.jpeg" hidden onChange={(e) => setPhoto(e.target.files[0] || null)} />
+                  <input type="file" accept=".png,.jpg,.jpeg" hidden onChange={handlePhotoChange} />
                 </label>
               </div>
             </div>
@@ -102,11 +150,11 @@ const AddCandidateModal = ({ requisitionId, positionId, editingCandidate, onClos
             <div className="row">
               <div className="col-md-6 mb-3">
                 <label className="form-label">Resume (optional)</label>
-                <input type="file" className="form-control" accept=".pdf,.doc,.docx" onChange={(e) => setResume(e.target.files[0])} />
+                <input type="file" className="form-control" accept=".pdf,.doc,.docx" onChange={handleResumeChange} />
               </div>
               <div className="col-md-6 mb-3">
                 <label className="form-label">ID Proof (optional)</label>
-                <input type="file" className="form-control" accept=".pdf,.png,.jpg,.jpeg" onChange={(e) => setIdProof(e.target.files[0])} />
+                <input type="file" className="form-control" accept=".pdf,.png,.jpg,.jpeg" onChange={handleIdProofChange} />
               </div>
             </div>
           </div>

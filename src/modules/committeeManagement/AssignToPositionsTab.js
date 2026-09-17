@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import recruiterApiService from "../../core/recruiterApiService";
 import DateInput from "../../shared/DateInput";
+import ConfirmModal from "../../shared/ConfirmModal";
+import { formatDate } from "../../shared/dateFormat";
 
 const todayStr = () => new Date().toISOString().split("T")[0];
 
@@ -15,6 +17,10 @@ const AssignToPositionsTab = () => {
   const [selectedPanelId, setSelectedPanelId] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [confirmState, setConfirmState] = useState({ show: false, message: "", onConfirm: null });
+
+  const askConfirm = (message, action) => setConfirmState({ show: true, message, onConfirm: action });
+  const closeConfirm = () => setConfirmState({ show: false, message: "", onConfirm: null });
 
   useEffect(() => {
     recruiterApiService.getApprovedRequisitions().then((res) => setRequisitions(res.data.data || []));
@@ -69,15 +75,17 @@ const AssignToPositionsTab = () => {
     }
   };
 
-  const handleRemove = async (id) => {
-    if (!window.confirm("Remove this panel assignment?")) return;
-    try {
-      await recruiterApiService.removePanelFromPosition(id);
-      toast.success("Panel assignment removed");
-      loadAssigned();
-    } catch (e) {
-      toast.error(e.response?.data?.message || "Failed to remove assignment");
-    }
+  const handleRemove = (id) => {
+    askConfirm("Remove this panel assignment?", async () => {
+      closeConfirm();
+      try {
+        await recruiterApiService.removePanelFromPosition(id);
+        toast.success("Panel assignment removed");
+        loadAssigned();
+      } catch (e) {
+        toast.error(e.response?.data?.message || "Failed to remove assignment");
+      }
+    });
   };
 
   return (
@@ -146,8 +154,8 @@ const AssignToPositionsTab = () => {
                 {assignedPanels.map((p) => (
                   <tr key={p.id}>
                     <td>{p.panelName}</td>
-                    <td>{p.startDate}</td>
-                    <td>{p.endDate}</td>
+                    <td>{formatDate(p.startDate)}</td>
+                    <td>{formatDate(p.endDate)}</td>
                     <td>
                       <button className="table-icon-btn delete" onClick={() => handleRemove(p.id)}><i className="bi bi-trash" /></button>
                     </td>
@@ -159,6 +167,13 @@ const AssignToPositionsTab = () => {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        show={confirmState.show}
+        message={confirmState.message}
+        onConfirm={confirmState.onConfirm}
+        onCancel={closeConfirm}
+      />
     </div>
   );
 };

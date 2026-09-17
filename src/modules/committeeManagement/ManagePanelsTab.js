@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import recruiterApiService from "../../core/recruiterApiService";
 import masterApiService from "../../core/masterApiService";
+import ConfirmModal from "../../shared/ConfirmModal";
 
 const ManagePanelsTab = () => {
   const [panels, setPanels] = useState([]);
@@ -11,6 +12,10 @@ const ManagePanelsTab = () => {
   const [editing, setEditing] = useState(null);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
+  const [confirmState, setConfirmState] = useState({ show: false, message: "", onConfirm: null });
+
+  const askConfirm = (message, action) => setConfirmState({ show: true, message, onConfirm: action });
+  const closeConfirm = () => setConfirmState({ show: false, message: "", onConfirm: null });
 
   const load = async () => {
     setLoading(true);
@@ -64,15 +69,17 @@ const ManagePanelsTab = () => {
     setSelectedMembers(panel.memberIds);
   };
 
-  const handleDelete = async (panel) => {
-    if (!window.confirm(`Delete panel "${panel.name}"?`)) return;
-    try {
-      await recruiterApiService.deletePanel(panel.id);
-      toast.success("Panel deleted successfully");
-      load();
-    } catch (e) {
-      toast.error(e.response?.data?.message || "Failed to delete panel");
-    }
+  const handleDelete = (panel) => {
+    askConfirm(`Delete panel "${panel.name}"?`, async () => {
+      closeConfirm();
+      try {
+        await recruiterApiService.deletePanel(panel.id);
+        toast.success("Panel deleted successfully");
+        load();
+      } catch (e) {
+        toast.error(e.response?.data?.message || "Failed to delete panel");
+      }
+    });
   };
 
   const toggleMember = (id) => {
@@ -150,6 +157,13 @@ const ManagePanelsTab = () => {
           </table>
         )}
       </div>
+
+      <ConfirmModal
+        show={confirmState.show}
+        message={confirmState.message}
+        onConfirm={confirmState.onConfirm}
+        onCancel={closeConfirm}
+      />
     </div>
   );
 };

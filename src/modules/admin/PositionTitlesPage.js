@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import masterApiService from "../../core/masterApiService";
+import ConfirmModal from "../../shared/ConfirmModal";
 
 const EXPERIENCE_YEARS = Array.from({ length: 31 }, (_, i) => i);
 
@@ -19,6 +20,10 @@ const PositionTitlesPage = () => {
   const [editing, setEditing] = useState(null);
   const [viewOnly, setViewOnly] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
+  const [confirmState, setConfirmState] = useState({ show: false, message: "", onConfirm: null });
+
+  const askConfirm = (message, action) => setConfirmState({ show: true, message, onConfirm: action });
+  const closeConfirm = () => setConfirmState({ show: false, message: "", onConfirm: null });
 
   const loadData = async () => {
     setLoading(true);
@@ -89,15 +94,17 @@ const PositionTitlesPage = () => {
     }
   };
 
-  const handleDelete = async (item) => {
-    if (!window.confirm(`Delete "${item.name}"?`)) return;
-    try {
-      await masterApiService.deletePositionTitle(item.id);
-      toast.success("Position title deleted successfully");
-      loadData();
-    } catch (e) {
-      toast.error(e.response?.data?.message || "Delete failed");
-    }
+  const handleDelete = (item) => {
+    askConfirm(`Delete "${item.name}"?`, async () => {
+      closeConfirm();
+      try {
+        await masterApiService.deletePositionTitle(item.id);
+        toast.success("Position title deleted successfully");
+        loadData();
+      } catch (e) {
+        toast.error(e.response?.data?.message || "Delete failed");
+      }
+    });
   };
 
   return (
@@ -223,13 +230,20 @@ const PositionTitlesPage = () => {
                   {viewOnly ? "Close" : "Cancel"}
                 </button>
                 {!viewOnly && (
-                  <button className="btn btn-primary" onClick={handleSave}>Save</button>
+                  <button className="btn btn-primary" onClick={handleSave}>{editing ? "Update" : "Save"}</button>
                 )}
               </div>
             </div>
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        show={confirmState.show}
+        message={confirmState.message}
+        onConfirm={confirmState.onConfirm}
+        onCancel={closeConfirm}
+      />
     </div>
   );
 };

@@ -29,6 +29,13 @@ const EMPTY_FORM = {
 const EXPERIENCE_YEARS = Array.from({ length: 31 }, (_, i) => i);
 const todayStr = () => new Date().toISOString().split("T")[0];
 
+const APPROVAL_DOC_EXTENSIONS = [".png", ".jpg", ".jpeg", ".docx", ".pdf"];
+
+const getFileExtension = (fileName) => {
+  const idx = fileName.lastIndexOf(".");
+  return idx === -1 ? "" : fileName.slice(idx).toLowerCase();
+};
+
 const AddPosition = () => {
   const navigate = useNavigate();
   const { requisitionId } = useParams();
@@ -135,6 +142,17 @@ const AddPosition = () => {
 
   const selectedApprovedByRole = approvedByRoles.find((a) => a.id === form.approvedById);
   const isApprovedByOthers = selectedApprovedByRole?.name?.toLowerCase() === "others";
+
+  const handleApprovalDocChange = (e) => {
+    const file = e.target.files[0];
+    if (file && !APPROVAL_DOC_EXTENSIONS.includes(getFileExtension(file.name))) {
+      toast.error("Approval document must be a PNG, JPEG, DOCX or PDF file");
+      e.target.value = "";
+      setApprovalDoc(null);
+      return;
+    }
+    setApprovalDoc(file || null);
+  };
 
   const handleSave = async () => {
     if (viewOnly) return;
@@ -404,8 +422,8 @@ const AddPosition = () => {
           <input
             type="file"
             className="form-control"
-            accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
-            onChange={(e) => setApprovalDoc(e.target.files[0])}
+            accept=".pdf,.docx,.png,.jpg,.jpeg"
+            onChange={handleApprovalDocChange}
           />
           <small className="text-muted">Scanned copy, email attachment, or screenshot of management approval.</small>
         </div>
@@ -429,7 +447,7 @@ const AddPosition = () => {
         </button>
         {!viewOnly && (
           <button className="btn btn-primary" disabled={saving} onClick={handleSave}>
-            {saving ? "Saving..." : "Save Position"}
+            {saving ? (editingPosition ? "Updating..." : "Saving...") : editingPosition ? "Update Position" : "Save Position"}
           </button>
         )}
       </div>

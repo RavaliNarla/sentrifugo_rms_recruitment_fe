@@ -50,16 +50,11 @@ const Topbar = () => {
   return (
     <div className="topbar">
       <div>
-        <div className="breadcrumb-mini">{meta.section}</div>
         <div className="title">{meta.title}</div>
         {meta.subtitle && <div className="sub">{meta.subtitle}</div>}
       </div>
 
       <div className="topbar-actions">
-        <button type="button" className="topbar-icon-btn" title="Notifications">
-          <i className="bi bi-bell-fill" />
-        </button>
-
         <div className="position-relative" ref={userMenuRef}>
           <button type="button" className="topbar-user-pill" onClick={() => setShowUserMenu((prev) => !prev)}>
             <span className="avatar">{getInitials(user.name)}</span>

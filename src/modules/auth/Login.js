@@ -3,7 +3,7 @@ import { useMsal } from "@azure/msal-react";
 import { InteractionStatus } from "@azure/msal-browser";
 import { toast } from "react-toastify";
 import { loginRequest } from "../../app/msalConfig";
-import mascot from "../../assets/mascot.png";
+import logo from "../../assets/sagar-logo.png";
 import companyLogo from "../../assets/sagar-cement-logo.png";
 import "./Login.css";
 
@@ -49,13 +49,7 @@ const Login = () => {
     <div className="auth-shell">
       <div className="auth-left">
         <div className="auth-left-logo">
-          <span className="chip">
-            <img src={mascot} alt="Sagar Cement" />
-          </span>
-          <span className="d-flex flex-column">
-            <span className="word">SAGAR RMS</span>
-            <span className="sub">Recruitment Hub</span>
-          </span>
+          <img src={logo} alt="Sagar Recruitment Hub" className="auth-left-brand-logo" />
         </div>
 
         <div className="auth-hero-wrap">

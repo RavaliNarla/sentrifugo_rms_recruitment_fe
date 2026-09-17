@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import recruiterApiService from "../../core/recruiterApiService";
+import { formatDate } from "../../shared/dateFormat";
 
 const STATUS_BADGE = {
   NEW: "secondary",
@@ -123,7 +124,7 @@ const Approvals = () => {
                     <span className={`badge bg-${STATUS_BADGE[req.status] || "secondary"} me-2`}>{req.status}</span>
                     <span className="fw-bold">{req.title}</span>
                     <div className="text-muted small mt-1">{req.description}</div>
-                    <div className="text-muted small">Start: {req.startDate} | Expected Fulfilment: {req.expectedFulfilmentDate}</div>
+                    <div className="text-muted small">Start: {formatDate(req.startDate)} | Expected Fulfilment: {formatDate(req.expectedFulfilmentDate)}</div>
                     {req.comments && <div className="text-muted small">Last comments: {req.comments}</div>}
                   </div>
                   <button type="button" className="icon-btn-circle" onClick={() => toggleExpand(req.id)}>

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import recruiterApiService from "../../../core/recruiterApiService";
 import Pagination from "../../../shared/Pagination";
+import { formatDate } from "../../../shared/dateFormat";
 
 const STATUS_PILL = {
   SCHEDULED: "status-pill-info",
@@ -89,7 +90,7 @@ const InterviewPoolTab = ({ positionId }) => {
                   )}
                 </td>
                 <td>{r.candidateName}</td>
-                <td>{r.interviewDate || "-"}</td>
+                <td>{formatDate(r.interviewDate)}</td>
                 <td>{r.startTime ? `${r.startTime} - ${r.endTime}` : "-"}</td>
                 <td>{r.panelName || "-"}</td>
                 <td>

@@ -4,6 +4,7 @@ import recruiterApiService from "../../../core/recruiterApiService";
 import masterApiService from "../../../core/masterApiService";
 import Pagination from "../../../shared/Pagination";
 import PdfViewerModal from "../../../shared/PdfViewerModal";
+import { formatDate } from "../../../shared/dateFormat";
 import { useFilePreview } from "../../../shared/useFilePreview";
 import DateInput from "../../../shared/DateInput";
 
@@ -107,6 +108,10 @@ const OfferPoolTab = ({ positionId }) => {
   const handleGenerate = async () => {
     if (!templateId || !acceptBeforeDate || !joiningDate) {
       toast.error("Select an offer template, accept-before date and joining date");
+      return;
+    }
+    if (acceptBeforeDate <= new Date().toISOString().split("T")[0]) {
+      toast.error("Accept Before Date must be a future date");
       return;
     }
     if (selected.length === 0) return;
@@ -215,8 +220,8 @@ const OfferPoolTab = ({ positionId }) => {
                   <td>{c.name}</td>
                   <td>{c.email}</td>
                   <td>{c.agreedCtc ?? c.salary ?? "-"}</td>
-                  <td>{offer?.acceptBeforeDate || "-"}</td>
-                  <td>{offer?.joiningDate || "-"}</td>
+                  <td>{formatDate(offer?.acceptBeforeDate)}</td>
+                  <td>{formatDate(offer?.joiningDate)}</td>
                   <td>{offer ? <span className={`status-pill ${OFFER_STATUS_PILL[offer.status] || "status-pill-secondary"}`}>{offer.status.replace(/_/g, " ")}</span> : "-"}</td>
                   <td>
                     {offer?.offerFileUrl && (

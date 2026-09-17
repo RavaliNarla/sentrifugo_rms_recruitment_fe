@@ -1,7 +1,7 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
 import { useSelector } from "react-redux";
-import mascot from "../assets/mascot.png";
+import logo from "../assets/sagar-logo.png";
 
 /**
  * Vertical nav, styled after the Sagar Cement Learning Hub sidebar: a green
@@ -20,13 +20,7 @@ const Sidebar = () => {
   return (
     <aside className="sidebar">
       <NavLink to="/dashboard" className="sidebar-brand">
-        <span className="sidebar-logo-chip">
-          <img src={mascot} alt="Sagar Cement" />
-        </span>
-        <span className="sidebar-brand-text">
-          <span className="word">SAGAR RMS</span>
-          <span className="sub">Recruitment Hub</span>
-        </span>
+        <img src={logo} alt="Sagar Recruitment Hub" className="sidebar-logo" />
       </NavLink>
 
       <nav className="sidebar-nav">

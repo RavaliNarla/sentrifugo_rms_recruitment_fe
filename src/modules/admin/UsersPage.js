@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import masterApiService from "../../core/masterApiService";
+import ConfirmModal from "../../shared/ConfirmModal";
 
 const ROLES = ["Admin", "Recruiter", "Committee_Member"];
 const EMPTY_FORM = { name: "", role: "", email: "" };
@@ -11,6 +12,10 @@ const UsersPage = () => {
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
+  const [confirmState, setConfirmState] = useState({ show: false, message: "", onConfirm: null });
+
+  const askConfirm = (message, action) => setConfirmState({ show: true, message, onConfirm: action });
+  const closeConfirm = () => setConfirmState({ show: false, message: "", onConfirm: null });
 
   const loadUsers = async () => {
     setLoading(true);
@@ -60,15 +65,17 @@ const UsersPage = () => {
     }
   };
 
-  const handleDelete = async (user) => {
-    if (!window.confirm(`Delete user "${user.name}"?`)) return;
-    try {
-      await masterApiService.deleteUser(user.id);
-      toast.success("User deleted successfully");
-      loadUsers();
-    } catch (e) {
-      toast.error(e.response?.data?.message || "Delete failed");
-    }
+  const handleDelete = (user) => {
+    askConfirm(`Delete user "${user.name}"?`, async () => {
+      closeConfirm();
+      try {
+        await masterApiService.deleteUser(user.id);
+        toast.success("User deleted successfully");
+        loadUsers();
+      } catch (e) {
+        toast.error(e.response?.data?.message || "Delete failed");
+      }
+    });
   };
 
   return (
@@ -166,12 +173,19 @@ const UsersPage = () => {
               </div>
               <div className="modal-footer">
                 <button className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
-                <button className="btn btn-primary" onClick={handleSave}>Save</button>
+                <button className="btn btn-primary" onClick={handleSave}>{editing ? "Update" : "Save"}</button>
               </div>
             </div>
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        show={confirmState.show}
+        message={confirmState.message}
+        onConfirm={confirmState.onConfirm}
+        onCancel={closeConfirm}
+      />
     </div>
   );
 };

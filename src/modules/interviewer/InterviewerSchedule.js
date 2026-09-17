@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import recruiterApiService from "../../core/recruiterApiService";
 import DateInput from "../../shared/DateInput";
+import { formatDate } from "../../shared/dateFormat";
 
 const DECISION_OPTIONS = [
   { value: "", label: "Select" },
@@ -132,7 +133,7 @@ const InterviewerSchedule = () => {
                   {rows.map((r) => (
                     <tr key={r.candidateId}>
                       <td>{r.candidateName}</td>
-                      <td>{r.interviewDate}</td>
+                      <td>{formatDate(r.interviewDate)}</td>
                       <td>{r.startTime} - {r.endTime}</td>
                       <td><span className="badge bg-secondary">{r.applicationStatus}</span></td>
                       <td>
