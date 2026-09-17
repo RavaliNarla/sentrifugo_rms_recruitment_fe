@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import recruiterApiService from "../../core/recruiterApiService";
@@ -28,6 +28,8 @@ const CreateRequisition = () => {
       : { title: "", description: "", startDate: "", expectedFulfilmentDate: "" }
   );
   const [errors, setErrors] = useState({});
+  const [saving, setSaving] = useState(false);
+  const submittingRef = useRef(false);
 
   const setField = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -56,7 +58,10 @@ const CreateRequisition = () => {
 
   const handleSave = async () => {
     if (viewOnly) return;
+    if (submittingRef.current) return;
     if (!validate()) return;
+    submittingRef.current = true;
+    setSaving(true);
     try {
       if (editingRequisition) {
         await recruiterApiService.updateRequisition(editingRequisition.id, form);
@@ -69,6 +74,9 @@ const CreateRequisition = () => {
       }
     } catch (e) {
       toast.error(e.response?.data?.message || "Failed to save requisition");
+    } finally {
+      submittingRef.current = false;
+      setSaving(false);
     }
   };
 
@@ -149,7 +157,9 @@ const CreateRequisition = () => {
           {viewOnly ? "Back" : "Cancel"}
         </button>
         {!viewOnly && (
-          <button className="btn btn-primary" onClick={handleSave}>{editingRequisition ? "Save Changes" : "Save & Add Position"}</button>
+          <button className="btn btn-primary" disabled={saving} onClick={handleSave}>
+            {saving ? "Saving..." : editingRequisition ? "Save Changes" : "Save & Add Position"}
+          </button>
         )}
       </div>
     </div>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import ConfirmModal from "./ConfirmModal";
 
@@ -13,6 +13,8 @@ const NamedMasterCrudPage = ({ title, getAll, add, update, remove }) => {
   const [editing, setEditing] = useState(null);
   const [name, setName] = useState("");
   const [nameError, setNameError] = useState("");
+  const [saving, setSaving] = useState(false);
+  const submittingRef = useRef(false);
   const [confirmState, setConfirmState] = useState({ show: false, message: "", onConfirm: null });
 
   const askConfirm = (message, action) => setConfirmState({ show: true, message, onConfirm: action });
@@ -50,10 +52,13 @@ const NamedMasterCrudPage = ({ title, getAll, add, update, remove }) => {
   };
 
   const handleSave = async () => {
+    if (submittingRef.current) return;
     if (!name.trim()) {
       setNameError("Name is required");
       return;
     }
+    submittingRef.current = true;
+    setSaving(true);
     try {
       if (editing) {
         await update(editing.id, { name });
@@ -66,6 +71,9 @@ const NamedMasterCrudPage = ({ title, getAll, add, update, remove }) => {
       loadData();
     } catch (e) {
       toast.error(e.response?.data?.message || "Save failed");
+    } finally {
+      submittingRef.current = false;
+      setSaving(false);
     }
   };
 
@@ -152,7 +160,9 @@ const NamedMasterCrudPage = ({ title, getAll, add, update, remove }) => {
               </div>
               <div className="modal-footer">
                 <button className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
-                <button className="btn btn-primary" onClick={handleSave}>{editing ? "Update" : "Save"}</button>
+                <button className="btn btn-primary" disabled={saving} onClick={handleSave}>
+                  {saving ? "Saving..." : editing ? "Update" : "Save"}
+                </button>
               </div>
             </div>
           </div>

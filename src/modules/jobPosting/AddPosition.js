@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import recruiterApiService from "../../core/recruiterApiService";
@@ -56,6 +56,7 @@ const AddPosition = () => {
   const [saving, setSaving] = useState(false);
   const [autofillPrompt, setAutofillPrompt] = useState(null);
   const [errors, setErrors] = useState({});
+  const submittingRef = useRef(false);
 
   const setField = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -197,8 +198,10 @@ const AddPosition = () => {
 
   const handleSave = async () => {
     if (viewOnly) return;
+    if (submittingRef.current) return;
     if (!validate()) return;
 
+    submittingRef.current = true;
     setSaving(true);
     try {
       const positionPayload = {
@@ -238,6 +241,7 @@ const AddPosition = () => {
     } catch (e) {
       toast.error(e.response?.data?.message || "Failed to save position");
     } finally {
+      submittingRef.current = false;
       setSaving(false);
     }
   };

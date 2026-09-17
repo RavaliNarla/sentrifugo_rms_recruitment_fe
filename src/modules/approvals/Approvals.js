@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
@@ -29,6 +29,8 @@ const Approvals = () => {
   const [selected, setSelected] = useState([]);
   const [comments, setComments] = useState("");
   const [loading, setLoading] = useState(false);
+  const [acting, setActing] = useState(false);
+  const actingRef = useRef(false);
 
   const load = async () => {
     setLoading(true);
@@ -68,6 +70,9 @@ const Approvals = () => {
 
   const actOnSelected = async (approve) => {
     if (selected.length === 0) return;
+    if (actingRef.current) return;
+    actingRef.current = true;
+    setActing(true);
     try {
       await recruiterApiService.approveOrReject({ requisitionIds: selected, approve, comments });
       toast.success(approve ? "Requisition(s) approved" : "Requisition(s) rejected");
@@ -76,6 +81,9 @@ const Approvals = () => {
       load();
     } catch (e) {
       toast.error(e.response?.data?.message || "Action failed");
+    } finally {
+      actingRef.current = false;
+      setActing(false);
     }
   };
 
@@ -98,11 +106,23 @@ const Approvals = () => {
               value={comments}
               onChange={(e) => setComments(e.target.value)}
             />
-            <button className="btn btn-outline-danger" onClick={() => actOnSelected(false)}>Reject</button>
-            <button className="btn btn-outline-success" onClick={() => actOnSelected(true)}>Approve</button>
+            <button className="btn btn-outline-danger" disabled={acting} onClick={() => actOnSelected(false)}>Reject</button>
+            <button className="btn btn-outline-success" disabled={acting} onClick={() => actOnSelected(true)}>Approve</button>
           </div>
         )}
       </div>
+
+      {acting && (
+        <div
+          className="d-flex align-items-center justify-content-center"
+          style={{ position: "fixed", inset: 0, background: "rgba(15,60,30,0.45)", zIndex: 2000 }}
+        >
+          <div className="d-flex flex-column align-items-center text-white">
+            <span className="spinner-border mb-2" role="status" aria-hidden="true" />
+            <span>Processing your request...</span>
+          </div>
+        </div>
+      )}
 
       {loading ? (
         <div>Loading...</div>

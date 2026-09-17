@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import masterApiService from "../../core/masterApiService";
 import ConfirmModal from "../../shared/ConfirmModal";
@@ -13,6 +13,8 @@ const LocationsPage = () => {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState({});
+  const [saving, setSaving] = useState(false);
+  const submittingRef = useRef(false);
   const [confirmState, setConfirmState] = useState({ show: false, message: "", onConfirm: null });
 
   const setField = (field, value) => {
@@ -66,7 +68,10 @@ const LocationsPage = () => {
   };
 
   const handleSave = async () => {
+    if (submittingRef.current) return;
     if (!validate()) return;
+    submittingRef.current = true;
+    setSaving(true);
     try {
       if (editing) {
         await masterApiService.updateLocation(editing.id, form);
@@ -79,6 +84,9 @@ const LocationsPage = () => {
       loadData();
     } catch (e) {
       toast.error(e.response?.data?.message || "Save failed");
+    } finally {
+      submittingRef.current = false;
+      setSaving(false);
     }
   };
 
@@ -189,7 +197,9 @@ const LocationsPage = () => {
               </div>
               <div className="modal-footer">
                 <button className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
-                <button className="btn btn-primary" onClick={handleSave}>{editing ? "Update" : "Save"}</button>
+                <button className="btn btn-primary" disabled={saving} onClick={handleSave}>
+                  {saving ? "Saving..." : editing ? "Update" : "Save"}
+                </button>
               </div>
             </div>
           </div>

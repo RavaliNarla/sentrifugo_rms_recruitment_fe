@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import masterApiService from "../../core/masterApiService";
 import ConfirmModal from "../../shared/ConfirmModal";
@@ -21,6 +21,8 @@ const PositionTitlesPage = () => {
   const [viewOnly, setViewOnly] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState({});
+  const [saving, setSaving] = useState(false);
+  const submittingRef = useRef(false);
   const [confirmState, setConfirmState] = useState({ show: false, message: "", onConfirm: null });
 
   const setField = (field, value) => {
@@ -85,6 +87,7 @@ const PositionTitlesPage = () => {
   };
 
   const handleSave = async () => {
+    if (submittingRef.current) return;
     if (!validate()) return;
     const payload = {
       name: form.name,
@@ -92,6 +95,8 @@ const PositionTitlesPage = () => {
       jobDescription: form.jobDescription || null,
       minimumExperienceYears: Number(form.minimumExperienceYears),
     };
+    submittingRef.current = true;
+    setSaving(true);
     try {
       if (editing) {
         await masterApiService.updatePositionTitle(editing.id, payload);
@@ -104,6 +109,9 @@ const PositionTitlesPage = () => {
       loadData();
     } catch (e) {
       toast.error(e.response?.data?.message || "Save failed");
+    } finally {
+      submittingRef.current = false;
+      setSaving(false);
     }
   };
 
@@ -245,7 +253,9 @@ const PositionTitlesPage = () => {
                   {viewOnly ? "Close" : "Cancel"}
                 </button>
                 {!viewOnly && (
-                  <button className="btn btn-primary" onClick={handleSave}>{editing ? "Update" : "Save"}</button>
+                  <button className="btn btn-primary" disabled={saving} onClick={handleSave}>
+                    {saving ? "Saving..." : editing ? "Update" : "Save"}
+                  </button>
                 )}
               </div>
             </div>

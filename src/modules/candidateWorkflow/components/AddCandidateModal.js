@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import recruiterApiService from "../../../core/recruiterApiService";
 
@@ -28,6 +28,7 @@ const AddCandidateModal = ({ requisitionId, positionId, editingCandidate, onClos
   const [photo, setPhoto] = useState(null);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
+  const submittingRef = useRef(false);
 
   const setField = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -92,7 +93,9 @@ const AddCandidateModal = ({ requisitionId, positionId, editingCandidate, onClos
   };
 
   const handleSave = async () => {
+    if (submittingRef.current) return;
     if (!validate()) return;
+    submittingRef.current = true;
     setSaving(true);
     try {
       const formData = new FormData();
@@ -111,6 +114,7 @@ const AddCandidateModal = ({ requisitionId, positionId, editingCandidate, onClos
     } catch (e) {
       toast.error(e.response?.data?.message || "Failed to save candidate");
     } finally {
+      submittingRef.current = false;
       setSaving(false);
     }
   };
