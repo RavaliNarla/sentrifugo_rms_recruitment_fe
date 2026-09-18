@@ -156,7 +156,7 @@ const LocationsPage = () => {
       )}
 
       {showModal && (
-        <div className="modal show d-block" style={{ background: "rgba(15,60,30,0.45)" }}>
+        <div className="modal show d-block" style={{ background: "rgba(0, 0, 0, 0.45)" }}>
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
@@ -171,7 +171,7 @@ const LocationsPage = () => {
                     value={form.name}
                     onChange={(e) => setField("name", e.target.value)}
                   />
-                  {errors.name && <div className="text-danger fs-13 mt-1">{errors.name}</div>}
+                  <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.name || ""}</div>
                 </div>
                 <div className="mb-3">
                   <label className="form-label">State <span className="text-danger">*</span></label>
@@ -183,7 +183,7 @@ const LocationsPage = () => {
                     <option value="">Select State</option>
                     {states.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
                   </select>
-                  {errors.stateId && <div className="text-danger fs-13 mt-1">{errors.stateId}</div>}
+                  <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.stateId || ""}</div>
                 </div>
                 <div className="mb-3">
                   <label className="form-label">Address</label>

@@ -21,7 +21,7 @@ const CandidateProfileModal = ({ candidate, onClose, onDecide, onViewFile }) => 
   if (!candidate) return null;
 
   return (
-    <div className="modal show d-block" style={{ background: "rgba(15,60,30,0.45)" }}>
+    <div className="modal show d-block" style={{ background: "rgba(0, 0, 0, 0.45)" }}>
       <div className="modal-dialog modal-dialog-centered">
         <div className="modal-content">
           <div className="modal-header">

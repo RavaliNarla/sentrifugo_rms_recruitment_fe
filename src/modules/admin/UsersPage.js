@@ -159,7 +159,7 @@ const UsersPage = () => {
       )}
 
       {showModal && (
-        <div className="modal show d-block" style={{ background: "rgba(15,60,30,0.45)" }}>
+        <div className="modal show d-block" style={{ background: "rgba(0, 0, 0, 0.45)" }}>
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
@@ -174,7 +174,7 @@ const UsersPage = () => {
                     value={form.name}
                     onChange={(e) => setField("name", e.target.value)}
                   />
-                  {errors.name && <div className="text-danger fs-13 mt-1">{errors.name}</div>}
+                  <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.name || ""}</div>
                 </div>
                 <div className="mb-3">
                   <label className="form-label">Role <span className="text-danger">*</span></label>
@@ -186,7 +186,7 @@ const UsersPage = () => {
                     <option value="">Select Role</option>
                     {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
                   </select>
-                  {errors.role && <div className="text-danger fs-13 mt-1">{errors.role}</div>}
+                  <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.role || ""}</div>
                 </div>
                 <div className="mb-3">
                   <label className="form-label">Email (must match their Azure AD account) <span className="text-danger">*</span></label>
@@ -197,7 +197,7 @@ const UsersPage = () => {
                     disabled={!!editing}
                     onChange={(e) => setField("email", e.target.value)}
                   />
-                  {errors.email && <div className="text-danger fs-13 mt-1">{errors.email}</div>}
+                  <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.email || ""}</div>
                 </div>
               </div>
               <div className="modal-footer">

@@ -383,7 +383,7 @@ const JobPostings = () => {
       {submitting && (
         <div
           className="d-flex align-items-center justify-content-center"
-          style={{ position: "fixed", inset: 0, background: "rgba(15,60,30,0.45)", zIndex: 2000 }}
+          style={{ position: "fixed", inset: 0, background: "rgba(0, 0, 0, 0.45)", zIndex: 2000 }}
         >
           <div className="d-flex flex-column align-items-center text-white">
             <span className="spinner-border mb-2" role="status" aria-hidden="true" />
@@ -548,7 +548,7 @@ const JobPostings = () => {
                                     <i className="bi bi-eye" />
                                   </button>
                                 )}
-                                {pos.status === "NEW" && (
+                                {req.status === "NEW" && (
                                   <button
                                     type="button"
                                     className="icon-btn-circle danger"
@@ -585,7 +585,7 @@ const JobPostings = () => {
       />
 
       {historyModal.show && (
-        <div className="modal show d-block" style={{ background: "rgba(15,60,30,0.45)" }} onClick={closeApprovalHistory}>
+        <div className="modal show d-block" style={{ background: "rgba(0, 0, 0, 0.45)" }} onClick={closeApprovalHistory}>
           <div className="modal-dialog modal-dialog-centered modal-lg" onClick={(e) => e.stopPropagation()}>
             <div className="modal-content">
               <div className="modal-header">

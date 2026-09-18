@@ -47,7 +47,13 @@ const ScheduleInterviewModal = ({ candidates, round = 1, onClose, onScheduled })
   const [endTime, setEndTime] = useState("17:00");
   const [durationMinutes, setDurationMinutes] = useState(30);
   const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState({});
   const interviewRound = Number(round) > 0 ? Number(round) : 1;
+
+  const setField = (field, value, setter) => {
+    setter(value);
+    setErrors((prev) => (prev[field] ? { ...prev, [field]: undefined } : prev));
+  };
 
   useEffect(() => {
     recruiterApiService.getPanels()
@@ -68,31 +74,31 @@ const ScheduleInterviewModal = ({ candidates, round = 1, onClose, onScheduled })
   const selectedPanel = panels.find((p) => p.id === panelId);
   const enoughSlots = capacity >= candidates.length;
 
-  const handleSchedule = async () => {
-    if (!panelId) {
-      toast.error("Select a panel");
-      return;
-    }
+  const validate = () => {
+    const next = {};
+    if (!panelId) next.panelId = "Select a panel";
     if (!interviewDate) {
-      toast.error("Select an interview date");
-      return;
+      next.interviewDate = "Select an interview date";
+    } else if (interviewDate < new Date().toISOString().slice(0, 10)) {
+      next.interviewDate = "Interview date cannot be in the past";
     }
-    if (!startTime || !endTime) {
-      toast.error("Start and end time are required");
-      return;
-    }
-    if (toMinutes(endTime) <= toMinutes(startTime)) {
-      toast.error("End time must be after start time");
-      return;
+    if (!startTime) next.startTime = "Start time is required";
+    if (!endTime) {
+      next.endTime = "End time is required";
+    } else if (startTime && toMinutes(endTime) <= toMinutes(startTime)) {
+      next.endTime = "End time must be after start time";
     }
     if (!durationMinutes || Number(durationMinutes) <= 0) {
-      toast.error("Duration must be greater than 0 minutes");
-      return;
+      next.durationMinutes = "Duration must be greater than 0 minutes";
     }
-    if (!enoughSlots) {
-      toast.error(`Only ${capacity} slot(s) fit in this window, but ${candidates.length} candidate(s) are selected.`);
-      return;
-    }
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  };
+
+  const handleSchedule = async () => {
+    if (!validate()) return;
+    // The Schedule button is already disabled when slots don't fit (enoughSlots),
+    // and the capacity box above already shows "not enough room" inline.
     setSaving(true);
     try {
       await recruiterApiService.scheduleInterviews({
@@ -114,7 +120,7 @@ const ScheduleInterviewModal = ({ candidates, round = 1, onClose, onScheduled })
   };
 
   return (
-    <div className="modal show d-block" style={{ background: "rgba(15,60,30,0.45)" }}>
+    <div className="modal show d-block" style={{ background: "rgba(0, 0, 0, 0.45)" }}>
       <div className="modal-dialog modal-dialog-centered modal-lg">
         <div className="modal-content">
           <div className="modal-header">
@@ -142,7 +148,11 @@ const ScheduleInterviewModal = ({ candidates, round = 1, onClose, onScheduled })
             <div className="row g-3">
               <div className="col-md-6">
                 <label className="form-label">Panel <span className="text-danger">*</span></label>
-                <select className="form-select" value={panelId} onChange={(e) => setPanelId(e.target.value)}>
+                <select
+                  className={`form-select ${errors.panelId ? "is-invalid" : ""}`}
+                  value={panelId}
+                  onChange={(e) => setField("panelId", e.target.value, setPanelId)}
+                >
                   <option value="">Select panel</option>
                   {panels.map((p) => (
                     <option key={p.id} value={p.id}>
@@ -150,34 +160,64 @@ const ScheduleInterviewModal = ({ candidates, round = 1, onClose, onScheduled })
                     </option>
                   ))}
                 </select>
-                {selectedPanel?.memberNames?.length > 0 && (
-                  <div className="text-muted small mt-1">Members: {selectedPanel.memberNames.join(", ")}</div>
+                <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.panelId || ""}</div>
+                {!errors.panelId && selectedPanel?.memberNames?.length > 0 && (
+                  <div className="text-muted small mt-n2">Members: {selectedPanel.memberNames.join(", ")}</div>
                 )}
               </div>
               <div className="col-md-6">
                 <label className="form-label">Interview date <span className="text-danger">*</span></label>
                 <input
                   type="date"
-                  className="form-control"
+                  className={`form-control ${errors.interviewDate ? "is-invalid" : ""}`}
                   min={new Date().toISOString().slice(0, 10)}
                   value={interviewDate}
-                  onChange={(e) => setInterviewDate(e.target.value)}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setInterviewDate(v);
+                    const todayStr = new Date().toISOString().slice(0, 10);
+                    setErrors((prev) => ({
+                      ...prev,
+                      interviewDate: v && v < todayStr ? "Interview date cannot be in the past" : undefined,
+                    }));
+                  }}
                 />
+                <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.interviewDate || ""}</div>
               </div>
               <div className="col-md-4">
                 <label className="form-label">Start time <span className="text-danger">*</span></label>
-                <input type="time" className="form-control" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
+                <input
+                  type="time"
+                  className={`form-control ${errors.startTime ? "is-invalid" : ""}`}
+                  value={startTime}
+                  onChange={(e) => setField("startTime", e.target.value, setStartTime)}
+                />
+                <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.startTime || ""}</div>
               </div>
               <div className="col-md-4">
                 <label className="form-label">End time <span className="text-danger">*</span></label>
-                <input type="time" className="form-control" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
-                <div className="text-muted small mt-1">Default 5:00 PM</div>
+                <input
+                  type="time"
+                  className={`form-control ${errors.endTime ? "is-invalid" : ""}`}
+                  value={endTime}
+                  onChange={(e) => setField("endTime", e.target.value, setEndTime)}
+                />
+                {errors.endTime ? (
+                  <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.endTime}</div>
+                ) : (
+                  <div className="text-muted small mt-1" style={{ minHeight: "18px" }}>Default 5:00 PM</div>
+                )}
               </div>
               <div className="col-md-4">
                 <label className="form-label">Each interview (mins)</label>
-                <select className="form-select" value={durationMinutes} onChange={(e) => setDurationMinutes(Number(e.target.value))}>
+                <select
+                  className={`form-select ${errors.durationMinutes ? "is-invalid" : ""}`}
+                  value={durationMinutes}
+                  onChange={(e) => setField("durationMinutes", Number(e.target.value), setDurationMinutes)}
+                >
                   {[15, 20, 30, 45, 60].map((d) => <option key={d} value={d}>{d} minutes</option>)}
                 </select>
+                <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.durationMinutes || ""}</div>
               </div>
             </div>
 

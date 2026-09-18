@@ -225,7 +225,7 @@ const AddCandidateModal = ({
   );
 
   return (
-    <div className="modal show d-block" style={{ background: "rgba(15,60,30,0.45)" }}>
+    <div className="modal show d-block" style={{ background: "rgba(0, 0, 0, 0.45)" }}>
       <div className="modal-dialog modal-dialog-centered modal-lg">
         <div className="modal-content">
           <div className="modal-header">
@@ -242,7 +242,7 @@ const AddCandidateModal = ({
                     value={form.name}
                     onChange={(e) => setField("name", e.target.value)}
                   />
-                  {errors.name && <div className="text-danger fs-13 mt-1">{errors.name}</div>}
+                  <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.name || ""}</div>
                 </div>
                 <div className="mb-3">
                   <label className="form-label">Phone <span className="text-danger">*</span></label>
@@ -253,7 +253,7 @@ const AddCandidateModal = ({
                     value={form.phone}
                     onChange={(e) => setField("phone", e.target.value.replace(/\D/g, "").slice(0, 10))}
                   />
-                  {errors.phone && <div className="text-danger fs-13 mt-1">{errors.phone}</div>}
+                  <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.phone || ""}</div>
                 </div>
                 <div className="mb-3">
                   <label className="form-label">Email <span className="text-danger">*</span></label>
@@ -263,7 +263,7 @@ const AddCandidateModal = ({
                     value={form.email}
                     onChange={(e) => setField("email", e.target.value)}
                   />
-                  {errors.email && <div className="text-danger fs-13 mt-1">{errors.email}</div>}
+                  <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.email || ""}</div>
                 </div>
               </div>
 
@@ -287,7 +287,7 @@ const AddCandidateModal = ({
                     onDelete={() => askDeleteDocument("photo")}
                   />
                 )}
-                {errors.photo && <div className="text-danger fs-13 mt-1">{errors.photo}</div>}
+                <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.photo || ""}</div>
               </div>
             </div>
 
@@ -307,7 +307,7 @@ const AddCandidateModal = ({
                     onDelete={() => askDeleteDocument("resume")}
                   />
                 )}
-                {errors.resume && <div className="text-danger fs-13 mt-1">{errors.resume}</div>}
+                <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.resume || ""}</div>
               </div>
               <div className="col-md-6 mb-3">
                 <label className="form-label">ID Proof (optional)</label>
@@ -324,7 +324,7 @@ const AddCandidateModal = ({
                     onDelete={() => askDeleteDocument("id-proof")}
                   />
                 )}
-                {errors.idProof && <div className="text-danger fs-13 mt-1">{errors.idProof}</div>}
+                <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.idProof || ""}</div>
               </div>
             </div>
           </div>

@@ -27,6 +27,13 @@ const tomorrowStr = () => {
   return d.toISOString().split("T")[0];
 };
 
+// Joining Date must be after Accept Before Date.
+const dayAfter = (dateStr) => {
+  const d = new Date(dateStr);
+  d.setDate(d.getDate() + 1);
+  return d.toISOString().split("T")[0];
+};
+
 // SCL_41: selectable until candidate accepts or rejects (SENT can be regenerated/resent).
 const LOCKED_OFFER_STATUSES = ["ACCEPTED", "REJECTED"];
 
@@ -115,7 +122,11 @@ const OfferPoolTab = ({ positionId }) => {
     } else if (acceptBeforeDate <= new Date().toISOString().split("T")[0]) {
       next.acceptBeforeDate = "Accept Before Date must be a future date";
     }
-    if (!joiningDate) next.joiningDate = "Joining Date is required";
+    if (!joiningDate) {
+      next.joiningDate = "Joining Date is required";
+    } else if (acceptBeforeDate && joiningDate <= acceptBeforeDate) {
+      next.joiningDate = "Joining Date must be after the Accept Before Date";
+    }
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -171,7 +182,7 @@ const OfferPoolTab = ({ positionId }) => {
             <option value="">Select Template</option>
             {templates.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
           </select>
-          {errors.templateId && <div className="text-danger fs-13 mt-1">{errors.templateId}</div>}
+          <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.templateId || ""}</div>
           {/* SCL_36: preview template with placeholders, or with selected candidate values. */}
           <button type="button" className="btn btn-link btn-sm p-0 mt-1" onClick={handlePreview}>
             <i className="bi bi-eye me-1" /> Preview{selected.length === 0 ? " template" : ""}
@@ -180,12 +191,16 @@ const OfferPoolTab = ({ positionId }) => {
         <div className="col-md-3">
           <label className="form-label small">Accept Before Date</label>
           <DateInput value={acceptBeforeDate} min={tomorrowStr()} onChange={(v) => { setAcceptBeforeDate(v); setErrors((prev) => (prev.acceptBeforeDate ? { ...prev, acceptBeforeDate: undefined } : prev)); }} />
-          {errors.acceptBeforeDate && <div className="text-danger fs-13 mt-1">{errors.acceptBeforeDate}</div>}
+          <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.acceptBeforeDate || ""}</div>
         </div>
         <div className="col-md-3">
           <label className="form-label small">Joining Date</label>
-          <DateInput value={joiningDate} min={tomorrowStr()} onChange={(v) => { setJoiningDate(v); setErrors((prev) => (prev.joiningDate ? { ...prev, joiningDate: undefined } : prev)); }} />
-          {errors.joiningDate && <div className="text-danger fs-13 mt-1">{errors.joiningDate}</div>}
+          <DateInput
+            value={joiningDate}
+            min={acceptBeforeDate ? dayAfter(acceptBeforeDate) : tomorrowStr()}
+            onChange={(v) => { setJoiningDate(v); setErrors((prev) => (prev.joiningDate ? { ...prev, joiningDate: undefined } : prev)); }}
+          />
+          <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.joiningDate || ""}</div>
         </div>
         <div className="col-md-3 d-flex align-items-end justify-content-end gap-2">
           {selected.length > 0 && (
@@ -271,7 +286,7 @@ const OfferPoolTab = ({ positionId }) => {
       />
 
       {previewHtml !== null && (
-        <div className="modal show d-block" style={{ background: "rgba(15,60,30,0.45)" }}>
+        <div className="modal show d-block" style={{ background: "rgba(0, 0, 0, 0.45)" }}>
           <div className="modal-dialog modal-dialog-centered modal-lg">
             <div className="modal-content">
               <div className="modal-header">

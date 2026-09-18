@@ -16,6 +16,7 @@ const CreateRequisition = () => {
   const routeLocation = useLocation();
   const editingRequisition = routeLocation.state?.requisition;
   const viewOnly = routeLocation.state?.viewOnly === true;
+  const returnTo = routeLocation.state?.returnTo || "/job-postings";
 
   const [form, setForm] = useState(
     editingRequisition
@@ -118,9 +119,10 @@ const CreateRequisition = () => {
           <DateInput
             value={form.startDate}
             min={tomorrowStr()}
+            disabled={viewOnly}
             onChange={(v) => setField("startDate", v)}
           />
-          {errors.startDate && <div className="text-danger fs-13 mt-1">{errors.startDate}</div>}
+          <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.startDate || ""}</div>
         </div>
       </div>
 
@@ -134,13 +136,14 @@ const CreateRequisition = () => {
             value={form.description}
             onChange={(e) => setField("description", e.target.value)}
           />
-          {errors.description && <div className="text-danger fs-13 mt-1">{errors.description}</div>}
+          <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.description || ""}</div>
         </div>
         <div className="col-md-4 mb-3">
           <label className="form-label">Expected Fulfilment Date <span className="text-danger">*</span></label>
           <DateInput
             value={form.expectedFulfilmentDate}
             min={form.startDate || tomorrowStr()}
+            disabled={viewOnly}
             onChange={(v) => setField("expectedFulfilmentDate", v)}
           />
           {errors.expectedFulfilmentDate ? (
@@ -153,7 +156,7 @@ const CreateRequisition = () => {
       </fieldset>
 
       <div className="d-flex justify-content-end gap-2 mt-3">
-        <button className="btn btn-outline-secondary" onClick={() => navigate("/job-postings")}>
+        <button className="btn btn-outline-secondary" onClick={() => navigate(returnTo)}>
           {viewOnly ? "Back" : "Cancel"}
         </button>
         {!viewOnly && (

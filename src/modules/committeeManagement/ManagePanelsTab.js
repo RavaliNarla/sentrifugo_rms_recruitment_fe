@@ -111,7 +111,7 @@ const ManagePanelsTab = () => {
             onChange={(e) => { setName(e.target.value); setErrors((prev) => (prev.name ? { ...prev, name: undefined } : prev)); }}
             placeholder="Enter Panel Name"
           />
-          {errors.name && <div className="text-danger fs-13 mt-1">{errors.name}</div>}
+          <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.name || ""}</div>
         </div>
         <div className="mb-3">
           <label className="form-label fs-14">Panel Members <span className="text-danger">*</span></label>
@@ -128,7 +128,7 @@ const ManagePanelsTab = () => {
               </div>
             ))}
           </div>
-          {errors.members && <div className="text-danger fs-13 mt-1">{errors.members}</div>}
+          <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.members || ""}</div>
         </div>
         <div className="d-flex justify-content-end gap-2">
           {editing && <button className="btn btn-outline-secondary" onClick={resetForm}>Cancel</button>}

@@ -5,6 +5,12 @@ import Pagination from "../../../shared/Pagination";
 
 const EMPTY_DETAILS = { currentCtc: "", expectedCtc: "", fixedPay: "", variablePay: "", bonus: "", compensationComments: "", agreedCtc: "" };
 
+// Agreed CTC is not manually entered - it's always the sum of Fixed Pay + Variable Pay.
+const computeAgreedCtc = (fixedPay, variablePay) => {
+  if (fixedPay === "" && variablePay === "") return "";
+  return String((Number(fixedPay) || 0) + (Number(variablePay) || 0));
+};
+
 /** Compensation Management (Section 15 of the requirements doc, renamed from "Compensation Pool"). */
 const CompensationPoolTab = ({ positionId }) => {
   const [rows, setRows] = useState([]);
@@ -24,14 +30,16 @@ const CompensationPoolTab = ({ positionId }) => {
       setRows(content);
       const map = {};
       content.forEach((c) => {
+        const fixedPay = c.fixedPay ?? "";
+        const variablePay = c.variablePay ?? "";
         map[c.id] = {
           currentCtc: c.currentCtc ?? "",
           expectedCtc: c.expectedCtc ?? "",
-          fixedPay: c.fixedPay ?? "",
-          variablePay: c.variablePay ?? "",
+          fixedPay,
+          variablePay,
           bonus: c.bonus ?? "",
           compensationComments: c.compensationComments ?? "",
-          agreedCtc: c.agreedCtc ?? "",
+          agreedCtc: computeAgreedCtc(fixedPay, variablePay),
         };
       });
       setDetails(map);
@@ -50,7 +58,13 @@ const CompensationPoolTab = ({ positionId }) => {
   }, [positionId, page, size]);
 
   const updateField = (id, field, value) => {
-    setDetails((prev) => ({ ...prev, [id]: { ...(prev[id] || EMPTY_DETAILS), [field]: value } }));
+    setDetails((prev) => {
+      const current = { ...(prev[id] || EMPTY_DETAILS), [field]: value };
+      if (field === "fixedPay" || field === "variablePay") {
+        current.agreedCtc = computeAgreedCtc(current.fixedPay, current.variablePay);
+      }
+      return { ...prev, [id]: current };
+    });
   };
 
   const handleSaveDetails = async (id) => {
@@ -139,7 +153,7 @@ const CompensationPoolTab = ({ positionId }) => {
                   <td><input type="number" className="form-control form-control-sm" style={{ width: 100 }} value={d.variablePay} onChange={(e) => updateField(c.id, "variablePay", e.target.value)} /></td>
                   <td><input type="number" className="form-control form-control-sm" style={{ width: 90 }} value={d.bonus} onChange={(e) => updateField(c.id, "bonus", e.target.value)} /></td>
                   <td><input className="form-control form-control-sm" style={{ width: 140 }} value={d.compensationComments} onChange={(e) => updateField(c.id, "compensationComments", e.target.value)} /></td>
-                  <td><input type="number" className="form-control form-control-sm" style={{ width: 110 }} value={d.agreedCtc} onChange={(e) => updateField(c.id, "agreedCtc", e.target.value)} /></td>
+                  <td><input type="number" className="form-control form-control-sm" style={{ width: 110 }} value={d.agreedCtc} disabled /></td>
                   <td>
                     <button className="btn btn-sm btn-outline-primary" disabled={savingId === c.id} onClick={() => handleSaveDetails(c.id)}>
                       {savingId === c.id ? "Saving..." : "Save"}

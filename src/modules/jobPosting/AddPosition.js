@@ -42,6 +42,7 @@ const AddPosition = () => {
   const location = useLocation();
   const editingPosition = location.state?.position;
   const viewOnly = location.state?.viewOnly === true;
+  const returnTo = location.state?.returnTo || "/job-postings";
   const filePreview = useFilePreview();
 
   const [departments, setDepartments] = useState([]);
@@ -57,6 +58,7 @@ const AddPosition = () => {
   const [autofillPrompt, setAutofillPrompt] = useState(null);
   const [errors, setErrors] = useState({});
   const submittingRef = useRef(false);
+  const fieldRefs = useRef({});
 
   const setField = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -191,6 +193,19 @@ const AddPosition = () => {
       next.approvalDoc = "Upload Approval Email/Document is required";
     }
     setErrors(next);
+
+    // Scroll to the first invalid field, in the same top-to-bottom order they appear on the page.
+    const fieldOrder = [
+      "departmentId", "positionTitleId", "locationId", "jobDescription",
+      "educationQualificationId", "experienceYears", "employmentType",
+      "contractualPeriod", "vacancies", "approvedById", "approvedOn",
+      "approvedByOtherText", "approvalDoc",
+    ];
+    const firstErrorField = fieldOrder.find((f) => next[f]);
+    if (firstErrorField) {
+      fieldRefs.current[firstErrorField]?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+
     return Object.keys(next).length === 0;
   };
 
@@ -259,15 +274,15 @@ const AddPosition = () => {
 
       <fieldset disabled={viewOnly} style={{ border: 0, padding: 0, margin: 0 }}>
       <div className="row">
-        <div className="col-md-6 mb-3">
+        <div className="col-md-6 mb-3" ref={(el) => (fieldRefs.current.departmentId = el)}>
           <label className="form-label">Department <span className="text-danger">*</span></label>
           <select className={`form-select ${errors.departmentId ? "is-invalid" : ""}`} value={form.departmentId} onChange={(e) => { handleDepartmentChange(e.target.value); setErrors((prev) => (prev.departmentId ? { ...prev, departmentId: undefined } : prev)); }}>
             <option value="">Select</option>
             {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
           </select>
-          {errors.departmentId && <div className="text-danger fs-13 mt-1">{errors.departmentId}</div>}
+          <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.departmentId || ""}</div>
         </div>
-        <div className="col-md-6 mb-3">
+        <div className="col-md-6 mb-3" ref={(el) => (fieldRefs.current.positionTitleId = el)}>
           <label className="form-label">Position Title <span className="text-danger">*</span></label>
           <select
             className={`form-select ${errors.positionTitleId ? "is-invalid" : ""}`}
@@ -278,20 +293,20 @@ const AddPosition = () => {
             <option value="">{form.departmentId ? "Select" : "Select a Department first"}</option>
             {positionTitles.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
-          {errors.positionTitleId && <div className="text-danger fs-13 mt-1">{errors.positionTitleId}</div>}
+          <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.positionTitleId || ""}</div>
         </div>
       </div>
 
-      <div className="mb-3">
+      <div className="mb-3" ref={(el) => (fieldRefs.current.locationId = el)}>
         <label className="form-label">Location <span className="text-danger">*</span></label>
         <select className={`form-select ${errors.locationId ? "is-invalid" : ""}`} value={form.locationId} onChange={(e) => setField("locationId", e.target.value)}>
           <option value="">Select</option>
           {locations.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
         </select>
-        {errors.locationId && <div className="text-danger fs-13 mt-1">{errors.locationId}</div>}
+        <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.locationId || ""}</div>
       </div>
 
-      <div className="mb-3">
+      <div className="mb-3" ref={(el) => (fieldRefs.current.jobDescription = el)}>
         <label className="form-label">Roles &amp; Responsibilities <span className="text-danger">*</span></label>
         <textarea
           className={`form-control ${errors.jobDescription ? "is-invalid" : ""}`}
@@ -299,17 +314,17 @@ const AddPosition = () => {
           value={form.jobDescription}
           onChange={(e) => setField("jobDescription", e.target.value)}
         />
-        {errors.jobDescription && <div className="text-danger fs-13 mt-1">{errors.jobDescription}</div>}
+        <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.jobDescription || ""}</div>
       </div>
 
       <div className="row">
-        <div className="col-md-6 mb-3">
+        <div className="col-md-6 mb-3" ref={(el) => (fieldRefs.current.educationQualificationId = el)}>
           <label className="form-label">Education Requirement <span className="text-danger">*</span></label>
           <select className={`form-select ${errors.educationQualificationId ? "is-invalid" : ""}`} value={form.educationQualificationId} onChange={(e) => { setForm({ ...form, educationQualificationId: e.target.value, specializationId: "" }); setErrors((prev) => (prev.educationQualificationId ? { ...prev, educationQualificationId: undefined } : prev)); }}>
             <option value="">Select</option>
             {educationQualifications.map((e2) => <option key={e2.id} value={e2.id}>{e2.name}</option>)}
           </select>
-          {errors.educationQualificationId && <div className="text-danger fs-13 mt-1">{errors.educationQualificationId}</div>}
+          <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.educationQualificationId || ""}</div>
         </div>
         <div className="col-md-6 mb-3">
           <label className="form-label">Specialization (optional)</label>
@@ -326,13 +341,13 @@ const AddPosition = () => {
       </div>
 
       <div className="row">
-        <div className="col-md-6 mb-3">
+        <div className="col-md-6 mb-3" ref={(el) => (fieldRefs.current.experienceYears = el)}>
           <label className="form-label">Experience Required (years) <span className="text-danger">*</span></label>
           <select className={`form-select ${errors.experienceYears ? "is-invalid" : ""}`} value={form.experienceYears} onChange={(e) => setField("experienceYears", e.target.value)}>
             <option value="">Select</option>
             {EXPERIENCE_YEARS.map((y) => <option key={y} value={y}>{y} {y === 1 ? "year" : "years"}</option>)}
           </select>
-          {errors.experienceYears && <div className="text-danger fs-13 mt-1">{errors.experienceYears}</div>}
+          <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.experienceYears || ""}</div>
         </div>
         <div className="col-md-6 mb-3">
           <label className="form-label">Certifications (optional)</label>
@@ -348,7 +363,7 @@ const AddPosition = () => {
       </div>
 
       <div className="row align-items-end">
-        <div className="col-md-4 mb-3">
+        <div className="col-md-4 mb-3" ref={(el) => (fieldRefs.current.employmentType = el)}>
           <label className="form-label">Employment Type <span className="text-danger">*</span></label>
           <select
             className={`form-select ${errors.employmentType ? "is-invalid" : ""}`}
@@ -367,21 +382,21 @@ const AddPosition = () => {
             <option value="REGULAR">Regular</option>
             <option value="CONTRACT">Contract</option>
           </select>
-          {errors.employmentType && <div className="text-danger fs-13 mt-1">{errors.employmentType}</div>}
+          <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.employmentType || ""}</div>
         </div>
         {form.employmentType === "CONTRACT" && (
-          <div className="col-md-4 mb-3">
+          <div className="col-md-4 mb-3" ref={(el) => (fieldRefs.current.contractualPeriod = el)}>
             <label className="form-label">Contractual Period <span className="text-danger">*</span></label>
             <input
               className={`form-control ${errors.contractualPeriod ? "is-invalid" : ""}`}
-              placeholder="e.g. 6 months"
+              placeholder="6 months"
               value={form.contractualPeriod}
               onChange={(e) => setField("contractualPeriod", e.target.value)}
             />
-            {errors.contractualPeriod && <div className="text-danger fs-13 mt-1">{errors.contractualPeriod}</div>}
+            <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.contractualPeriod || ""}</div>
           </div>
         )}
-        <div className="col-md-4 mb-3">
+        <div className="col-md-4 mb-3" ref={(el) => (fieldRefs.current.vacancies = el)}>
           <label className="form-label">Number of Positions to be Hired <span className="text-danger">*</span></label>
           <input
             type="number"
@@ -391,7 +406,7 @@ const AddPosition = () => {
             value={form.vacancies}
             onChange={(e) => setField("vacancies", e.target.value)}
           />
-          {errors.vacancies && <div className="text-danger fs-13 mt-1">{errors.vacancies}</div>}
+          <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.vacancies || ""}</div>
         </div>
       </div>
 
@@ -409,22 +424,22 @@ const AddPosition = () => {
       <hr className="my-3" />
       <h6>Approval</h6>
       <div className="row">
-        <div className="col-md-6 mb-3">
+        <div className="col-md-6 mb-3" ref={(el) => (fieldRefs.current.approvedById = el)}>
           <label className="form-label">Approved By <span className="text-danger">*</span></label>
           <select className={`form-select ${errors.approvedById ? "is-invalid" : ""}`} value={form.approvedById} onChange={(e) => setField("approvedById", e.target.value)}>
             <option value="">Select</option>
             {approvedByRoles.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
           </select>
-          {errors.approvedById && <div className="text-danger fs-13 mt-1">{errors.approvedById}</div>}
+          <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.approvedById || ""}</div>
         </div>
-        <div className="col-md-6 mb-3">
+        <div className="col-md-6 mb-3" ref={(el) => (fieldRefs.current.approvedOn = el)}>
           <label className="form-label">Approved On <span className="text-danger">*</span></label>
-          <DateInput value={form.approvedOn} max={todayStr()} onChange={(v) => setField("approvedOn", v)} />
-          {errors.approvedOn && <div className="text-danger fs-13 mt-1">{errors.approvedOn}</div>}
+          <DateInput value={form.approvedOn} max={todayStr()} disabled={viewOnly} onChange={(v) => setField("approvedOn", v)} />
+          <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.approvedOn || ""}</div>
         </div>
       </div>
       {isApprovedByOthers && (
-        <div className="mb-3">
+        <div className="mb-3" ref={(el) => (fieldRefs.current.approvedByOtherText = el)}>
           <label className="form-label">Approver's Name <span className="text-danger">*</span></label>
           <input
             className={`form-control ${errors.approvedByOtherText ? "is-invalid" : ""}`}
@@ -432,12 +447,12 @@ const AddPosition = () => {
             value={form.approvedByOtherText}
             onChange={(e) => setField("approvedByOtherText", e.target.value)}
           />
-          {errors.approvedByOtherText && <div className="text-danger fs-13 mt-1">{errors.approvedByOtherText}</div>}
+          <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.approvedByOtherText || ""}</div>
         </div>
       )}
       </fieldset>
 
-      <div className="mb-3">
+      <div className="mb-3" ref={(el) => (fieldRefs.current.approvalDoc = el)}>
         <label className="form-label d-block">Upload Approval Email/Document <span className="text-danger">*</span></label>
         {!viewOnly && (
           <>
@@ -447,7 +462,7 @@ const AddPosition = () => {
               accept=".pdf,.docx,.png,.jpg,.jpeg"
               onChange={handleApprovalDocChange}
             />
-            {errors.approvalDoc && <div className="text-danger fs-13 mt-1">{errors.approvalDoc}</div>}
+            <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.approvalDoc || ""}</div>
             <small className="text-muted d-block">Scanned copy, email attachment, or screenshot of management approval.</small>
           </>
         )}
@@ -463,7 +478,7 @@ const AddPosition = () => {
       </div>
 
       <div className="d-flex justify-content-end gap-2 mt-3">
-        <button className="btn btn-outline-secondary" onClick={() => navigate("/job-postings")}>
+        <button className="btn btn-outline-secondary" onClick={() => navigate(returnTo)}>
           {viewOnly ? "Back" : "Cancel"}
         </button>
         {!viewOnly && (

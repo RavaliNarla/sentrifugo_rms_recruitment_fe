@@ -28,7 +28,7 @@
   align-items: center;
 }
 .auth-left-brand-logo {
-  width: 220px;
+  width: 200px;
   max-width: 100%;
   height: auto;
   display: block;
@@ -85,7 +85,7 @@
 }
 .auth-right-inner { width: 100%; max-width: 380px; text-align: center; }
 .auth-right-inner img.auth-logo {
-  height: 72px;
+  height: 50px;
   width: auto;
   display: block;
   margin: 0 auto 28px;

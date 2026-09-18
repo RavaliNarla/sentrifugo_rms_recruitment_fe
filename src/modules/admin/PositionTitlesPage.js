@@ -190,7 +190,7 @@ const PositionTitlesPage = () => {
       )}
 
       {showModal && (
-        <div className="modal show d-block" style={{ background: "rgba(15,60,30,0.45)" }}>
+        <div className="modal show d-block" style={{ background: "rgba(0, 0, 0, 0.45)" }}>
           <div className="modal-dialog modal-dialog-centered modal-lg">
             <div className="modal-content">
               <div className="modal-header">
@@ -212,7 +212,7 @@ const PositionTitlesPage = () => {
                         <option value="">Select</option>
                         {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
                       </select>
-                      {errors.departmentId && <div className="text-danger fs-13 mt-1">{errors.departmentId}</div>}
+                      <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.departmentId || ""}</div>
                     </div>
                     <div className="col-md-6 mb-3">
                       <label className="form-label">Position Title <span className="text-danger">*</span></label>
@@ -222,7 +222,7 @@ const PositionTitlesPage = () => {
                         onChange={(e) => setField("name", e.target.value)}
                         autoFocus
                       />
-                      {errors.name && <div className="text-danger fs-13 mt-1">{errors.name}</div>}
+                      <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.name || ""}</div>
                     </div>
                   </div>
 

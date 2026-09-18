@@ -115,7 +115,7 @@ const Approvals = () => {
       {acting && (
         <div
           className="d-flex align-items-center justify-content-center"
-          style={{ position: "fixed", inset: 0, background: "rgba(15,60,30,0.45)", zIndex: 2000 }}
+          style={{ position: "fixed", inset: 0, background: "rgba(0, 0, 0, 0.45)", zIndex: 2000 }}
         >
           <div className="d-flex flex-column align-items-center text-white">
             <span className="spinner-border mb-2" role="status" aria-hidden="true" />
@@ -176,7 +176,7 @@ const Approvals = () => {
                   <button
                     className="icon-btn-circle"
                     title="View Requisition"
-                    onClick={(e) => { e.stopPropagation(); navigate("/job-postings/create-requisition", { state: { requisition: req, viewOnly: true } }); }}
+                    onClick={(e) => { e.stopPropagation(); navigate("/job-postings/create-requisition", { state: { requisition: req, viewOnly: true, returnTo: "/approvals" } }); }}
                   >
                     <i className="bi bi-eye" />
                   </button>
@@ -214,7 +214,7 @@ const Approvals = () => {
                                 type="button"
                                 className="icon-btn-circle"
                                 title="View Position"
-                                onClick={() => navigate(`/job-postings/${req.id}/add-position`, { state: { position: pos, viewOnly: true } })}
+                                onClick={() => navigate(`/job-postings/${req.id}/add-position`, { state: { position: pos, viewOnly: true, returnTo: "/approvals" } })}
                               >
                                 <i className="bi bi-eye" />
                               </button>

@@ -148,7 +148,7 @@ const SpecializationsPage = () => {
       )}
 
       {showModal && (
-        <div className="modal show d-block" style={{ background: "rgba(15,60,30,0.45)" }}>
+        <div className="modal show d-block" style={{ background: "rgba(0, 0, 0, 0.45)" }}>
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
@@ -164,7 +164,7 @@ const SpecializationsPage = () => {
                     onChange={(e) => { setForm({ ...form, name: e.target.value }); setNameError(""); }}
                     autoFocus
                   />
-                  {nameError && <div className="text-danger fs-13 mt-1">{nameError}</div>}
+                  <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{nameError || ""}</div>
                 </div>
                 <div className="mb-3">
                   <label className="form-label">Education Level (optional)</label>

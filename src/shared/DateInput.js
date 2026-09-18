@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import "./DateInput.css";
 
 /**
@@ -18,10 +18,31 @@ const formatDisplay = (value) => {
   return `${d}-${m}-${y}`;
 };
 
+// The browser's own native calendar icon sits flush right, roughly this wide -
+// a click there already opens/closes the picker natively; calling showPicker()
+// again on top of that collides with the native toggle and closes it right back.
+const NATIVE_ICON_ZONE_PX = 32;
+
 const DateInput = ({ value, onChange, min, max, disabled, placeholder = "dd-mm-yyyy", className = "" }) => {
+  const inputRef = useRef(null);
+
+  // Native date inputs only open the picker when the browser's own calendar
+  // icon is clicked; showPicker() lets a click anywhere else in the field open it too.
+  const openPicker = (e) => {
+    if (disabled) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    if (e.clientX >= rect.right - NATIVE_ICON_ZONE_PX) return;
+    try {
+      inputRef.current?.showPicker?.();
+    } catch {
+      // showPicker() can throw (e.g. unsupported browser) - clicking still focuses the field.
+    }
+  };
+
   return (
     <div className={`date-input-wrap ${className}`}>
       <input
+        ref={inputRef}
         type="date"
         className="date-input-native"
         value={value || ""}
@@ -29,6 +50,7 @@ const DateInput = ({ value, onChange, min, max, disabled, placeholder = "dd-mm-y
         max={max}
         disabled={disabled}
         onChange={(e) => onChange(e.target.value)}
+        onClick={openPicker}
       />
       <div className={`date-input-display form-control ${disabled ? "disabled" : ""}`}>
         <span className={value ? "" : "text-muted"}>{value ? formatDisplay(value) : placeholder}</span>

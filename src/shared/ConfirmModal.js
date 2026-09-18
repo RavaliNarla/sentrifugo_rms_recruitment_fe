@@ -23,7 +23,7 @@ const ConfirmModal = ({
     <div
       className="modal show d-block"
       style={{
-        background: elevated ? "rgba(10, 35, 18, 0.72)" : "rgba(15,60,30,0.45)",
+        background: elevated ? "rgba(10, 35, 18, 0.72)" : "rgba(0, 0, 0, 0.45)",
         zIndex: elevated ? 2000 : undefined,
       }}
     >
