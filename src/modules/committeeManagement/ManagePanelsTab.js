@@ -45,10 +45,28 @@ const ManagePanelsTab = () => {
     setErrors({});
   };
 
+  // Order-independent check that no other panel already has this exact set of members
+  // (the backend enforces the same rule - this just gives instant feedback without a round-trip).
+  const findDuplicateMemberSetPanel = () => {
+    const selectedSet = new Set(selectedMembers);
+    return panels.find((p) => {
+      if (editing && p.id === editing.id) return false;
+      const memberSet = new Set(p.memberIds || []);
+      return memberSet.size === selectedSet.size && [...memberSet].every((id) => selectedSet.has(id));
+    });
+  };
+
   const validate = () => {
     const next = {};
     if (!name.trim()) next.name = "Panel Name is required";
-    if (selectedMembers.length === 0) next.members = "Select at least one panel member";
+    if (selectedMembers.length === 0) {
+      next.members = "Select at least one panel member";
+    } else {
+      const duplicate = findDuplicateMemberSetPanel();
+      if (duplicate) {
+        next.members = `A panel with these exact members already exists: "${duplicate.name}". Use the existing panel instead.`;
+      }
+    }
     setErrors(next);
     return Object.keys(next).length === 0;
   };

@@ -5,7 +5,7 @@ import masterApiService from "../../core/masterApiService";
 const EducationQualificationsPage = () => (
   <NamedMasterCrudPage
     title="Education Qualification"
-    getAll={masterApiService.getEducationQualifications}
+    getAll={masterApiService.searchEducationQualifications}
     add={masterApiService.addEducationQualification}
     update={masterApiService.updateEducationQualification}
     remove={masterApiService.deleteEducationQualification}

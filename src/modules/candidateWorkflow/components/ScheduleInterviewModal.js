@@ -249,7 +249,7 @@ const ScheduleInterviewModal = ({ candidates, round = 1, onClose, onScheduled })
               disabled={saving || panels.length === 0 || !enoughSlots}
               onClick={handleSchedule}
             >
-              {saving ? "Scheduling..." : "Schedule & email candidates"}
+              {saving ? "Scheduling..." : "Schedule"}
             </button>
           </div>
         </div>

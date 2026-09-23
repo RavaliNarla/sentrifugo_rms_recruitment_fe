@@ -14,6 +14,7 @@ const UsersPage = () => {
   const [form, setForm] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
+  const [searchText, setSearchText] = useState("");
   const submittingRef = useRef(false);
   const [confirmState, setConfirmState] = useState({ show: false, message: "", onConfirm: null });
 
@@ -25,21 +26,36 @@ const UsersPage = () => {
   const askConfirm = (message, action) => setConfirmState({ show: true, message, onConfirm: action });
   const closeConfirm = () => setConfirmState({ show: false, message: "", onConfirm: null });
 
-  const loadUsers = async () => {
+  // Guards against overlapping fetches (e.g. React StrictMode's dev-only double-invoke on mount).
+  const loadInFlightRef = useRef(false);
+  const loadUsers = async (search) => {
+    if (loadInFlightRef.current) return;
+    loadInFlightRef.current = true;
     setLoading(true);
     try {
-      const res = await masterApiService.getUsers();
+      const res = await masterApiService.getUsers(search);
       setUsers(res.data.data || []);
     } catch (e) {
       toast.error(e.response?.data?.message || "Failed to load users");
     } finally {
       setLoading(false);
+      loadInFlightRef.current = false;
     }
   };
 
   useEffect(() => {
     loadUsers();
   }, []);
+
+  // Search is performed server-side - only reload on a genuine searchText change, not on mount.
+  const prevSearchTextRef = useRef(searchText);
+  useEffect(() => {
+    if (prevSearchTextRef.current === searchText) return;
+    prevSearchTextRef.current = searchText;
+    const timeout = setTimeout(() => loadUsers(searchText), 400);
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchText]);
 
   const openAdd = () => {
     setEditing(null);
@@ -82,7 +98,7 @@ const UsersPage = () => {
         toast.success("User added successfully. Their email must match their Azure AD account to log in.");
       }
       setShowModal(false);
-      loadUsers();
+      loadUsers(searchText);
     } catch (e) {
       toast.error(e.response?.data?.message || "Save failed");
     } finally {
@@ -97,7 +113,7 @@ const UsersPage = () => {
       try {
         await masterApiService.deleteUser(user.id);
         toast.success("User deleted successfully");
-        loadUsers();
+        loadUsers(searchText);
       } catch (e) {
         toast.error(e.response?.data?.message || "Delete failed");
       }
@@ -112,9 +128,20 @@ const UsersPage = () => {
           <span className="list-card-title">User records</span>
           <span className="list-card-count">({users.length} record{users.length === 1 ? "" : "s"})</span>
         </div>
-        <button className="btn btn-primary" onClick={openAdd}>
-          <i className="bi bi-plus-lg" /> Add
-        </button>
+        <div className="d-flex align-items-center gap-2">
+          <div className="input-group input-group-sm" style={{ width: 220 }}>
+            <span className="input-group-text bg-white"><i className="bi bi-search" /></span>
+            <input
+              className="form-control"
+              placeholder="Search users..."
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+            />
+          </div>
+          <button className="btn btn-primary" onClick={openAdd}>
+            <i className="bi bi-plus-lg" /> Add
+          </button>
+        </div>
       </div>
 
       {loading ? (

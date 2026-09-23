@@ -29,6 +29,13 @@ const CandidateWorkflow = () => {
   const [positions, setPositions] = useState([]);
   const [requisitionId, setRequisitionId] = useState("");
   const [positionId, setPositionId] = useState("");
+  // Once a tab has been switched to, keep it mounted (just hidden) so revisiting it doesn't
+  // unmount/remount/refetch and flash a "Loading..." state again.
+  const [visitedTabs, setVisitedTabs] = useState(() => new Set(activeTab ? [activeTab] : []));
+
+  useEffect(() => {
+    if (activeTab) setVisitedTabs((prev) => (prev.has(activeTab) ? prev : new Set(prev).add(activeTab)));
+  }, [activeTab]);
 
   useEffect(() => {
     recruiterApiService.getApprovedRequisitions()
@@ -93,10 +100,26 @@ const CandidateWorkflow = () => {
           <div className="text-center text-muted py-5">Select a requisition and position to continue.</div>
         ) : (
           <>
-            {activeTab === "CANDIDATE_POOL" && <CandidatePoolTab requisitionId={requisitionId} positionId={positionId} />}
-            {activeTab === "INTERVIEW_POOL" && <InterviewPoolTab positionId={positionId} />}
-            {activeTab === "COMPENSATION_POOL" && <CompensationPoolTab positionId={positionId} />}
-            {activeTab === "OFFER_POOL" && <OfferPoolTab positionId={positionId} />}
+            {visitedTabs.has("CANDIDATE_POOL") && (
+              <div style={{ display: activeTab === "CANDIDATE_POOL" ? "block" : "none" }}>
+                <CandidatePoolTab requisitionId={requisitionId} positionId={positionId} />
+              </div>
+            )}
+            {visitedTabs.has("INTERVIEW_POOL") && (
+              <div style={{ display: activeTab === "INTERVIEW_POOL" ? "block" : "none" }}>
+                <InterviewPoolTab positionId={positionId} />
+              </div>
+            )}
+            {visitedTabs.has("COMPENSATION_POOL") && (
+              <div style={{ display: activeTab === "COMPENSATION_POOL" ? "block" : "none" }}>
+                <CompensationPoolTab positionId={positionId} />
+              </div>
+            )}
+            {visitedTabs.has("OFFER_POOL") && (
+              <div style={{ display: activeTab === "OFFER_POOL" ? "block" : "none" }}>
+                <OfferPoolTab positionId={positionId} />
+              </div>
+            )}
           </>
         )}
       </div>

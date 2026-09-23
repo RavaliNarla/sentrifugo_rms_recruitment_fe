@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import recruiterApiService from "../../../core/recruiterApiService";
 import Pagination from "../../../shared/Pagination";
@@ -37,6 +37,10 @@ const CandidatePoolTab = ({ requisitionId, positionId }) => {
   const [size, setSize] = useState(10);
   const [totalPages, setTotalPages] = useState(0);
   const [selected, setSelected] = useState([]);
+  // Keeps the full candidate object for anything ever selected, so selections made on one
+  // page (and their data, needed for canSchedule/ScheduleInterviewModal) survive navigating
+  // to another page, where the original candidates array no longer holds that row.
+  const [selectedCandidatesMap, setSelectedCandidatesMap] = useState({});
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingCandidate, setEditingCandidate] = useState(null);
   const [profileCandidate, setProfileCandidate] = useState(null);
@@ -50,7 +54,12 @@ const CandidatePoolTab = ({ requisitionId, positionId }) => {
   const askConfirm = (message, action) => setConfirmState({ show: true, message, onConfirm: action });
   const closeConfirm = () => setConfirmState({ show: false, message: "", onConfirm: null });
 
+  // Guards against two overlapping fetches (e.g. React StrictMode's dev-only double-invoke
+  // of effects on first mount) turning into two separate loading-spinner flips.
+  const loadInFlightRef = useRef(false);
   const load = async () => {
+    if (loadInFlightRef.current) return;
+    loadInFlightRef.current = true;
     setLoading(true);
     try {
       const res = await recruiterApiService.searchCandidates({
@@ -66,16 +75,29 @@ const CandidatePoolTab = ({ requisitionId, positionId }) => {
       toast.error("Failed to load candidates");
     } finally {
       setLoading(false);
+      loadInFlightRef.current = false;
     }
   };
 
   useEffect(() => {
     load();
-    setSelected([]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [positionId, page, size, statusFilter]);
 
+  // Only clear selection when the position or status filter genuinely changes context -
+  // not on plain pagination/page-size changes, so selections persist across pages.
   useEffect(() => {
+    setSelected([]);
+    setSelectedCandidatesMap({});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [positionId, statusFilter]);
+
+  // Only reload on a genuine searchText change, not on mount (compares actual values rather
+  // than a "have I run before" flag, so it stays correct under StrictMode's double-invoke too).
+  const prevSearchTextRef = useRef(searchText);
+  useEffect(() => {
+    if (prevSearchTextRef.current === searchText) return;
+    prevSearchTextRef.current = searchText;
     const timeout = setTimeout(() => {
       setPage(0);
       load();
@@ -90,8 +112,17 @@ const CandidatePoolTab = ({ requisitionId, positionId }) => {
     setPage(0);
   };
 
-  const toggleSelect = (id) => {
+  const toggleSelect = (candidate) => {
+    const id = candidate.id;
     setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+    setSelectedCandidatesMap((prev) => {
+      if (prev[id]) {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      }
+      return { ...prev, [id]: candidate };
+    });
   };
 
   // SCL_25: shortlist decision is Yes / No / On Hold (decision: "SHORTLIST" | "REJECT" | "HOLD").
@@ -120,7 +151,7 @@ const CandidatePoolTab = ({ requisitionId, positionId }) => {
     });
   };
 
-  const selectedCandidates = candidates.filter((c) => selected.includes(c.id));
+  const selectedCandidates = selected.map((id) => selectedCandidatesMap[id]).filter(Boolean);
   const canSchedule = selectedCandidates.length > 0 && selectedCandidates.every((c) => c.status === "SHORTLISTED");
 
   return (
@@ -171,7 +202,7 @@ const CandidatePoolTab = ({ requisitionId, positionId }) => {
               <tr key={c.id}>
                 <td>
                   {c.status === "SHORTLISTED" && (
-                    <input type="checkbox" className="form-check-input" checked={selected.includes(c.id)} onChange={() => toggleSelect(c.id)} />
+                    <input type="checkbox" className="form-check-input" checked={selected.includes(c.id)} onChange={() => toggleSelect(c)} />
                   )}
                 </td>
                 <td>{c.name}</td>
@@ -251,7 +282,7 @@ const CandidatePoolTab = ({ requisitionId, positionId }) => {
         <ScheduleInterviewModal
           candidates={selectedCandidates}
           onClose={() => setShowScheduleModal(false)}
-          onScheduled={() => { setShowScheduleModal(false); setSelected([]); load(); }}
+          onScheduled={() => { setShowScheduleModal(false); setSelected([]); setSelectedCandidatesMap({}); load(); }}
         />
       )}
 

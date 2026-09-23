@@ -18,21 +18,27 @@ const SpecializationsPage = () => {
   const [form, setForm] = useState(EMPTY_FORM);
   const [nameError, setNameError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [searchText, setSearchText] = useState("");
   const submittingRef = useRef(false);
   const [confirmState, setConfirmState] = useState({ show: false, message: "", onConfirm: null });
 
   const askConfirm = (message, action) => setConfirmState({ show: true, message, onConfirm: action });
   const closeConfirm = () => setConfirmState({ show: false, message: "", onConfirm: null });
 
-  const loadData = async () => {
+  // Guards against overlapping fetches (e.g. React StrictMode's dev-only double-invoke on mount).
+  const loadInFlightRef = useRef(false);
+  const loadData = async (search) => {
+    if (loadInFlightRef.current) return;
+    loadInFlightRef.current = true;
     setLoading(true);
     try {
-      const res = await masterApiService.getSpecializations();
+      const res = await masterApiService.getSpecializations(search);
       setItems(res.data.data || []);
     } catch (e) {
       toast.error(e.response?.data?.message || "Failed to load data");
     } finally {
       setLoading(false);
+      loadInFlightRef.current = false;
     }
   };
 
@@ -42,6 +48,16 @@ const SpecializationsPage = () => {
       .then((res) => setEducationQualifications(res.data.data || []))
       .catch(() => toast.error("Failed to load education qualifications"));
   }, []);
+
+  // Search is performed server-side - only reload on a genuine searchText change, not on mount.
+  const prevSearchTextRef = useRef(searchText);
+  useEffect(() => {
+    if (prevSearchTextRef.current === searchText) return;
+    prevSearchTextRef.current = searchText;
+    const timeout = setTimeout(() => loadData(searchText), 400);
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchText]);
 
   const openAdd = () => {
     setEditing(null);
@@ -75,7 +91,7 @@ const SpecializationsPage = () => {
         toast.success("Specialization added successfully");
       }
       setShowModal(false);
-      loadData();
+      loadData(searchText);
     } catch (e) {
       toast.error(e.response?.data?.message || "Save failed");
     } finally {
@@ -90,7 +106,7 @@ const SpecializationsPage = () => {
       try {
         await masterApiService.deleteSpecialization(item.id);
         toast.success("Specialization deleted successfully");
-        loadData();
+        loadData(searchText);
       } catch (e) {
         toast.error(e.response?.data?.message || "Delete failed");
       }
@@ -105,9 +121,20 @@ const SpecializationsPage = () => {
           <span className="list-card-title">Specialization records</span>
           <span className="list-card-count">({items.length} record{items.length === 1 ? "" : "s"})</span>
         </div>
-        <button className="btn btn-primary" onClick={openAdd}>
-          <i className="bi bi-plus-lg" /> Add
-        </button>
+        <div className="d-flex align-items-center gap-2">
+          <div className="input-group input-group-sm" style={{ width: 220 }}>
+            <span className="input-group-text bg-white"><i className="bi bi-search" /></span>
+            <input
+              className="form-control"
+              placeholder="Search specializations..."
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+            />
+          </div>
+          <button className="btn btn-primary" onClick={openAdd}>
+            <i className="bi bi-plus-lg" /> Add
+          </button>
+        </div>
       </div>
 
       {loading ? (

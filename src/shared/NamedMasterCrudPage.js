@@ -1,41 +1,69 @@
 import React, { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import ConfirmModal from "./ConfirmModal";
+import Pagination from "./Pagination";
 
 /**
  * Generic list + add/edit/delete screen for simple "id + name" master data
- * (Departments, Position Titles, Education Qualifications).
+ * (Departments, Education Qualifications) - paginated + searched server-side.
  */
 const NamedMasterCrudPage = ({ title, getAll, add, update, remove }) => {
   const [items, setItems] = useState([]);
+  const [page, setPage] = useState(0);
+  const [size, setSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
   const [name, setName] = useState("");
   const [nameError, setNameError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [searchText, setSearchText] = useState("");
   const submittingRef = useRef(false);
   const [confirmState, setConfirmState] = useState({ show: false, message: "", onConfirm: null });
 
   const askConfirm = (message, action) => setConfirmState({ show: true, message, onConfirm: action });
   const closeConfirm = () => setConfirmState({ show: false, message: "", onConfirm: null });
 
-  const loadData = async () => {
+  // Guards against overlapping fetches (e.g. React StrictMode's dev-only double-invoke on mount).
+  const loadInFlightRef = useRef(false);
+  const loadData = async (search, pageArg, sizeArg) => {
+    if (loadInFlightRef.current) return;
+    loadInFlightRef.current = true;
     setLoading(true);
     try {
-      const res = await getAll();
-      setItems(res.data.data || []);
+      const res = await getAll(search, pageArg ?? page, sizeArg ?? size);
+      const data = res.data.data || {};
+      setItems(data.content || []);
+      setTotalPages(data.totalPages || 0);
+      setTotalElements(data.totalElements || 0);
     } catch (e) {
       toast.error(e.response?.data?.message || "Failed to load data");
     } finally {
       setLoading(false);
+      loadInFlightRef.current = false;
     }
   };
 
   useEffect(() => {
-    loadData();
+    loadData(searchText, page, size);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [page, size]);
+
+  // Search is performed server-side - only reload (and jump back to page 1) on a genuine
+  // searchText change, not on mount.
+  const prevSearchTextRef = useRef(searchText);
+  useEffect(() => {
+    if (prevSearchTextRef.current === searchText) return;
+    prevSearchTextRef.current = searchText;
+    const timeout = setTimeout(() => {
+      setPage(0);
+      loadData(searchText, 0, size);
+    }, 400);
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchText]);
 
   const openAdd = () => {
     setEditing(null);
@@ -68,7 +96,7 @@ const NamedMasterCrudPage = ({ title, getAll, add, update, remove }) => {
         toast.success(`${title} added successfully`);
       }
       setShowModal(false);
-      loadData();
+      loadData(searchText, page, size);
     } catch (e) {
       toast.error(e.response?.data?.message || "Save failed");
     } finally {
@@ -83,7 +111,7 @@ const NamedMasterCrudPage = ({ title, getAll, add, update, remove }) => {
       try {
         await remove(item.id);
         toast.success(`${title} deleted successfully`);
-        loadData();
+        loadData(searchText, page, size);
       } catch (e) {
         toast.error(e.response?.data?.message || "Delete failed");
       }
@@ -96,11 +124,22 @@ const NamedMasterCrudPage = ({ title, getAll, add, update, remove }) => {
         <div className="list-card-title-wrap">
           <i className="bi bi-collection-fill" />
           <span className="list-card-title">{title} records</span>
-          <span className="list-card-count">({items.length} record{items.length === 1 ? "" : "s"})</span>
+          <span className="list-card-count">({totalElements} record{totalElements === 1 ? "" : "s"})</span>
         </div>
-        <button className="btn btn-primary" onClick={openAdd}>
-          <i className="bi bi-plus-lg" /> Add
-        </button>
+        <div className="d-flex align-items-center gap-2">
+          <div className="input-group input-group-sm" style={{ width: 220 }}>
+            <span className="input-group-text bg-white"><i className="bi bi-search" /></span>
+            <input
+              className="form-control"
+              placeholder={`Search ${title.toLowerCase()}...`}
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+            />
+          </div>
+          <button className="btn btn-primary" onClick={openAdd}>
+            <i className="bi bi-plus-lg" /> Add
+          </button>
+        </div>
       </div>
 
       {loading ? (
@@ -117,7 +156,7 @@ const NamedMasterCrudPage = ({ title, getAll, add, update, remove }) => {
           <tbody>
             {items.map((item, idx) => (
               <tr key={item.id}>
-                <td>{idx + 1}</td>
+                <td>{page * size + idx + 1}</td>
                 <td>{item.name}</td>
                 <td>
                   <button className="icon-btn-circle me-2" onClick={() => openEdit(item)}>
@@ -139,6 +178,8 @@ const NamedMasterCrudPage = ({ title, getAll, add, update, remove }) => {
           </tbody>
         </table>
       )}
+
+      <Pagination page={page} totalPages={totalPages} onChange={setPage} size={size} onSizeChange={(s) => { setSize(s); setPage(0); }} />
 
       {showModal && (
         <div className="modal show d-block" style={{ background: "rgba(0, 0, 0, 0.45)" }}>

@@ -35,10 +35,10 @@ const InterviewerSchedule = () => {
   }, [requisitionId]);
 
   const load = async () => {
-    if (!positionId) { setRows([]); return; }
+    if (!positionId || !dateFilter) { setRows([]); return; }
     setLoading(true);
     try {
-      const res = await recruiterApiService.getMyInterviews(positionId, dateFilter || undefined);
+      const res = await recruiterApiService.getMyInterviews(positionId, dateFilter);
       const data = res.data.data || [];
       setRows(data);
       // SCL_29: redisplay the interviewer's own previously-saved score/rationale/decision, not blank fields.
@@ -111,27 +111,33 @@ const InterviewerSchedule = () => {
       <div className="app-card mb-3">
         <div className="row">
           <div className="col-md-4">
-            <label className="form-label">Requisition</label>
+            <label className="form-label">Requisition <span className="text-danger">*</span></label>
             <select className="form-select" value={requisitionId} onChange={(e) => setRequisitionId(e.target.value)}>
               <option value="">Select Requisition</option>
               {requisitions.map((r) => <option key={r.id} value={r.id}>{r.requisitionCode} - {r.title}</option>)}
             </select>
           </div>
           <div className="col-md-4">
-            <label className="form-label">Position</label>
+            <label className="form-label">Position <span className="text-danger">*</span></label>
             <select className="form-select" value={positionId} onChange={(e) => setPositionId(e.target.value)} disabled={!requisitionId}>
               <option value="">Select Position</option>
               {positions.map((p) => <option key={p.id} value={p.id}>{p.positionTitleName} - {p.locationName}</option>)}
             </select>
           </div>
           <div className="col-md-4">
-            <label className="form-label">Interview Date</label>
-            <DateInput value={dateFilter} onChange={setDateFilter} placeholder="All dates" />
+            <label className="form-label">Interview Date <span className="text-danger">*</span></label>
+            <DateInput value={dateFilter} onChange={setDateFilter} placeholder="Select a date" />
           </div>
         </div>
       </div>
 
-      {positionId && (
+      {positionId && !dateFilter && (
+        <div className="app-card text-center text-muted py-4">
+          Select an Interview Date to view scheduled candidates.
+        </div>
+      )}
+
+      {positionId && dateFilter && (
         <div className="app-card">
           {loading ? <div>Loading...</div> : (
             <>
@@ -187,7 +193,7 @@ const InterviewerSchedule = () => {
                     </tr>
                   ))}
                   {rows.length === 0 && (
-                    <tr><td colSpan={8} className="text-center text-muted py-4">No candidates scheduled with your panel for this position{dateFilter ? " on this date" : ""}.</td></tr>
+                    <tr><td colSpan={8} className="text-center text-muted py-4">No candidates scheduled with your panel for this position on this date.</td></tr>
                   )}
                 </tbody>
               </table>

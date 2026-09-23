@@ -5,7 +5,7 @@ import masterApiService from "../../core/masterApiService";
 const DepartmentsPage = () => (
   <NamedMasterCrudPage
     title="Department"
-    getAll={masterApiService.getDepartments}
+    getAll={masterApiService.searchDepartments}
     add={masterApiService.addDepartment}
     update={masterApiService.updateDepartment}
     remove={masterApiService.deleteDepartment}

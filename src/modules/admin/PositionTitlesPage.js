@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import masterApiService from "../../core/masterApiService";
 import ConfirmModal from "../../shared/ConfirmModal";
+import Pagination from "../../shared/Pagination";
 
 const EXPERIENCE_YEARS = Array.from({ length: 31 }, (_, i) => i);
 
@@ -15,6 +16,10 @@ const EMPTY_FORM = {
 const PositionTitlesPage = () => {
   const [items, setItems] = useState([]);
   const [departments, setDepartments] = useState([]);
+  const [page, setPage] = useState(0);
+  const [size, setSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -22,6 +27,7 @@ const PositionTitlesPage = () => {
   const [form, setForm] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
+  const [searchText, setSearchText] = useState("");
   const submittingRef = useRef(false);
   const [confirmState, setConfirmState] = useState({ show: false, message: "", onConfirm: null });
 
@@ -33,24 +39,47 @@ const PositionTitlesPage = () => {
   const askConfirm = (message, action) => setConfirmState({ show: true, message, onConfirm: action });
   const closeConfirm = () => setConfirmState({ show: false, message: "", onConfirm: null });
 
-  const loadData = async () => {
+  // Guards against overlapping fetches (e.g. React StrictMode's dev-only double-invoke on mount).
+  const loadInFlightRef = useRef(false);
+  const loadData = async (search, pageArg, sizeArg) => {
+    if (loadInFlightRef.current) return;
+    loadInFlightRef.current = true;
     setLoading(true);
     try {
-      const res = await masterApiService.getPositionTitles();
-      setItems(res.data.data || []);
+      const res = await masterApiService.getPositionTitles(search, pageArg ?? page, sizeArg ?? size);
+      const data = res.data.data || {};
+      setItems(data.content || []);
+      setTotalPages(data.totalPages || 0);
+      setTotalElements(data.totalElements || 0);
     } catch (e) {
       toast.error(e.response?.data?.message || "Failed to load data");
     } finally {
       setLoading(false);
+      loadInFlightRef.current = false;
     }
   };
 
   useEffect(() => {
-    loadData();
+    loadData(searchText, page, size);
     masterApiService.getDepartments()
       .then((d) => setDepartments(d.data.data || []))
       .catch(() => toast.error("Failed to load master data"));
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, size]);
+
+  // Search is performed server-side - only reload (and jump back to page 1) on a genuine
+  // searchText change, not on mount.
+  const prevSearchTextRef = useRef(searchText);
+  useEffect(() => {
+    if (prevSearchTextRef.current === searchText) return;
+    prevSearchTextRef.current = searchText;
+    const timeout = setTimeout(() => {
+      setPage(0);
+      loadData(searchText, 0, size);
+    }, 400);
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchText]);
 
   const openAdd = () => {
     setEditing(null);
@@ -106,7 +135,7 @@ const PositionTitlesPage = () => {
         toast.success("Position title added successfully");
       }
       setShowModal(false);
-      loadData();
+      loadData(searchText, page, size);
     } catch (e) {
       toast.error(e.response?.data?.message || "Save failed");
     } finally {
@@ -121,7 +150,7 @@ const PositionTitlesPage = () => {
       try {
         await masterApiService.deletePositionTitle(item.id);
         toast.success("Position title deleted successfully");
-        loadData();
+        loadData(searchText, page, size);
       } catch (e) {
         toast.error(e.response?.data?.message || "Delete failed");
       }
@@ -134,11 +163,22 @@ const PositionTitlesPage = () => {
         <div className="list-card-title-wrap">
           <i className="bi bi-collection-fill" />
           <span className="list-card-title">Position Title records</span>
-          <span className="list-card-count">({items.length} record{items.length === 1 ? "" : "s"})</span>
+          <span className="list-card-count">({totalElements} record{totalElements === 1 ? "" : "s"})</span>
         </div>
-        <button className="btn btn-primary" onClick={openAdd}>
-          <i className="bi bi-plus-lg" /> Add
-        </button>
+        <div className="d-flex align-items-center gap-2">
+          <div className="input-group input-group-sm" style={{ width: 220 }}>
+            <span className="input-group-text bg-white"><i className="bi bi-search" /></span>
+            <input
+              className="form-control"
+              placeholder="Search position titles..."
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+            />
+          </div>
+          <button className="btn btn-primary" onClick={openAdd}>
+            <i className="bi bi-plus-lg" /> Add
+          </button>
+        </div>
       </div>
 
       {loading ? (
@@ -157,7 +197,7 @@ const PositionTitlesPage = () => {
           <tbody>
             {items.map((item, idx) => (
               <tr key={item.id}>
-                <td>{idx + 1}</td>
+                <td>{page * size + idx + 1}</td>
                 <td>{item.departmentName || "-"}</td>
                 <td>{item.name}</td>
                 <td>
@@ -188,6 +228,8 @@ const PositionTitlesPage = () => {
           </tbody>
         </table>
       )}
+
+      <Pagination page={page} totalPages={totalPages} onChange={setPage} size={size} onSizeChange={(s) => { setSize(s); setPage(0); }} />
 
       {showModal && (
         <div className="modal show d-block" style={{ background: "rgba(0, 0, 0, 0.45)" }}>

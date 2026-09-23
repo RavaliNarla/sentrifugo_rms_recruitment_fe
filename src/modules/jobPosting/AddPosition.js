@@ -45,6 +45,7 @@ const AddPosition = () => {
   const returnTo = location.state?.returnTo || "/job-postings";
   const filePreview = useFilePreview();
 
+  const [requisition, setRequisition] = useState(null);
   const [departments, setDepartments] = useState([]);
   const [locations, setLocations] = useState([]);
   const [positionTitles, setPositionTitles] = useState([]);
@@ -77,6 +78,10 @@ const AddPosition = () => {
     load("education qualifications", masterApiService.getEducationQualifications(), setEducationQualifications);
     load("approved-by roles", masterApiService.getApprovedByRoles(), setApprovedByRoles);
     load("certifications", masterApiService.getCertifications(), setCertifications);
+
+    recruiterApiService.getRequisition(requisitionId)
+      .then((res) => setRequisition(res.data.data))
+      .catch(() => toast.error("Failed to load requisition details"));
 
     if (editingPosition) {
       setForm({
@@ -267,9 +272,15 @@ const AddPosition = () => {
           {viewOnly ? "View Position" : editingPosition ? "Edit Position" : "Add New Position"}
         </span>
       </div>
-      <div className="page-subtitle mb-4">
+      <div className="page-subtitle mb-2">
         {viewOnly ? "Position details for this requisition." : "Fill in the role details below."}
       </div>
+      {requisition && (
+        <div className="mb-3">
+          <span className="badge bg-light text-dark border me-2">{requisition.requisitionCode}</span>
+          <span className="text-muted">{requisition.title}</span>
+        </div>
+      )}
       <hr className="mb-4" style={{ borderColor: "var(--card-border)" }} />
 
       <fieldset disabled={viewOnly} style={{ border: 0, padding: 0, margin: 0 }}>
@@ -418,7 +429,7 @@ const AddPosition = () => {
           checked={form.medicalFitnessRequired}
           onChange={(e) => setForm({ ...form, medicalFitnessRequired: e.target.checked })}
         />
-        <label className="form-check-label" htmlFor="medicalFitnessRequired">Medical Fitness Required</label>
+        <label className="form-check-label" htmlFor="medicalFitnessRequired" style={{ fontSize: "0.875rem" }}>Medical Fitness Required</label>
       </div>
 
       <hr className="my-3" />
