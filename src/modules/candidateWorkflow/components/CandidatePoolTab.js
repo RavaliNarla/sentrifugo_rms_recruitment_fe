@@ -31,7 +31,7 @@ const STATUS_LABELS = {
 
 export const getStatusLabel = (status) => STATUS_LABELS[status] || status.replace(/_/g, " ");
 
-const CandidatePoolTab = ({ requisitionId, positionId }) => {
+const CandidatePoolTab = ({ requisitionId, positionId, isActive }) => {
   const [candidates, setCandidates] = useState([]);
   const [page, setPage] = useState(0);
   const [size, setSize] = useState(10);
@@ -91,6 +91,17 @@ const CandidatePoolTab = ({ requisitionId, positionId }) => {
     setSelectedCandidatesMap({});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [positionId, statusFilter]);
+
+  // Also clear the selection and filter fields when navigating away to another tab - since
+  // this tab now stays mounted (to avoid a reload flicker on revisit), they'd otherwise persist.
+  useEffect(() => {
+    if (!isActive) {
+      setSelected([]);
+      setSelectedCandidatesMap({});
+      setSearchText("");
+      setStatusFilter("");
+    }
+  }, [isActive]);
 
   // Only reload on a genuine searchText change, not on mount (compares actual values rather
   // than a "have I run before" flag, so it stays correct under StrictMode's double-invoke too).

@@ -13,8 +13,8 @@ const pagedQuery = (search, page, size) => {
 };
 
 const masterApiService = {
-  // Users
-  getUsers: (search) => masterApi.get(withSearch("/user/all", search)),
+  // Users (admin list is paginated - no dropdown elsewhere depends on the flat list)
+  getUsers: (search, page, size) => masterApi.get(`/user/all${pagedQuery(search, page, size)}`),
   addUser: (payload) => masterApi.post("/user/add", payload),
   updateUser: (id, payload) => masterApi.put(`/user/update/${id}`, payload),
   deleteUser: (id) => masterApi.delete(`/user/delete/${id}`),
@@ -48,7 +48,8 @@ const masterApiService = {
   deleteEducationQualification: (id) => masterApi.delete(`/education-qualifications/delete/${id}`),
 
   // Specializations (optional, linked to an education level - e.g. "Computer Science and Engineering" for B.Tech)
-  getSpecializations: (search) => masterApi.get(withSearch("/specializations/all", search)),
+  // Admin list is paginated - no dropdown elsewhere depends on the flat list (getSpecializationsByEducation is separate).
+  getSpecializations: (search, page, size) => masterApi.get(`/specializations/all${pagedQuery(search, page, size)}`),
   getSpecializationsByEducation: (educationQualificationId) => masterApi.get(`/specializations/by-education/${educationQualificationId}`),
   addSpecialization: (payload) => masterApi.post("/specializations/add", payload),
   updateSpecialization: (id, payload) => masterApi.put(`/specializations/update/${id}`, payload),

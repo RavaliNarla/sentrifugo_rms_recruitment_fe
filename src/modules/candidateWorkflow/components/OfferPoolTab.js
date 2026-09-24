@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import recruiterApiService from "../../../core/recruiterApiService";
 import masterApiService from "../../../core/masterApiService";
@@ -37,7 +37,7 @@ const dayAfter = (dateStr) => {
 // SCL_41: selectable until candidate accepts or rejects (SENT can be regenerated/resent).
 const LOCKED_OFFER_STATUSES = ["ACCEPTED", "REJECTED"];
 
-const OfferPoolTab = ({ positionId }) => {
+const OfferPoolTab = ({ positionId, isActive }) => {
   const [candidates, setCandidates] = useState([]);
   const [offers, setOffers] = useState({});
   const [templates, setTemplates] = useState([]);
@@ -53,6 +53,8 @@ const OfferPoolTab = ({ positionId }) => {
   const [submitting, setSubmitting] = useState(false);
   const [previewHtml, setPreviewHtml] = useState(null);
   const [errors, setErrors] = useState({});
+  const [generatedInfo, setGeneratedInfo] = useState(null);
+  const [searchText, setSearchText] = useState("");
   const filePreview = useFilePreview();
 
   useEffect(() => {
@@ -62,7 +64,7 @@ const OfferPoolTab = ({ positionId }) => {
   const load = async () => {
     setLoading(true);
     try {
-      const res = await recruiterApiService.searchCandidates({ positionId, statuses: ["MOVED_TO_OFFER"], page, size });
+      const res = await recruiterApiService.searchCandidates({ positionId, statuses: ["MOVED_TO_OFFER"], page, size, searchText });
       const content = res.data.data.content || [];
       setCandidates(content);
       setTotalPages(res.data.data.totalPages || 0);
@@ -85,6 +87,33 @@ const OfferPoolTab = ({ positionId }) => {
     setSelected([]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [positionId, page, size]);
+
+  // Clear the selection and filter fields when navigating away to another tab - since this
+  // tab now stays mounted (to avoid a reload flicker on revisit), they would otherwise persist.
+  useEffect(() => {
+    if (!isActive) {
+      setSelected([]);
+      setTemplateId("");
+      setAcceptBeforeDate("");
+      setJoiningDate("");
+      setErrors({});
+      setSearchText("");
+    }
+  }, [isActive]);
+
+  // Only reload on a genuine searchText change, not on mount (compares actual values rather
+  // than a "have I run before" flag, so it stays correct under StrictMode's double-invoke too).
+  const prevSearchTextRef = useRef(searchText);
+  useEffect(() => {
+    if (prevSearchTextRef.current === searchText) return;
+    prevSearchTextRef.current = searchText;
+    const timeout = setTimeout(() => {
+      setPage(0);
+      load();
+    }, 400);
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchText]);
 
   const canSelect = (c) => {
     const offer = offers[c.id];
@@ -136,8 +165,9 @@ const OfferPoolTab = ({ positionId }) => {
     if (selected.length === 0) return;
     setGenerating(true);
     try {
+      const count = selected.length;
       await recruiterApiService.generateOffers({ candidateIds: selected, templateId, acceptBeforeDate, joiningDate });
-      toast.success("Offer(s) generated as draft. Submit for approval to send them.");
+      setGeneratedInfo(count);
       setSelected([]);
       load();
     } catch (e) {
@@ -182,18 +212,23 @@ const OfferPoolTab = ({ positionId }) => {
             <option value="">Select Template</option>
             {templates.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
           </select>
-          <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.templateId || ""}</div>
+          <div className="text-danger fs-13 mt-1" style={{ minHeight: "5px" }}>{errors.templateId || ""}</div>
           {/* SCL_36: preview template with placeholders, or with selected candidate values. */}
-          <button type="button" className="btn btn-link btn-sm p-0 mt-1" onClick={handlePreview}>
+          <button
+            type="button"
+            className="btn btn-outline-secondary btn-sm mt-1"
+            style={{ padding: "2px 10px", fontSize: "0.8125rem" }}
+            onClick={handlePreview}
+          >
             <i className="bi bi-eye me-1" /> Preview{selected.length === 0 ? " template" : ""}
           </button>
         </div>
-        <div className="col-md-3">
+        <div className="col-md-2">
           <label className="form-label small">Accept Before Date</label>
           <DateInput value={acceptBeforeDate} min={tomorrowStr()} onChange={(v) => { setAcceptBeforeDate(v); setErrors((prev) => (prev.acceptBeforeDate ? { ...prev, acceptBeforeDate: undefined } : prev)); }} />
           <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.acceptBeforeDate || ""}</div>
         </div>
-        <div className="col-md-3">
+        <div className="col-md-2">
           <label className="form-label small">Joining Date</label>
           <DateInput
             value={joiningDate}
@@ -202,22 +237,27 @@ const OfferPoolTab = ({ positionId }) => {
           />
           <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.joiningDate || ""}</div>
         </div>
-        <div className="col-md-3 d-flex align-items-end justify-content-end gap-2">
-          {selected.length > 0 && (
-            <button className="btn btn-primary" disabled={generating} onClick={handleGenerate}>
-              {generating ? "Generating..." : `Generate (${selected.length})`}
-            </button>
-          )}
-        </div>
-      </div>
-
-      {hasGeneratedSelected && (
-        <div className="mb-2 d-flex justify-content-end">
-          <button className="btn btn-blue-dark" disabled={submitting} onClick={handleSubmitForApproval}>
+        <div className="col-md-5 d-flex flex-wrap align-items-start gap-2" style={{ marginTop: "1.85rem" }}>
+          <button className="btn btn-primary" disabled={generating || selected.length === 0} onClick={handleGenerate}>
+            {generating ? "Generating..." : `Generate${selected.length > 0 ? ` (${selected.length})` : ""}`}
+          </button>
+          <button className="btn btn-primary" disabled={submitting || !hasGeneratedSelected} onClick={handleSubmitForApproval}>
             {submitting ? "Submitting..." : "Submit for Approval"}
           </button>
         </div>
-      )}
+      </div>
+
+      <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div className="d-flex align-items-center flex-wrap gap-2">
+          <div className="search-boxpost">
+            <i className="bi bi-search" />
+            <input className="form-control form-control-sm" placeholder="Search candidates..." value={searchText} onChange={(e) => setSearchText(e.target.value)} />
+          </div>
+          {selected.length > 0 && (
+            <span className="badge rounded-pill text-bg-light border text-app-primary fs-13">{selected.length} Candidates Selected</span>
+          )}
+        </div>
+      </div>
 
       {loading ? <div>Loading...</div> : (
         <table className="table table-hover align-middle">
@@ -298,6 +338,32 @@ const OfferPoolTab = ({ positionId }) => {
               </div>
               <div className="modal-footer">
                 <button className="btn btn-secondary" onClick={() => setPreviewHtml(null)}>Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {generatedInfo !== null && (
+        <div className="modal show d-block" style={{ background: "rgba(0, 0, 0, 0.45)" }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">
+                  <i className="bi bi-check-circle-fill text-app-primary me-2" />
+                  {generatedInfo} Offer{generatedInfo === 1 ? "" : "s"} Generated
+                </h5>
+                <button className="btn-close" onClick={() => setGeneratedInfo(null)} />
+              </div>
+              <div className="modal-body">
+                <p className="mb-0 small">
+                  The offer letter{generatedInfo === 1 ? " has" : "s have"} been generated and saved as a draft.
+                  Please select the candidate{generatedInfo === 1 ? "" : "s"} again and click <strong>Submit for Approval</strong> to
+                  send {generatedInfo === 1 ? "it" : "them"} for approval.
+                </p>
+              </div>
+              <div className="modal-footer">
+                <button className="btn btn-primary" onClick={() => setGeneratedInfo(null)}>Got it</button>
               </div>
             </div>
           </div>

@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import recruiterApiService from "../../core/recruiterApiService";
 import ConfirmModal from "../../shared/ConfirmModal";
+import Pagination from "../../shared/Pagination";
 import { formatDate } from "../../shared/dateFormat";
 import "./JobPostings.css";
 
@@ -76,17 +77,50 @@ const JobPostings = () => {
   const [jobTitleFilter, setJobTitleFilter] = useState("");
   const [departmentFilter, setDepartmentFilter] = useState("");
   const [locationFilter, setLocationFilter] = useState("");
+  const [page, setPage] = useState(0);
+  const [size, setSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(0);
+  const [filterOptions, setFilterOptions] = useState({ years: [], jobTitles: [], departments: [], locations: [] });
   const [confirmState, setConfirmState] = useState({ show: false, message: "", onConfirm: null });
 
   const askConfirm = (message, action) => setConfirmState({ show: true, message, onConfirm: action });
   const closeConfirm = () => setConfirmState({ show: false, message: "", onConfirm: null });
 
-  const loadRequisitions = async () => {
+  useEffect(() => {
+    recruiterApiService.getRequisitionFilterOptions()
+      .then((res) => setFilterOptions(res.data.data || { years: [], jobTitles: [], departments: [], locations: [] }))
+      .catch(() => toast.error("Failed to load filter options"));
+  }, []);
+
+  // Guards against overlapping fetches (e.g. React StrictMode's dev-only double-invoke on mount).
+  const loadInFlightRef = useRef(false);
+  const loadRequisitions = async (pageArg) => {
+    if (loadInFlightRef.current) return;
+    loadInFlightRef.current = true;
     setLoading(true);
     try {
-      const res = await recruiterApiService.getRequisitions(0, 1000);
+      const params = {
+        search: searchText || undefined,
+        status: statusFilter || undefined,
+        jobTitle: jobTitleFilter || undefined,
+        department: departmentFilter || undefined,
+        location: locationFilter || undefined,
+        page: pageArg ?? page,
+        size,
+      };
+      if (yearFilter === "CUSTOM") {
+        if (customYearFrom) params.yearFrom = customYearFrom;
+        if (customYearTo) params.yearTo = customYearTo;
+      } else if (yearFilter) {
+        params.yearFrom = yearFilter;
+        params.yearTo = yearFilter;
+        if (monthFilter) params.month = monthFilter;
+      }
+
+      const res = await recruiterApiService.searchRequisitions(params);
       const content = res.data.data.content || [];
       setRequisitions(content);
+      setTotalPages(res.data.data.totalPages || 0);
 
       const positionResults = await Promise.all(
         content.map((req) =>
@@ -100,12 +134,39 @@ const JobPostings = () => {
       toast.error(e.response?.data?.message || "Failed to load requisitions");
     } finally {
       setLoading(false);
+      loadInFlightRef.current = false;
     }
   };
 
   useEffect(() => {
-    loadRequisitions();
-  }, []);
+    loadRequisitions(page);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, size]);
+
+  // Dropdown filters reload immediately (and jump back to page 1) on a genuine change - not on mount.
+  const filterKey = JSON.stringify({ statusFilter, yearFilter, customYearFrom, customYearTo, monthFilter, jobTitleFilter, departmentFilter, locationFilter });
+  const prevFilterKeyRef = useRef(filterKey);
+  useEffect(() => {
+    if (prevFilterKeyRef.current === filterKey) return;
+    prevFilterKeyRef.current = filterKey;
+    setPage(0);
+    loadRequisitions(0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterKey]);
+
+  // Search is performed server-side - only reload (and jump back to page 1) on a genuine
+  // searchText change, not on mount.
+  const prevSearchTextRef = useRef(searchText);
+  useEffect(() => {
+    if (prevSearchTextRef.current === searchText) return;
+    prevSearchTextRef.current = searchText;
+    const timeout = setTimeout(() => {
+      setPage(0);
+      loadRequisitions(0);
+    }, 400);
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchText]);
 
   const toggleExpand = (requisitionId) => {
     setExpanded((prev) => ({ ...prev, [requisitionId]: !prev[requisitionId] }));
@@ -202,14 +263,10 @@ const JobPostings = () => {
     });
   };
 
-  const years = Array.from(
-    new Set(requisitions.filter((r) => r.startDate).map((r) => r.startDate.slice(0, 4)))
-  ).sort((a, b) => b.localeCompare(a));
-
-  const allPositions = Object.values(positionsByReq).flat();
-  const jobTitles = Array.from(new Set(allPositions.map((p) => p.positionTitleName).filter(Boolean))).sort();
-  const departments = Array.from(new Set(allPositions.map((p) => p.departmentName).filter(Boolean))).sort();
-  const locations = Array.from(new Set(allPositions.map((p) => p.locationName).filter(Boolean))).sort();
+  const years = filterOptions.years || [];
+  const jobTitles = filterOptions.jobTitles || [];
+  const departments = filterOptions.departments || [];
+  const locations = filterOptions.locations || [];
 
   const clearFilters = () => {
     setSearchText("");
@@ -225,37 +282,6 @@ const JobPostings = () => {
 
   const hasActiveFilters =
     searchText || statusFilter || yearFilter || monthFilter || jobTitleFilter || departmentFilter || locationFilter;
-
-  const filteredRequisitions = requisitions.filter((req) => {
-    if (statusFilter && req.status !== statusFilter) return false;
-    if (searchText) {
-      const haystack = `${req.requisitionCode} ${req.title}`.toLowerCase();
-      if (!haystack.includes(searchText.toLowerCase())) return false;
-    }
-    if (yearFilter === "CUSTOM") {
-      const reqYear = req.startDate ? parseInt(req.startDate.slice(0, 4), 10) : null;
-      const from = customYearFrom ? parseInt(customYearFrom, 10) : null;
-      const to = customYearTo ? parseInt(customYearTo, 10) : null;
-      if (from && (!reqYear || reqYear < from)) return false;
-      if (to && (!reqYear || reqYear > to)) return false;
-    } else if (yearFilter) {
-      if (!req.startDate || req.startDate.slice(0, 4) !== yearFilter) return false;
-    }
-
-    if (monthFilter) {
-      const reqMonth = req.startDate ? String(parseInt(req.startDate.slice(5, 7), 10)) : null;
-      if (reqMonth !== monthFilter) return false;
-    }
-
-    if (jobTitleFilter || departmentFilter || locationFilter) {
-      const positions = positionsByReq[req.id] || [];
-      if (jobTitleFilter && !positions.some((p) => p.positionTitleName === jobTitleFilter)) return false;
-      if (departmentFilter && !positions.some((p) => p.departmentName === departmentFilter)) return false;
-      if (locationFilter && !positions.some((p) => p.locationName === locationFilter)) return false;
-    }
-
-    return true;
-  });
 
   const selectableStatuses = ["NEW", "L1_REJECTED", "L2_REJECTED"];
 
@@ -395,7 +421,7 @@ const JobPostings = () => {
       {loading ? (
         <div>Loading...</div>
       ) : (
-        filteredRequisitions.map((req) => {
+        requisitions.map((req) => {
           const positions = positionsByReq[req.id] || [];
           const departmentCount = new Set(positions.map((p) => p.departmentName)).size;
           const vacancyCount = positions.reduce((sum, p) => sum + (p.vacancies || 0), 0);
@@ -571,10 +597,14 @@ const JobPostings = () => {
           );
         })
       )}
-      {!loading && filteredRequisitions.length === 0 && (
+      {!loading && requisitions.length === 0 && (
         <div className="text-center text-muted py-5">
           No requisitions found. <Link to="/job-postings/create-requisition">Create one</Link>.
         </div>
+      )}
+
+      {!loading && requisitions.length > 0 && (
+        <Pagination page={page} totalPages={totalPages} onChange={setPage} size={size} onSizeChange={(s) => { setSize(s); setPage(0); }} />
       )}
 
       <ConfirmModal

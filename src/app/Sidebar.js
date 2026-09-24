@@ -48,7 +48,7 @@ const Sidebar = () => {
         {privileges.CommitteeManagement && (
           <NavLink to="/committee-management" className={({ isActive }) => (isActive ? "active" : "")}>
             <i className="bi bi-diagram-3-fill" />
-            <span className="label">Committee Management</span>
+            <span className="label">Panel Management</span>
           </NavLink>
         )}
 

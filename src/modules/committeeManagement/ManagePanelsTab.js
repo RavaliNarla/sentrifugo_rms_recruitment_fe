@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import recruiterApiService from "../../core/recruiterApiService";
 import masterApiService from "../../core/masterApiService";
 import ConfirmModal from "../../shared/ConfirmModal";
+import Pagination from "../../shared/Pagination";
 
 const ManagePanelsTab = () => {
   const [panels, setPanels] = useState([]);
@@ -12,31 +13,55 @@ const ManagePanelsTab = () => {
   const [editing, setEditing] = useState(null);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(0);
+  const [size, setSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(0);
   const [errors, setErrors] = useState({});
   const [confirmState, setConfirmState] = useState({ show: false, message: "", onConfirm: null });
 
   const askConfirm = (message, action) => setConfirmState({ show: true, message, onConfirm: action });
   const closeConfirm = () => setConfirmState({ show: false, message: "", onConfirm: null });
 
-  const load = async () => {
+  useEffect(() => {
+    masterApiService.getPanelMembers().then((res) => setMembers(res.data.data || [])).catch(() => toast.error("Failed to load panel members"));
+  }, []);
+
+  // Guards against overlapping fetches (e.g. React StrictMode's dev-only double-invoke on mount).
+  const loadInFlightRef = useRef(false);
+  const load = async (pageArg) => {
+    if (loadInFlightRef.current) return;
+    loadInFlightRef.current = true;
     setLoading(true);
     try {
-      const [panelRes, memberRes] = await Promise.all([
-        recruiterApiService.getPanels(),
-        masterApiService.getPanelMembers(),
-      ]);
-      setPanels(panelRes.data.data || []);
-      setMembers(memberRes.data.data || []);
+      const res = await recruiterApiService.searchPanels({ search: search || undefined, page: pageArg ?? page, size });
+      setPanels(res.data.data.content || []);
+      setTotalPages(res.data.data.totalPages || 0);
     } catch (e) {
       toast.error("Failed to load panels");
     } finally {
       setLoading(false);
+      loadInFlightRef.current = false;
     }
   };
 
   useEffect(() => {
-    load();
-  }, []);
+    load(page);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, size]);
+
+  // Search is performed server-side - only reload (and jump back to page 1) on a genuine
+  // search change, not on mount.
+  const prevSearchRef = useRef(search);
+  useEffect(() => {
+    if (prevSearchRef.current === search) return;
+    prevSearchRef.current = search;
+    const timeout = setTimeout(() => {
+      setPage(0);
+      load(0);
+    }, 400);
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search]);
 
   const resetForm = () => {
     setEditing(null);
@@ -45,32 +70,16 @@ const ManagePanelsTab = () => {
     setErrors({});
   };
 
-  // Order-independent check that no other panel already has this exact set of members
-  // (the backend enforces the same rule - this just gives instant feedback without a round-trip).
-  const findDuplicateMemberSetPanel = () => {
-    const selectedSet = new Set(selectedMembers);
-    return panels.find((p) => {
-      if (editing && p.id === editing.id) return false;
-      const memberSet = new Set(p.memberIds || []);
-      return memberSet.size === selectedSet.size && [...memberSet].every((id) => selectedSet.has(id));
-    });
-  };
-
   const validate = () => {
     const next = {};
     if (!name.trim()) next.name = "Panel Name is required";
-    if (selectedMembers.length === 0) {
-      next.members = "Select at least one panel member";
-    } else {
-      const duplicate = findDuplicateMemberSetPanel();
-      if (duplicate) {
-        next.members = `A panel with these exact members already exists: "${duplicate.name}". Use the existing panel instead.`;
-      }
-    }
+    if (selectedMembers.length === 0) next.members = "Select at least one panel member";
     setErrors(next);
     return Object.keys(next).length === 0;
   };
 
+  // The duplicate-member-set check is backend-only (panels is now a paginated page, not the
+  // full list, so it can't be checked reliably client-side) - shown inline like other member errors.
   const handleSave = async () => {
     if (!validate()) return;
     try {
@@ -84,7 +93,14 @@ const ManagePanelsTab = () => {
       resetForm();
       load();
     } catch (e) {
-      toast.error(e.response?.data?.message || "Failed to save panel");
+      const message = e.response?.data?.message || "Failed to save panel";
+      if (message.toLowerCase().includes("exact members")) {
+        setErrors((prev) => ({ ...prev, members: message }));
+      } else if (message.toLowerCase().includes("panel with this name")) {
+        setErrors((prev) => ({ ...prev, name: message }));
+      } else {
+        toast.error(message);
+      }
     }
   };
 
@@ -112,8 +128,6 @@ const ManagePanelsTab = () => {
     setSelectedMembers((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
     setErrors((prev) => (prev.members ? { ...prev, members: undefined } : prev));
   };
-
-  const filteredPanels = panels.filter((p) => p.name.toLowerCase().includes(search.toLowerCase()));
 
   return (
     <div className="row g-3" style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "24px" }}>
@@ -175,9 +189,9 @@ const ManagePanelsTab = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredPanels.map((p, idx) => (
+              {panels.map((p, idx) => (
                 <tr key={p.id}>
-                  <td>{idx + 1}</td>
+                  <td>{page * size + idx + 1}</td>
                   <td>{p.name}</td>
                   <td>{(p.memberNames || []).join(", ")}</td>
                   <td>
@@ -186,10 +200,12 @@ const ManagePanelsTab = () => {
                   </td>
                 </tr>
               ))}
-              {filteredPanels.length === 0 && <tr><td colSpan={4} className="text-center text-muted py-4">No panels created yet</td></tr>}
+              {panels.length === 0 && <tr><td colSpan={4} className="text-center text-muted py-4">No panels created yet</td></tr>}
             </tbody>
           </table>
         )}
+
+        <Pagination page={page} totalPages={totalPages} onChange={setPage} size={size} onSizeChange={(s) => { setSize(s); setPage(0); }} />
       </div>
 
       <ConfirmModal

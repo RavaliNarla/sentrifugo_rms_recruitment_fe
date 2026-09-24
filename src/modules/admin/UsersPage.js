@@ -2,12 +2,17 @@ import React, { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import masterApiService from "../../core/masterApiService";
 import ConfirmModal from "../../shared/ConfirmModal";
+import Pagination from "../../shared/Pagination";
 
 const ROLES = ["Admin", "Recruiter", "Committee_Member"];
 const EMPTY_FORM = { name: "", role: "", email: "" };
 
 const UsersPage = () => {
   const [users, setUsers] = useState([]);
+  const [page, setPage] = useState(0);
+  const [size, setSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -28,13 +33,16 @@ const UsersPage = () => {
 
   // Guards against overlapping fetches (e.g. React StrictMode's dev-only double-invoke on mount).
   const loadInFlightRef = useRef(false);
-  const loadUsers = async (search) => {
+  const loadUsers = async (search, pageArg, sizeArg) => {
     if (loadInFlightRef.current) return;
     loadInFlightRef.current = true;
     setLoading(true);
     try {
-      const res = await masterApiService.getUsers(search);
-      setUsers(res.data.data || []);
+      const res = await masterApiService.getUsers(search, pageArg ?? page, sizeArg ?? size);
+      const data = res.data.data || {};
+      setUsers(data.content || []);
+      setTotalPages(data.totalPages || 0);
+      setTotalElements(data.totalElements || 0);
     } catch (e) {
       toast.error(e.response?.data?.message || "Failed to load users");
     } finally {
@@ -44,15 +52,20 @@ const UsersPage = () => {
   };
 
   useEffect(() => {
-    loadUsers();
-  }, []);
+    loadUsers(searchText, page, size);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, size]);
 
-  // Search is performed server-side - only reload on a genuine searchText change, not on mount.
+  // Search is performed server-side - only reload (and jump back to page 1) on a genuine
+  // searchText change, not on mount.
   const prevSearchTextRef = useRef(searchText);
   useEffect(() => {
     if (prevSearchTextRef.current === searchText) return;
     prevSearchTextRef.current = searchText;
-    const timeout = setTimeout(() => loadUsers(searchText), 400);
+    const timeout = setTimeout(() => {
+      setPage(0);
+      loadUsers(searchText, 0, size);
+    }, 400);
     return () => clearTimeout(timeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchText]);
@@ -98,7 +111,7 @@ const UsersPage = () => {
         toast.success("User added successfully. Their email must match their Azure AD account to log in.");
       }
       setShowModal(false);
-      loadUsers(searchText);
+      loadUsers(searchText, page, size);
     } catch (e) {
       toast.error(e.response?.data?.message || "Save failed");
     } finally {
@@ -113,7 +126,7 @@ const UsersPage = () => {
       try {
         await masterApiService.deleteUser(user.id);
         toast.success("User deleted successfully");
-        loadUsers(searchText);
+        loadUsers(searchText, page, size);
       } catch (e) {
         toast.error(e.response?.data?.message || "Delete failed");
       }
@@ -126,7 +139,7 @@ const UsersPage = () => {
         <div className="list-card-title-wrap">
           <i className="bi bi-person-badge-fill" />
           <span className="list-card-title">User records</span>
-          <span className="list-card-count">({users.length} record{users.length === 1 ? "" : "s"})</span>
+          <span className="list-card-count">({totalElements} record{totalElements === 1 ? "" : "s"})</span>
         </div>
         <div className="d-flex align-items-center gap-2">
           <div className="input-group input-group-sm" style={{ width: 220 }}>
@@ -160,7 +173,7 @@ const UsersPage = () => {
           <tbody>
             {users.map((user, idx) => (
               <tr key={user.id}>
-                <td>{idx + 1}</td>
+                <td>{page * size + idx + 1}</td>
                 <td>{user.name}</td>
                 <td>
                   <span className="status-pill status-pill-secondary">{user.role}</span>
@@ -184,6 +197,8 @@ const UsersPage = () => {
           </tbody>
         </table>
       )}
+
+      <Pagination page={page} totalPages={totalPages} onChange={setPage} size={size} onSizeChange={(s) => { setSize(s); setPage(0); }} />
 
       {showModal && (
         <div className="modal show d-block" style={{ background: "rgba(0, 0, 0, 0.45)" }}>

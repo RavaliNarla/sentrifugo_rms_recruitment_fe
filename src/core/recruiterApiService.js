@@ -9,9 +9,11 @@ const recruiterApiService = {
   deleteRequisition: (id) => recruiterApi.delete(`/job-requisitions/${id}`),
   getRequisition: (id) => recruiterApi.get(`/job-requisitions/${id}`),
   getRequisitions: (page = 0, size = 20) => recruiterApi.get(`/job-requisitions?page=${page}&size=${size}`),
+  searchRequisitions: (params) => recruiterApi.get("/job-requisitions/search", { params }),
+  getRequisitionFilterOptions: () => recruiterApi.get("/job-requisitions/filter-options"),
   getApprovedRequisitions: () => recruiterApi.get("/job-requisitions/approved"),
-  getL1Requisitions: () => recruiterApi.get("/job-requisitions/l1-requisitions"),
-  getL2Requisitions: () => recruiterApi.get("/job-requisitions/l2-requisitions"),
+  getL1Requisitions: (params) => recruiterApi.get("/job-requisitions/l1-requisitions", { params }),
+  getL2Requisitions: (params) => recruiterApi.get("/job-requisitions/l2-requisitions", { params }),
   submitForApproval: (requisitionIds) => recruiterApi.post("/job-requisitions/submit-for-approval", requisitionIds),
   approveOrReject: (payload) => recruiterApi.post("/job-requisitions/approve-reject", payload),
   markFulfilled: (id) => recruiterApi.post(`/job-requisitions/${id}/fulfil`),
@@ -65,6 +67,7 @@ const recruiterApiService = {
   updatePanel: (id, payload) => recruiterApi.put(`/interview-panels/update/${id}`, payload),
   deletePanel: (id) => recruiterApi.delete(`/interview-panels/delete/${id}`),
   getPanels: () => recruiterApi.get("/interview-panels/all"),
+  searchPanels: (params) => recruiterApi.get("/interview-panels/search", { params }),
 
   // Interview scheduling
   scheduleInterviews: (payload) => recruiterApi.post("/interview-scheduling/schedule", payload),
@@ -88,8 +91,9 @@ const recruiterApiService = {
   previewOffer: (payload) => recruiterApi.post("/offers/preview", payload),
   submitOffersForApproval: (candidateIds) => recruiterApi.post("/offers/submit-for-approval", candidateIds),
   approveOrRejectOffers: (payload) => recruiterApi.post("/offers/approve-reject", payload),
-  getPendingOfferApprovals: () => recruiterApi.get("/offers/pending-approval"),
+  getPendingOfferApprovals: (params) => recruiterApi.get("/offers/pending-approval", { params }),
   getOfferByCandidate: (candidateId) => recruiterApi.get(`/offers/by-candidate/${candidateId}`),
+  getOfferApprovalHistory: (id) => recruiterApi.get(`/offers/${id}/approval-history`),
 
   // Dashboard
   getDashboardSummary: () => recruiterApi.get("/dashboard/summary"),

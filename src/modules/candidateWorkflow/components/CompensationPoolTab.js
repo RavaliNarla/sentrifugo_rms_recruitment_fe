@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import recruiterApiService from "../../../core/recruiterApiService";
 import Pagination from "../../../shared/Pagination";
@@ -12,7 +12,7 @@ const computeAgreedCtc = (fixedPay, variablePay) => {
 };
 
 /** Compensation Management (Section 15 of the requirements doc, renamed from "Compensation Pool"). */
-const CompensationPoolTab = ({ positionId }) => {
+const CompensationPoolTab = ({ positionId, isActive }) => {
   const [rows, setRows] = useState([]);
   const [details, setDetails] = useState({});
   const [page, setPage] = useState(0);
@@ -21,11 +21,12 @@ const CompensationPoolTab = ({ positionId }) => {
   const [selected, setSelected] = useState([]);
   const [loading, setLoading] = useState(false);
   const [savingId, setSavingId] = useState(null);
+  const [searchText, setSearchText] = useState("");
 
   const load = async () => {
     setLoading(true);
     try {
-      const res = await recruiterApiService.searchCompensationPool({ positionId, page, size });
+      const res = await recruiterApiService.searchCompensationPool({ positionId, page, size, searchText });
       const content = res.data.data.content || [];
       setRows(content);
       const map = {};
@@ -45,7 +46,7 @@ const CompensationPoolTab = ({ positionId }) => {
       setDetails(map);
       setTotalPages(res.data.data.totalPages || 0);
     } catch (e) {
-      toast.error("Failed to load compensation pool");
+      toast.error("Failed to load compensation section");
     } finally {
       setLoading(false);
     }
@@ -56,6 +57,29 @@ const CompensationPoolTab = ({ positionId }) => {
     setSelected([]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [positionId, page, size]);
+
+  // Clear the selection and search text when navigating away to another tab - since this tab
+  // now stays mounted (to avoid a reload flicker on revisit), they would otherwise persist.
+  useEffect(() => {
+    if (!isActive) {
+      setSelected([]);
+      setSearchText("");
+    }
+  }, [isActive]);
+
+  // Only reload on a genuine searchText change, not on mount (compares actual values rather
+  // than a "have I run before" flag, so it stays correct under StrictMode's double-invoke too).
+  const prevSearchTextRef = useRef(searchText);
+  useEffect(() => {
+    if (prevSearchTextRef.current === searchText) return;
+    prevSearchTextRef.current = searchText;
+    const timeout = setTimeout(() => {
+      setPage(0);
+      load();
+    }, 400);
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchText]);
 
   const updateField = (id, field, value) => {
     setDetails((prev) => {
@@ -109,10 +133,16 @@ const CompensationPoolTab = ({ positionId }) => {
 
   return (
     <div>
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        {selected.length > 0 ? (
-          <span className="badge rounded-pill text-bg-light border text-app-primary fs-13">{selected.length} Candidates Selected</span>
-        ) : <span />}
+      <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div className="d-flex align-items-center flex-wrap gap-2">
+          <div className="search-boxpost">
+            <i className="bi bi-search" />
+            <input className="form-control form-control-sm" placeholder="Search candidates..." value={searchText} onChange={(e) => setSearchText(e.target.value)} />
+          </div>
+          {selected.length > 0 && (
+            <span className="badge rounded-pill text-bg-light border text-app-primary fs-13">{selected.length} Candidates Selected</span>
+          )}
+        </div>
         {selected.length > 0 && (
           <button className="btn btn-blue-dark" onClick={handleMoveToOffer}>
             Move to Offer Pool ({selected.length})
@@ -133,7 +163,7 @@ const CompensationPoolTab = ({ positionId }) => {
               <th>Variable Pay</th>
               <th>Bonus</th>
               <th>Comments</th>
-              <th>Agreed CTC</th>
+              <th>Agreed CTC (<small className="text-muted fw-normal">Excludes Bonus</small>)</th>
               <th></th>
             </tr>
           </thead>

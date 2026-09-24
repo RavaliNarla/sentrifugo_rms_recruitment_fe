@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import masterApiService from "../../core/masterApiService";
 import ConfirmModal from "../../shared/ConfirmModal";
+import Pagination from "../../shared/Pagination";
 
 const EMPTY_FORM = { name: "", educationQualificationId: "" };
 
@@ -12,6 +13,10 @@ const EMPTY_FORM = { name: "", educationQualificationId: "" };
 const SpecializationsPage = () => {
   const [items, setItems] = useState([]);
   const [educationQualifications, setEducationQualifications] = useState([]);
+  const [page, setPage] = useState(0);
+  const [size, setSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -27,13 +32,16 @@ const SpecializationsPage = () => {
 
   // Guards against overlapping fetches (e.g. React StrictMode's dev-only double-invoke on mount).
   const loadInFlightRef = useRef(false);
-  const loadData = async (search) => {
+  const loadData = async (search, pageArg, sizeArg) => {
     if (loadInFlightRef.current) return;
     loadInFlightRef.current = true;
     setLoading(true);
     try {
-      const res = await masterApiService.getSpecializations(search);
-      setItems(res.data.data || []);
+      const res = await masterApiService.getSpecializations(search, pageArg ?? page, sizeArg ?? size);
+      const data = res.data.data || {};
+      setItems(data.content || []);
+      setTotalPages(data.totalPages || 0);
+      setTotalElements(data.totalElements || 0);
     } catch (e) {
       toast.error(e.response?.data?.message || "Failed to load data");
     } finally {
@@ -43,18 +51,23 @@ const SpecializationsPage = () => {
   };
 
   useEffect(() => {
-    loadData();
+    loadData(searchText, page, size);
     masterApiService.getEducationQualifications()
       .then((res) => setEducationQualifications(res.data.data || []))
       .catch(() => toast.error("Failed to load education qualifications"));
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, size]);
 
-  // Search is performed server-side - only reload on a genuine searchText change, not on mount.
+  // Search is performed server-side - only reload (and jump back to page 1) on a genuine
+  // searchText change, not on mount.
   const prevSearchTextRef = useRef(searchText);
   useEffect(() => {
     if (prevSearchTextRef.current === searchText) return;
     prevSearchTextRef.current = searchText;
-    const timeout = setTimeout(() => loadData(searchText), 400);
+    const timeout = setTimeout(() => {
+      setPage(0);
+      loadData(searchText, 0, size);
+    }, 400);
     return () => clearTimeout(timeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchText]);
@@ -91,7 +104,7 @@ const SpecializationsPage = () => {
         toast.success("Specialization added successfully");
       }
       setShowModal(false);
-      loadData(searchText);
+      loadData(searchText, page, size);
     } catch (e) {
       toast.error(e.response?.data?.message || "Save failed");
     } finally {
@@ -106,7 +119,7 @@ const SpecializationsPage = () => {
       try {
         await masterApiService.deleteSpecialization(item.id);
         toast.success("Specialization deleted successfully");
-        loadData(searchText);
+        loadData(searchText, page, size);
       } catch (e) {
         toast.error(e.response?.data?.message || "Delete failed");
       }
@@ -119,7 +132,7 @@ const SpecializationsPage = () => {
         <div className="list-card-title-wrap">
           <i className="bi bi-collection-fill" />
           <span className="list-card-title">Specialization records</span>
-          <span className="list-card-count">({items.length} record{items.length === 1 ? "" : "s"})</span>
+          <span className="list-card-count">({totalElements} record{totalElements === 1 ? "" : "s"})</span>
         </div>
         <div className="d-flex align-items-center gap-2">
           <div className="input-group input-group-sm" style={{ width: 220 }}>
@@ -152,7 +165,7 @@ const SpecializationsPage = () => {
           <tbody>
             {items.map((item, idx) => (
               <tr key={item.id}>
-                <td>{idx + 1}</td>
+                <td>{page * size + idx + 1}</td>
                 <td>{item.name}</td>
                 <td>{item.educationQualificationName || <span className="text-muted">General / Any</span>}</td>
                 <td>
@@ -173,6 +186,8 @@ const SpecializationsPage = () => {
           </tbody>
         </table>
       )}
+
+      <Pagination page={page} totalPages={totalPages} onChange={setPage} size={size} onSizeChange={(s) => { setSize(s); setPage(0); }} />
 
       {showModal && (
         <div className="modal show d-block" style={{ background: "rgba(0, 0, 0, 0.45)" }}>

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import recruiterApiService from "../../core/recruiterApiService";
+import Pagination from "../../shared/Pagination";
 import { formatDate } from "../../shared/dateFormat";
 import "../jobPosting/JobPostings.css";
 
@@ -14,6 +15,25 @@ const STATUS_PILL = {
   L1_REJECTED: "status-pill-danger",
   L2_REJECTED: "status-pill-danger",
   FULFILLED: "status-pill-info",
+};
+
+// Statuses an approver can ever see, per level - drives the status filter dropdown.
+const L1_STATUS_OPTIONS = ["L1_PENDING", "L2_PENDING", "APPROVED", "L1_REJECTED", "L2_REJECTED"];
+const L2_STATUS_OPTIONS = ["L2_PENDING", "APPROVED", "L2_REJECTED"];
+
+/** SCL_53: BOB-style "09-09-2026 12.45pm" from ISO datetime. */
+const formatApprovalDateTime = (iso) => {
+  if (!iso) return "-";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return String(iso);
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const yyyy = d.getFullYear();
+  let hours = d.getHours();
+  const minutes = String(d.getMinutes()).padStart(2, "0");
+  const ampm = hours >= 12 ? "pm" : "am";
+  hours = hours % 12 || 12;
+  return `${dd}-${mm}-${yyyy} ${hours}.${minutes}${ampm}`;
 };
 
 const Approvals = () => {
@@ -30,14 +50,40 @@ const Approvals = () => {
   const [comments, setComments] = useState("");
   const [loading, setLoading] = useState(false);
   const [acting, setActing] = useState(false);
+  const [searchText, setSearchText] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [page, setPage] = useState(0);
+  const [size, setSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(0);
+  const [historyModal, setHistoryModal] = useState({ show: false, requisition: null, rows: [], loading: false });
   const actingRef = useRef(false);
 
-  const load = async () => {
+  const openApprovalHistory = async (req, e) => {
+    e.stopPropagation();
+    setHistoryModal({ show: true, requisition: req, rows: [], loading: true });
+    try {
+      const res = await recruiterApiService.getRequisitionApprovalHistory(req.id);
+      setHistoryModal({ show: true, requisition: req, rows: res.data.data || [], loading: false });
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to load approval history");
+      setHistoryModal({ show: true, requisition: req, rows: [], loading: false });
+    }
+  };
+
+  const closeApprovalHistory = () => setHistoryModal({ show: false, requisition: null, rows: [], loading: false });
+
+  // Guards against overlapping fetches (e.g. React StrictMode's dev-only double-invoke on mount).
+  const loadInFlightRef = useRef(false);
+  const load = async (pageArg) => {
+    if (loadInFlightRef.current) return;
+    loadInFlightRef.current = true;
     setLoading(true);
     try {
-      const res = isL2 ? await recruiterApiService.getL2Requisitions() : await recruiterApiService.getL1Requisitions();
-      const content = res.data.data || [];
+      const params = { search: searchText || undefined, status: statusFilter || undefined, page: pageArg ?? page, size };
+      const res = isL2 ? await recruiterApiService.getL2Requisitions(params) : await recruiterApiService.getL1Requisitions(params);
+      const content = res.data.data.content || [];
       setRequisitions(content);
+      setTotalPages(res.data.data.totalPages || 0);
 
       // SCL_20: position details were not shown under a requisition in the approver's view.
       const positionResults = await Promise.all(
@@ -52,6 +98,7 @@ const Approvals = () => {
       toast.error("Failed to load requisitions for approval");
     } finally {
       setLoading(false);
+      loadInFlightRef.current = false;
     }
   };
 
@@ -60,9 +107,39 @@ const Approvals = () => {
   };
 
   useEffect(() => {
-    load();
+    setPage(0);
+    load(0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isL2]);
+
+  useEffect(() => {
+    load(page);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, size]);
+
+  // Status filter reloads immediately (and jumps back to page 1) on a genuine change - not on mount.
+  const prevStatusFilterRef = useRef(statusFilter);
+  useEffect(() => {
+    if (prevStatusFilterRef.current === statusFilter) return;
+    prevStatusFilterRef.current = statusFilter;
+    setPage(0);
+    load(0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statusFilter]);
+
+  // Search is performed server-side - only reload (and jump back to page 1) on a genuine
+  // searchText change, not on mount.
+  const prevSearchTextRef = useRef(searchText);
+  useEffect(() => {
+    if (prevSearchTextRef.current === searchText) return;
+    prevSearchTextRef.current = searchText;
+    const timeout = setTimeout(() => {
+      setPage(0);
+      load(0);
+    }, 400);
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchText]);
 
   const toggleSelect = (id) => {
     setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
@@ -88,10 +165,11 @@ const Approvals = () => {
   };
 
   const pendingStatus = isL2 ? "L2_PENDING" : "L1_PENDING";
+  const statusOptions = isL2 ? L2_STATUS_OPTIONS : L1_STATUS_OPTIONS;
 
   return (
     <div className="job-postings-page">
-      <div className="d-flex justify-content-between align-items-center mb-3">
+      <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <div className="list-card-title-wrap">
           <i className="bi bi-check2-square" />
           <span className="list-card-title">Requisition Requests</span>
@@ -110,6 +188,24 @@ const Approvals = () => {
             <button className="btn btn-outline-success" disabled={acting} onClick={() => actOnSelected(true)}>Approve</button>
           </div>
         )}
+      </div>
+
+      <div className="d-flex align-items-center flex-wrap gap-2 mb-3">
+        <div className="search-boxpost">
+          <i className="bi bi-search" />
+          <input
+            className="form-control form-control-sm"
+            placeholder="Search by requisition code or title..."
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+          />
+        </div>
+        <select className="form-select form-select-sm" style={{ width: 180 }} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+          <option value="">All Status</option>
+          {statusOptions.map((s) => (
+            <option key={s} value={s}>{s.replace(/_/g, " ")}</option>
+          ))}
+        </select>
       </div>
 
       {acting && (
@@ -157,7 +253,17 @@ const Approvals = () => {
                         {req.status === "FULFILLED" ? "Fulfilled" : req.status.replace(/_/g, " ")}
                       </span>
                     </div>
-                    <div className="req-code">{req.title}</div>
+                    <div className="d-flex align-items-center gap-2">
+                      <div className="req-code">{req.title}</div>
+                      <button
+                        type="button"
+                        className="btn btn-link p-0 lh-1 history-icon-btn"
+                        title="Approval History"
+                        onClick={(e) => openApprovalHistory(req, e)}
+                      >
+                        <i className="bi bi-clock-history" />
+                      </button>
+                    </div>
                     <div className="req-dates">
                       <span><i className="bi bi-calendar-event" />Start: {formatDate(req.startDate)}</span>
                       <span><i className="bi bi-calendar-check" />Expected Fulfilment: {formatDate(req.expectedFulfilmentDate)}</span>
@@ -232,6 +338,62 @@ const Approvals = () => {
       )}
       {!loading && requisitions.length === 0 && (
         <div className="text-center text-muted py-5">No requisitions in your approval queue.</div>
+      )}
+
+      {!loading && requisitions.length > 0 && (
+        <Pagination page={page} totalPages={totalPages} onChange={setPage} size={size} onSizeChange={(s) => { setSize(s); setPage(0); }} />
+      )}
+
+      {historyModal.show && (
+        <div className="modal show d-block" style={{ background: "rgba(0, 0, 0, 0.45)" }} onClick={closeApprovalHistory}>
+          <div className="modal-dialog modal-dialog-centered modal-lg" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-content">
+              <div className="modal-header">
+                <div>
+                  <h5 className="modal-title mb-0">Approval History</h5>
+                  <div className="text-muted fs-13">
+                    Track approvals and decisions
+                    {historyModal.requisition ? ` — ${historyModal.requisition.requisitionCode}` : ""}
+                  </div>
+                </div>
+                <button type="button" className="btn-close" onClick={closeApprovalHistory} />
+              </div>
+              <div className="modal-body">
+                {historyModal.loading ? (
+                  <div className="text-muted">Loading...</div>
+                ) : historyModal.rows.length === 0 ? (
+                  <div className="text-muted text-center py-4">No approval history yet for this requisition.</div>
+                ) : (
+                  <div className="table-responsive">
+                    <table className="table table-bordered align-middle mb-0 approval-history-table">
+                      <thead>
+                        <tr>
+                          <th>Approver</th>
+                          <th>Approval Date</th>
+                          <th>Status</th>
+                          <th>Comments</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {historyModal.rows.map((row) => (
+                          <tr key={row.id}>
+                            <td>{row.approverName || "-"}</td>
+                            <td>{formatApprovalDateTime(row.approvalDate)}</td>
+                            <td>{(row.status || "").replace(/_/g, " ")}</td>
+                            <td>{row.comments?.trim() ? row.comments : "-"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={closeApprovalHistory}>Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

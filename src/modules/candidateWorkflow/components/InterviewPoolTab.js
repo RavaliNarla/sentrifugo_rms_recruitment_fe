@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import recruiterApiService from "../../../core/recruiterApiService";
 import Pagination from "../../../shared/Pagination";
@@ -48,7 +48,7 @@ const InterviewerScoresHint = ({ scores }) => {
   );
 };
 
-const InterviewPoolTab = ({ positionId }) => {
+const InterviewPoolTab = ({ positionId, isActive }) => {
   const [rows, setRows] = useState([]);
   const [page, setPage] = useState(0);
   const [size, setSize] = useState(10);
@@ -56,11 +56,12 @@ const InterviewPoolTab = ({ positionId }) => {
   const [selected, setSelected] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showNextRoundModal, setShowNextRoundModal] = useState(false);
+  const [searchText, setSearchText] = useState("");
 
   const load = async () => {
     setLoading(true);
     try {
-      const res = await recruiterApiService.searchInterviewPool({ positionId, page, size });
+      const res = await recruiterApiService.searchInterviewPool({ positionId, page, size, searchText });
       setRows(res.data.data.content || []);
       setTotalPages(res.data.data.totalPages || 0);
     } catch (e) {
@@ -75,6 +76,29 @@ const InterviewPoolTab = ({ positionId }) => {
     setSelected([]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [positionId, page, size]);
+
+  // Clear the selection and search text when navigating away to another tab - since this tab
+  // now stays mounted (to avoid a reload flicker on revisit), they would otherwise persist.
+  useEffect(() => {
+    if (!isActive) {
+      setSelected([]);
+      setSearchText("");
+    }
+  }, [isActive]);
+
+  // Only reload on a genuine searchText change, not on mount (compares actual values rather
+  // than a "have I run before" flag, so it stays correct under StrictMode's double-invoke too).
+  const prevSearchTextRef = useRef(searchText);
+  useEffect(() => {
+    if (prevSearchTextRef.current === searchText) return;
+    prevSearchTextRef.current = searchText;
+    const timeout = setTimeout(() => {
+      setPage(0);
+      load();
+    }, 400);
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchText]);
 
   const toggleSelect = (id) => {
     setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
@@ -96,7 +120,7 @@ const InterviewPoolTab = ({ positionId }) => {
   const handleMoveToCompensation = async () => {
     try {
       await recruiterApiService.moveToCompensation(selected);
-      toast.success("Candidate(s) moved to Compensation Pool");
+      toast.success("Candidate(s) moved to Compensation Section");
       setSelected([]);
       load();
     } catch (e) {
@@ -106,10 +130,16 @@ const InterviewPoolTab = ({ positionId }) => {
 
   return (
     <div>
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        {selected.length > 0 ? (
-          <span className="badge rounded-pill text-bg-light border text-app-primary fs-13">{selected.length} Candidates Selected</span>
-        ) : <span />}
+      <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div className="d-flex align-items-center flex-wrap gap-2">
+          <div className="search-boxpost">
+            <i className="bi bi-search" />
+            <input className="form-control form-control-sm" placeholder="Search candidates..." value={searchText} onChange={(e) => setSearchText(e.target.value)} />
+          </div>
+          {selected.length > 0 && (
+            <span className="badge rounded-pill text-bg-light border text-app-primary fs-13">{selected.length} Candidates Selected</span>
+          )}
+        </div>
         <div className="d-flex gap-2">
           {canScheduleNext && (
             <button className="btn btn-outline-primary" onClick={() => setShowNextRoundModal(true)}>
@@ -118,7 +148,7 @@ const InterviewPoolTab = ({ positionId }) => {
           )}
           {canMove && (
             <button className="btn btn-blue-dark" onClick={handleMoveToCompensation}>
-              Move to Compensation Pool ({selected.length})
+              Move to Compensation Section ({selected.length})
             </button>
           )}
         </div>

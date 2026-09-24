@@ -102,22 +102,22 @@ const CandidateWorkflow = () => {
           <>
             {visitedTabs.has("CANDIDATE_POOL") && (
               <div style={{ display: activeTab === "CANDIDATE_POOL" ? "block" : "none" }}>
-                <CandidatePoolTab requisitionId={requisitionId} positionId={positionId} />
+                <CandidatePoolTab requisitionId={requisitionId} positionId={positionId} isActive={activeTab === "CANDIDATE_POOL"} />
               </div>
             )}
             {visitedTabs.has("INTERVIEW_POOL") && (
               <div style={{ display: activeTab === "INTERVIEW_POOL" ? "block" : "none" }}>
-                <InterviewPoolTab positionId={positionId} />
+                <InterviewPoolTab positionId={positionId} isActive={activeTab === "INTERVIEW_POOL"} />
               </div>
             )}
             {visitedTabs.has("COMPENSATION_POOL") && (
               <div style={{ display: activeTab === "COMPENSATION_POOL" ? "block" : "none" }}>
-                <CompensationPoolTab positionId={positionId} />
+                <CompensationPoolTab positionId={positionId} isActive={activeTab === "COMPENSATION_POOL"} />
               </div>
             )}
             {visitedTabs.has("OFFER_POOL") && (
               <div style={{ display: activeTab === "OFFER_POOL" ? "block" : "none" }}>
-                <OfferPoolTab positionId={positionId} />
+                <OfferPoolTab positionId={positionId} isActive={activeTab === "OFFER_POOL"} />
               </div>
             )}
           </>
