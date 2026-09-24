@@ -142,6 +142,70 @@
 .btn-auth-ms:hover:enabled { background: #146b36; color: #fff; }
 .btn-auth-ms:disabled { opacity: 0.75; cursor: default; }
 
+.auth-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #33453c;
+  margin-bottom: 4px;
+}
+.auth-forgot-link {
+  font-size: 0.82rem;
+  color: #1b9c4a !important;
+  text-decoration: none;
+}
+.auth-forgot-link:hover { text-decoration: underline; }
+.auth-card .form-control {
+  text-align: left;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.auth-otp-row {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+.auth-otp-box {
+  width: 44px;
+  height: 48px;
+  text-align: center;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  border: 1.5px solid #1b9c4a;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(15, 60, 30, 0.10);
+  outline: none;
+}
+.auth-otp-box:focus {
+  border-color: #146b36;
+  box-shadow: 0 0 0 3px rgba(27, 156, 74, 0.18);
+}
+.auth-otp-box.is-invalid {
+  border-color: #b3261e;
+}
+.auth-otp-resend {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 10px;
+  font-size: 0.82rem;
+  color: #6a7d72;
+}
+.auth-otp-resend-btn {
+  font-size: 0.82rem !important;
+  font-weight: 700;
+  color: #1b9c4a !important;
+  text-decoration: none !important;
+  white-space: nowrap;
+}
+.auth-otp-resend-btn:disabled {
+  color: #9aa39e !important;
+  cursor: default;
+}
+
 @media (max-width: 860px) {
   .auth-left { display: none; }
   .auth-right { flex: 1 1 100%; }

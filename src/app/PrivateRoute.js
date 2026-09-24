@@ -1,18 +1,13 @@
 import React from "react";
-import { useIsAuthenticated, useMsal } from "@azure/msal-react";
 import { useSelector } from "react-redux";
 import { Navigate } from "react-router-dom";
+import { getAccessToken } from "../core/tokenStorage";
 
 const PrivateRoute = ({ children }) => {
-  const isMsalAuthenticated = useIsAuthenticated();
-  const { inProgress } = useMsal();
   const user = useSelector((state) => state.user);
+  const hasToken = !!getAccessToken();
 
-  if (inProgress !== "none") {
-    return <div className="text-center mt-5">Loading...</div>;
-  }
-
-  if (!isMsalAuthenticated || !user.isAuthenticated) {
+  if (!hasToken || !user.isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 

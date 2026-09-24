@@ -6,30 +6,41 @@ import PdfViewerModal from "../../../shared/PdfViewerModal";
 import { useFilePreview } from "../../../shared/useFilePreview";
 import ConfirmModal from "../../../shared/ConfirmModal";
 import AddCandidateModal from "./AddCandidateModal";
+import BulkUploadCandidatesModal from "./BulkUploadCandidatesModal";
 import CandidateProfileModal from "./CandidateProfileModal";
 import ScheduleInterviewModal from "./ScheduleInterviewModal";
 
 const STATUS_PILL = {
   ADDED: "status-pill-secondary",
   SHORTLISTED: "status-pill-warning",
-  NOT_SHORTLISTED: "status-pill-danger",
+  REJECTED: "status-pill-danger",
   ON_HOLD: "status-pill-warning",
+  INVITE_SENT: "status-pill-info",
   SCHEDULED: "status-pill-info",
+  DECLINED: "status-pill-danger",
   QUALIFIED: "status-pill-success",
   DISQUALIFIED: "status-pill-danger",
   COMPENSATION_PENDING: "status-pill-warning",
   MOVED_TO_OFFER: "status-pill-secondary",
 };
 
-const STATUS_OPTIONS = ["ADDED", "SHORTLISTED", "NOT_SHORTLISTED", "ON_HOLD", "SCHEDULED", "QUALIFIED", "DISQUALIFIED", "COMPENSATION_PENDING", "MOVED_TO_OFFER"];
+const STATUS_OPTIONS = ["ADDED", "SHORTLISTED", "REJECTED", "ON_HOLD", "INVITE_SENT", "SCHEDULED", "DECLINED", "QUALIFIED", "DISQUALIFIED", "COMPENSATION_PENDING", "MOVED_TO_OFFER"];
 
 const STATUS_LABELS = {
   ADDED: "Applied",
-  NOT_SHORTLISTED: "Not Shortlisted",
-  ON_HOLD: "On Hold",
+  SHORTLISTED: "SHORTLISTED",
+  REJECTED: "REJECTED",
+  ON_HOLD: "ON HOLD",
+  INVITE_SENT: "INVITE SENT",
+  SCHEDULED: "SCHEDULED",
+  DECLINED: "DECLINED",
 };
 
 export const getStatusLabel = (status) => STATUS_LABELS[status] || status.replace(/_/g, " ");
+
+/** Shortlist buttons only for Applied / SHORTLISTED / REJECTED / ON HOLD. */
+export const canShortlistDecide = (status) =>
+  ["ADDED", "SHORTLISTED", "REJECTED", "ON_HOLD"].includes(status);
 
 const CandidatePoolTab = ({ requisitionId, positionId, isActive }) => {
   const [candidates, setCandidates] = useState([]);
@@ -42,6 +53,7 @@ const CandidatePoolTab = ({ requisitionId, positionId, isActive }) => {
   // to another page, where the original candidates array no longer holds that row.
   const [selectedCandidatesMap, setSelectedCandidatesMap] = useState({});
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showBulkModal, setShowBulkModal] = useState(false);
   const [editingCandidate, setEditingCandidate] = useState(null);
   const [profileCandidate, setProfileCandidate] = useState(null);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
@@ -136,11 +148,11 @@ const CandidatePoolTab = ({ requisitionId, positionId, isActive }) => {
     });
   };
 
-  // SCL_25: shortlist decision is Yes / No / On Hold (decision: "SHORTLIST" | "REJECT" | "HOLD").
+  // SCL_25: shortlist decision — SHORTLIST / REJECT / HOLD → SHORTLISTED / REJECTED / ON_HOLD.
   const handleDecide = async (id, decision) => {
     try {
       await recruiterApiService.decideCandidate(id, decision);
-      toast.success("Decision recorded successfully");
+      toast.success("Decision recorded. Status email will be sent.");
       setProfileCandidate(null);
       load();
     } catch (e) {
@@ -163,7 +175,9 @@ const CandidatePoolTab = ({ requisitionId, positionId, isActive }) => {
   };
 
   const selectedCandidates = selected.map((id) => selectedCandidatesMap[id]).filter(Boolean);
-  const canSchedule = selectedCandidates.length > 0 && selectedCandidates.every((c) => c.status === "SHORTLISTED");
+  const canSchedule = selectedCandidates.length > 0 && selectedCandidates.every((c) =>
+    c.status === "SHORTLISTED" || c.status === "DECLINED"
+  );
 
   return (
     <div>
@@ -193,6 +207,9 @@ const CandidatePoolTab = ({ requisitionId, positionId, isActive }) => {
           <button className="btn btn-primary" onClick={() => { setEditingCandidate(null); setShowAddModal(true); }}>
             <i className="bi bi-plus-lg" /> Add Candidate
           </button>
+          <button className="btn btn-outline-primary" onClick={() => setShowBulkModal(true)}>
+            <i className="bi bi-upload" /> Bulk Upload
+          </button>
         </div>
       </div>
 
@@ -212,7 +229,7 @@ const CandidatePoolTab = ({ requisitionId, positionId, isActive }) => {
             {candidates.map((c) => (
               <tr key={c.id}>
                 <td>
-                  {c.status === "SHORTLISTED" && (
+                  {(c.status === "SHORTLISTED" || c.status === "DECLINED") && (
                     <input type="checkbox" className="form-check-input" checked={selected.includes(c.id)} onChange={() => toggleSelect(c)} />
                   )}
                 </td>
@@ -266,6 +283,17 @@ const CandidatePoolTab = ({ requisitionId, positionId, isActive }) => {
           onSaved={() => { setShowAddModal(false); setEditingCandidate(null); load(); }}
           onDocumentsChanged={(updated) => {
             if (updated) setEditingCandidate((prev) => (prev ? { ...prev, ...updated } : prev));
+            load();
+          }}
+        />
+      )}
+
+      {showBulkModal && (
+        <BulkUploadCandidatesModal
+          positionId={positionId}
+          onClose={() => setShowBulkModal(false)}
+          onImported={(closeModal = true) => {
+            if (closeModal) setShowBulkModal(false);
             load();
           }}
         />

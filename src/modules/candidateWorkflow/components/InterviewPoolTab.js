@@ -6,9 +6,28 @@ import { formatDate } from "../../../shared/dateFormat";
 import ScheduleInterviewModal from "./ScheduleInterviewModal";
 
 const STATUS_PILL = {
+  INVITE_SENT: "status-pill-info",
   SCHEDULED: "status-pill-info",
+  DECLINED: "status-pill-danger",
   QUALIFIED: "status-pill-success",
   DISQUALIFIED: "status-pill-danger",
+};
+
+const STATUS_LABELS = {
+  INVITE_SENT: "INVITE SENT",
+  SCHEDULED: "SCHEDULED",
+  DECLINED: "DECLINED",
+  QUALIFIED: "QUALIFIED",
+  DISQUALIFIED: "DISQUALIFIED",
+};
+
+/** Display-only: L{round} + status (e.g. L1 QUALIFIED). Backend status values unchanged. */
+const poolStatusLabel = (status, round) => {
+  if (!status) return "-";
+  const label = STATUS_LABELS[status] || String(status).replace(/_/g, " ");
+  const r = round != null && round !== "" ? Number(round) : 1;
+  const roundNum = Number.isFinite(r) && r > 0 ? r : 1;
+  return `L${roundNum} ${label}`;
 };
 
 const decisionLabel = (d) => {
@@ -186,7 +205,7 @@ const InterviewPoolTab = ({ positionId, isActive }) => {
                   <small className="text-muted ms-1">({r.membersScored}/{r.membersTotal} scored)</small>
                   {(r.membersScored > 0) && <InterviewerScoresHint scores={r.memberScores} />}
                 </td>
-                <td><span className={`status-pill ${STATUS_PILL[r.applicationStatus] || "status-pill-secondary"}`}>{r.applicationStatus}</span></td>
+                <td><span className={`status-pill ${STATUS_PILL[r.applicationStatus] || "status-pill-secondary"}`}>{poolStatusLabel(r.applicationStatus, r.round)}</span></td>
               </tr>
             ))}
             {rows.length === 0 && (

@@ -460,8 +460,87 @@ a {
   background: var(--tb-btn-bg); border: 1px solid var(--tb-btn-border);
   color: var(--tb-btn-color);
   flex-shrink: 0;
+  position: relative;
+  cursor: pointer;
 }
 .topbar-icon-btn:hover { background: var(--tb-btn-hbg); color: var(--tb-btn-hcolor); }
+.topbar-notif-btn { color: var(--brand-primary); font-size: 1.05rem; }
+.topbar-notif-btn:hover { color: var(--brand-primary); }
+.topbar-notif-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #b3261e;
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+  border: 2px solid #fff;
+}
+
+.topbar-notif-dropdown {
+  width: 340px;
+  max-width: min(340px, calc(100vw - 32px));
+  padding: 0;
+  border-radius: 12px;
+  border: 1px solid var(--tb-border);
+  box-shadow: 0 10px 28px rgba(15, 60, 30, 0.16);
+  background: #fff;
+  overflow: hidden;
+}
+.topbar-notif-header {
+  padding: 12px 14px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--tb-title);
+  border-bottom: 1px solid var(--tb-border);
+  background: rgba(31, 138, 60, 0.04);
+}
+.topbar-notif-list {
+  /* Show ~4 entries; scroll when there are more. */
+  max-height: 268px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.topbar-notif-list::-webkit-scrollbar {
+  width: 6px;
+}
+.topbar-notif-list::-webkit-scrollbar-thumb {
+  background: rgba(31, 138, 60, 0.35);
+  border-radius: 999px;
+}
+.topbar-notif-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+.topbar-notif-item {
+  padding: 12px 14px;
+  border-bottom: 1px solid #eef3ef;
+}
+.topbar-notif-item:last-child { border-bottom: 0; }
+.topbar-notif-item.unread {
+  background: rgba(31, 138, 60, 0.06);
+}
+.topbar-notif-text {
+  font-size: 0.84rem;
+  color: var(--tb-title);
+  line-height: 1.35;
+}
+.topbar-notif-time {
+  margin-top: 4px;
+  font-size: 0.72rem;
+  color: var(--tb-sub);
+}
+.topbar-notif-empty {
+  padding: 28px 16px;
+  text-align: center;
+  color: var(--tb-sub);
+  font-size: 0.85rem;
+}
 
 .topbar-user-pill {
   display: flex; align-items: center; gap: 10px;
@@ -530,6 +609,23 @@ a {
   background: var(--card-bg); border: 1px solid var(--card-border);
   border-radius: 12px; padding: 16px 18px; box-shadow: 0 2px 8px var(--card-shadow);
   display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; text-align: left; width: 100%;
+}
+button.stat-tile-v2 {
+  font: inherit; color: inherit; appearance: none;
+}
+.stat-tile-clickable {
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.12s ease;
+}
+.stat-tile-clickable:hover {
+  border-color: #208bbd;
+  box-shadow: 0 2px 10px rgba(32, 139, 189, 0.12);
+  transform: translateY(-1px);
+}
+.stat-tile-clickable:focus-visible {
+  outline: 2px solid #208bbd;
+  outline-offset: 2px;
 }
 .stat-num-v2 { font-size: 1.6rem; font-weight: 800; color: var(--tb-title); line-height: 1.1; }
 .stat-label-v2 { font-size: 0.82rem; color: var(--tb-sub); margin-top: 2px; }
@@ -618,18 +714,30 @@ a {
   font-size: 0.8rem;
 }
 
-/* Every modal app-wide: fits within the viewport, header/footer pinned, body scrolls. */
+/* Every modal app-wide: fits within the viewport with a clear outside gap,
+   header/footer pinned, body scrolls when content is tall. */
 .modal-dialog {
-  max-height: calc(100vh - 3.5rem) !important;
+  margin: 2.5rem auto !important;
+  max-height: calc(100vh - 5rem) !important;
+}
+.modal-dialog-centered {
+  min-height: calc(100% - 5rem) !important;
 }
 .modal-content {
-  max-height: 100% !important;
-  display: flex !important; flex-direction: column !important; overflow: hidden !important;
+  max-height: calc(100vh - 5rem) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
 }
 .modal-body {
-  flex: 1 1 auto !important; min-height: 0 !important; overflow-y: auto !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
 }
-.modal-header, .modal-footer { flex: 0 0 auto !important; }
+.modal-header,
+.modal-footer {
+  flex: 0 0 auto !important;
+}
 
 /* ===================== Candidate photo preview (Add Candidate modal) ===================== */
 .candidate-photo-preview {

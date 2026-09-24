@@ -20,6 +20,13 @@ const OFFER_STATUS_PILL = {
   EXPIRED: "status-pill-secondary",
 };
 
+const OFFER_STATUS_LABELS = {
+  SENT: "OFFER LETTER SENT",
+};
+
+const getOfferStatusLabel = (status) =>
+  OFFER_STATUS_LABELS[status] || (status ? String(status).replace(/_/g, " ") : "-");
+
 // SCL_39: Accept Before Date must be a future date.
 const tomorrowStr = () => {
   const d = new Date();
@@ -192,6 +199,7 @@ const OfferPoolTab = ({ positionId, isActive }) => {
       toast.success("Offer(s) submitted for approval");
       setSelected([]);
       load();
+      window.dispatchEvent(new CustomEvent("rms:notifications-refresh"));
     } catch (e) {
       toast.error(e.response?.data?.message || "Failed to submit for approval");
     } finally {
@@ -294,7 +302,7 @@ const OfferPoolTab = ({ positionId, isActive }) => {
                   <td>{c.agreedCtc ?? c.salary ?? "-"}</td>
                   <td>{formatDate(offer?.acceptBeforeDate)}</td>
                   <td>{formatDate(offer?.joiningDate)}</td>
-                  <td>{offer ? <span className={`status-pill ${OFFER_STATUS_PILL[offer.status] || "status-pill-secondary"}`}>{offer.status.replace(/_/g, " ")}</span> : "-"}</td>
+                  <td>{offer ? <span className={`status-pill ${OFFER_STATUS_PILL[offer.status] || "status-pill-secondary"}`}>{getOfferStatusLabel(offer.status)}</span> : "-"}</td>
                   <td>
                     {offer?.offerFileUrl && (
                       <button

@@ -186,6 +186,7 @@ const JobPostings = () => {
         toast.success("Requisition(s) submitted for approval");
         setSelected([]);
         await loadRequisitions();
+        window.dispatchEvent(new CustomEvent("rms:notifications-refresh"));
       } catch (e) {
         toast.error(e.response?.data?.message || "Submit failed");
       } finally {

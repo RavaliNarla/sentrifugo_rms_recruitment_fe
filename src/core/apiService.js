@@ -1,22 +1,11 @@
 import axios from "axios";
-import { getMsalInstance } from "./msalInstanceHolder";
-import { loginRequest } from "../app/msalConfig";
+import { clearAccessToken, getAccessToken } from "./tokenStorage";
 
 const attachAuthInterceptor = (instance) => {
-  instance.interceptors.request.use(async (config) => {
-    const msalInstance = getMsalInstance();
-    const account = msalInstance?.getActiveAccount();
-    if (msalInstance && account) {
-      try {
-        const result = await msalInstance.acquireTokenSilent({
-          ...loginRequest,
-          account,
-        });
-        config.headers.Authorization = `Bearer ${result.accessToken}`;
-      } catch (e) {
-        // Token acquisition failed - request will proceed without a token and
-        // the backend will reject with 401, which surfaces the login screen again.
-      }
+  instance.interceptors.request.use((config) => {
+    const token = getAccessToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   });
@@ -25,7 +14,10 @@ const attachAuthInterceptor = (instance) => {
     (response) => response,
     (error) => {
       if (error.response?.status === 401) {
-        window.location.href = "/login";
+        clearAccessToken();
+        if (!window.location.pathname.startsWith("/login")) {
+          window.location.href = "/login";
+        }
       }
       return Promise.reject(error);
     }
@@ -44,6 +36,11 @@ export const masterApi = attachAuthInterceptor(
 export const authApi = attachAuthInterceptor(
   axios.create({ baseURL: process.env.REACT_APP_AUTH_API_URL })
 );
+
+/** Unauthenticated auth calls (login / forgot / reset). */
+export const authPublicApi = axios.create({
+  baseURL: process.env.REACT_APP_AUTH_API_URL,
+});
 
 export const recruiterMultipartApi = attachAuthInterceptor(
   axios.create({

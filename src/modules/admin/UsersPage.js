@@ -5,7 +5,7 @@ import ConfirmModal from "../../shared/ConfirmModal";
 import Pagination from "../../shared/Pagination";
 
 const ROLES = ["Admin", "Recruiter", "Committee_Member"];
-const EMPTY_FORM = { name: "", role: "", email: "" };
+const EMPTY_FORM = { name: "", role: "", email: "", password: "" };
 
 const UsersPage = () => {
   const [users, setUsers] = useState([]);
@@ -31,7 +31,6 @@ const UsersPage = () => {
   const askConfirm = (message, action) => setConfirmState({ show: true, message, onConfirm: action });
   const closeConfirm = () => setConfirmState({ show: false, message: "", onConfirm: null });
 
-  // Guards against overlapping fetches (e.g. React StrictMode's dev-only double-invoke on mount).
   const loadInFlightRef = useRef(false);
   const loadUsers = async (search, pageArg, sizeArg) => {
     if (loadInFlightRef.current) return;
@@ -79,7 +78,7 @@ const UsersPage = () => {
 
   const openEdit = (user) => {
     setEditing(user);
-    setForm({ name: user.name, role: user.role, email: user.email });
+    setForm({ name: user.name, role: user.role, email: user.email, password: "" });
     setErrors({});
     setShowModal(true);
   };
@@ -93,6 +92,12 @@ const UsersPage = () => {
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
       next.email = "Please enter a valid email address";
     }
+    if (!editing) {
+      if (!form.password) next.password = "Password is required";
+      else if (form.password.length < 8) next.password = "Password must be at least 8 characters";
+    } else if (form.password && form.password.length < 8) {
+      next.password = "Password must be at least 8 characters";
+    }
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -104,11 +109,18 @@ const UsersPage = () => {
     setSaving(true);
     try {
       if (editing) {
-        await masterApiService.updateUser(editing.id, form);
+        const payload = { name: form.name, role: form.role, email: form.email };
+        if (form.password) payload.password = form.password;
+        await masterApiService.updateUser(editing.id, payload);
         toast.success("User updated successfully");
       } else {
-        await masterApiService.addUser(form);
-        toast.success("User added successfully. Their email must match their Azure AD account to log in.");
+        const res = await masterApiService.addUser(form);
+        const created = res.data?.data;
+        toast.success(
+          created?.employeeId
+            ? `User added successfully. Employee Code: ${created.employeeId}`
+            : "User added successfully"
+        );
       }
       setShowModal(false);
       loadUsers(searchText, page, size);
@@ -164,6 +176,7 @@ const UsersPage = () => {
           <thead>
             <tr className="text-muted fs-13">
               <th>#</th>
+              <th>Employee Code</th>
               <th>Name</th>
               <th>Role</th>
               <th>Email</th>
@@ -174,6 +187,7 @@ const UsersPage = () => {
             {users.map((user, idx) => (
               <tr key={user.id}>
                 <td>{page * size + idx + 1}</td>
+                <td><code>{user.employeeId || "-"}</code></td>
                 <td>{user.name}</td>
                 <td>
                   <span className="status-pill status-pill-secondary">{user.role}</span>
@@ -191,7 +205,7 @@ const UsersPage = () => {
             ))}
             {users.length === 0 && (
               <tr>
-                <td colSpan={5} className="text-center text-muted py-4">No users found</td>
+                <td colSpan={6} className="text-center text-muted py-4">No users found</td>
               </tr>
             )}
           </tbody>
@@ -231,7 +245,7 @@ const UsersPage = () => {
                   <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.role || ""}</div>
                 </div>
                 <div className="mb-3">
-                  <label className="form-label">Email (must match their Azure AD account) <span className="text-danger">*</span></label>
+                  <label className="form-label">Email <span className="text-danger">*</span></label>
                   <input
                     className={`form-control ${errors.email ? "is-invalid" : ""}`}
                     type="email"
@@ -241,6 +255,26 @@ const UsersPage = () => {
                   />
                   <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.email || ""}</div>
                 </div>
+                <div className="mb-3">
+                  <label className="form-label">
+                    Password {!editing && <span className="text-danger">*</span>}
+                    {editing && <span className="text-muted fs-13"> (leave blank to keep current)</span>}
+                  </label>
+                  <input
+                    type="password"
+                    className={`form-control ${errors.password ? "is-invalid" : ""}`}
+                    value={form.password}
+                    autoComplete="new-password"
+                    onChange={(e) => setField("password", e.target.value)}
+                  />
+                  <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.password || ""}</div>
+                </div>
+                {editing?.employeeId && (
+                  <div className="mb-1">
+                    <label className="form-label">Employee Code</label>
+                    <input className="form-control" value={editing.employeeId} disabled />
+                  </div>
+                )}
               </div>
               <div className="modal-footer">
                 <button className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>

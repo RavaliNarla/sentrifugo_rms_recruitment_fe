@@ -5,7 +5,6 @@ import PrivateRoute from "./PrivateRoute";
 import PrivilegeRoute from "./PrivilegeRoute";
 import Layout from "./Layout";
 import Login from "../modules/auth/Login";
-import AuthCallback from "../modules/auth/AuthCallback";
 import Unauthorized from "../modules/auth/Unauthorized";
 import Dashboard from "../modules/dashboard/Dashboard";
 import JobPostings from "../modules/jobPosting/JobPostings";
@@ -37,7 +36,6 @@ function App() {
         {/* Old BOB FE used /sagarsoft/login — keep bookmark/Azure redirect from looping there */}
         <Route path="/sagarsoft/login" element={<Navigate to="/login" replace />} />
         <Route path="/sagarsoft/*" element={<Navigate to="/login" replace />} />
-        <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
 
         <Route path="/dashboard" element={<PrivateRoute>{withLayout(<Dashboard />)}</PrivateRoute>} />

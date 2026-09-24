@@ -34,6 +34,13 @@ const formatApprovalDateTime = (iso) => {
   return `${dd}-${mm}-${yyyy} ${hours}.${minutes}${ampm}`;
 };
 
+const OFFER_STATUS_LABELS = {
+  SENT: "OFFER LETTER SENT",
+};
+
+const getOfferStatusLabel = (status) =>
+  OFFER_STATUS_LABELS[status] || (status ? String(status).replace(/_/g, " ") : "-");
+
 /**
  * Offer Letter approval (Section 12/16 of the requirements doc) - the second of
  * the two retained approval flows. Only after L2 approves is the offer letter
@@ -282,7 +289,7 @@ const OfferApprovals = () => {
                 />
               )}
               <div className="flex-grow-1">
-                <span className={`badge bg-${STATUS_BADGE[offer.status] || "secondary"} me-2`}>{offer.status.replace(/_/g, " ")}</span>
+                <span className={`badge bg-${STATUS_BADGE[offer.status] || "secondary"} me-2`}>{getOfferStatusLabel(offer.status)}</span>
                 <span className="fw-bold">{offer.candidateName}</span>
                 {offer.positionTitleName && <span className="text-muted"> — {offer.positionTitleName}</span>}
                 {offer.requisitionCode && <span className="text-muted"> ({offer.requisitionCode})</span>}

@@ -3,8 +3,6 @@
   "version": "1.0.0",
   "private": true,
   "dependencies": {
-    "@azure/msal-browser": "^3.27.0",
-    "@azure/msal-react": "^2.2.0",
     "@reduxjs/toolkit": "^2.5.0",
     "axios": "^1.7.9",
     "bootstrap": "^5.3.3",

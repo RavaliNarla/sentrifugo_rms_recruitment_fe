@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import recruiterApiService from "../../../core/recruiterApiService";
-import { getStatusLabel } from "./CandidatePoolTab";
+import { canShortlistDecide, getStatusLabel } from "./CandidatePoolTab";
 
 const CandidateProfileModal = ({ candidate, onClose, onDecide, onViewFile }) => {
   const [photoUrl, setPhotoUrl] = useState(null);
@@ -19,6 +19,8 @@ const CandidateProfileModal = ({ candidate, onClose, onDecide, onViewFile }) => 
   }, [candidate?.id, candidate?.hasPhoto]);
 
   if (!candidate) return null;
+
+  const showShortlistActions = canShortlistDecide(candidate.status);
 
   return (
     <div className="modal show d-block" style={{ background: "rgba(0, 0, 0, 0.45)" }}>
@@ -72,10 +74,13 @@ const CandidateProfileModal = ({ candidate, onClose, onDecide, onViewFile }) => 
           </div>
           <div className="modal-footer">
             <button className="btn btn-secondary" onClick={onClose}>Close</button>
-            {/* Always allow re-decide so status can be corrected (e.g. On Hold → Shortlisted). */}
-            <button className="btn btn-outline-secondary" onClick={() => onDecide(candidate.id, "HOLD")}>On Hold</button>
-            <button className="btn btn-outline-danger" onClick={() => onDecide(candidate.id, "REJECT")}>No</button>
-            <button className="btn btn-primary" onClick={() => onDecide(candidate.id, "SHORTLIST")}>Yes - Shortlist</button>
+            {showShortlistActions && (
+              <>
+                <button className="btn btn-outline-secondary" onClick={() => onDecide(candidate.id, "HOLD")}>On-Hold</button>
+                <button className="btn btn-outline-danger" onClick={() => onDecide(candidate.id, "REJECT")}>Reject</button>
+                <button className="btn btn-primary" onClick={() => onDecide(candidate.id, "SHORTLIST")}>Shortlist</button>
+              </>
+            )}
           </div>
         </div>
       </div>

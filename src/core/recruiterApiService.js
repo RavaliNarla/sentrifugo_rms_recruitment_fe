@@ -38,8 +38,15 @@ const recruiterApiService = {
   searchCandidates: (params) => recruiterApi.get("/candidates/search", { params }),
   getCandidate: (id) => recruiterApi.get(`/candidates/${id}`),
   shortlistCandidate: (id) => recruiterApi.post(`/candidates/${id}/shortlist`),
-  /** decision: "SHORTLIST" | "REJECT" | "HOLD" (FRS: Yes / No / On Hold). */
+  /** decision: "SHORTLIST" | "REJECT" | "HOLD" → SHORTLISTED / REJECTED / ON_HOLD. */
   decideCandidate: (id, decision) => recruiterApi.post(`/candidates/${id}/decision`, { decision }),
+  downloadCandidateBulkTemplate: () =>
+    recruiterApi.get("/candidates/bulk-template", { responseType: "blob" }),
+  bulkImportCandidates: (positionId, file) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return recruiterMultipartApi.post(`/candidates/bulk-import?positionId=${positionId}`, formData);
+  },
 
   // Files - stored locally on disk; fetch with auth and return a blob URL for preview
   fetchFileBlobUrl: async (relativePath) => {
@@ -97,6 +104,7 @@ const recruiterApiService = {
 
   // Dashboard
   getDashboardSummary: () => recruiterApi.get("/dashboard/summary"),
+  getDashboardDetails: (metric) => recruiterApi.get("/dashboard/details", { params: { metric } }),
 };
 
 export default recruiterApiService;
