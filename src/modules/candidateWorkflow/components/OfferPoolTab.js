@@ -70,8 +70,8 @@ const OfferPoolTab = ({ positionId, isActive }) => {
     masterApiService.getOfferTemplates().then((res) => setTemplates(res.data.data || []));
   }, []);
 
-  const load = async () => {
-    setLoading(true);
+  const load = async (silent) => {
+    if (!silent) setLoading(true);
     try {
       const res = await recruiterApiService.searchCandidates({ positionId, statuses: ["MOVED_TO_OFFER"], page, size, searchText });
       const content = res.data.data.content || [];
@@ -99,6 +99,9 @@ const OfferPoolTab = ({ positionId, isActive }) => {
 
   // Clear the selection and filter fields when navigating away to another tab - since this
   // tab now stays mounted (to avoid a reload flicker on revisit), they would otherwise persist.
+  // On the other hand, silently re-fetch (no loading flash) when revisiting - a candidate may
+  // have just been moved in here from another tab (e.g. Compensation Section) while we were away.
+  const prevIsActiveRef = useRef(isActive);
   useEffect(() => {
     if (!isActive) {
       setSelected([]);
@@ -107,7 +110,11 @@ const OfferPoolTab = ({ positionId, isActive }) => {
       setJoiningDate("");
       setErrors({});
       setSearchText("");
+    } else if (!prevIsActiveRef.current) {
+      load(true);
     }
+    prevIsActiveRef.current = isActive;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isActive]);
 
   // Only reload on a genuine searchText change, not on mount (compares actual values rather

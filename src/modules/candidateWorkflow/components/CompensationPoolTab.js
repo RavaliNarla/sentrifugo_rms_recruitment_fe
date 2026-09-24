@@ -23,8 +23,8 @@ const CompensationPoolTab = ({ positionId, isActive }) => {
   const [savingId, setSavingId] = useState(null);
   const [searchText, setSearchText] = useState("");
 
-  const load = async () => {
-    setLoading(true);
+  const load = async (silent) => {
+    if (!silent) setLoading(true);
     try {
       const res = await recruiterApiService.searchCompensationPool({ positionId, page, size, searchText });
       const content = res.data.data.content || [];
@@ -60,11 +60,18 @@ const CompensationPoolTab = ({ positionId, isActive }) => {
 
   // Clear the selection and search text when navigating away to another tab - since this tab
   // now stays mounted (to avoid a reload flicker on revisit), they would otherwise persist.
+  // On the other hand, silently re-fetch (no loading flash) when revisiting - a candidate may
+  // have just been moved in here from another tab (e.g. Interview Pool) while we were away.
+  const prevIsActiveRef = useRef(isActive);
   useEffect(() => {
     if (!isActive) {
       setSelected([]);
       setSearchText("");
+    } else if (!prevIsActiveRef.current) {
+      load(true);
     }
+    prevIsActiveRef.current = isActive;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isActive]);
 
   // Only reload on a genuine searchText change, not on mount (compares actual values rather
