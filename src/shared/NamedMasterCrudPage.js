@@ -127,10 +127,10 @@ const NamedMasterCrudPage = ({ title, getAll, add, update, remove }) => {
           <span className="list-card-count">({totalElements} record{totalElements === 1 ? "" : "s"})</span>
         </div>
         <div className="d-flex align-items-center gap-2">
-          <div className="input-group input-group-sm" style={{ width: 220 }}>
-            <span className="input-group-text bg-white"><i className="bi bi-search" /></span>
+          <div className="search-boxpost" style={{ width: 280 }}>
+            <i className="bi bi-search" />
             <input
-              className="form-control"
+              className="form-control form-control-sm"
               placeholder={`Search ${title.toLowerCase()}...`}
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}

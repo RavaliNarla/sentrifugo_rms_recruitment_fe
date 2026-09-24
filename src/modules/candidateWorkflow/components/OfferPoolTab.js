@@ -35,7 +35,9 @@ const dayAfter = (dateStr) => {
 };
 
 // SCL_41: selectable until candidate accepts or rejects (SENT can be regenerated/resent).
-const LOCKED_OFFER_STATUSES = ["ACCEPTED", "REJECTED"];
+// L1_PENDING/L2_PENDING are also locked - an offer already submitted for approval can't be
+// silently regenerated out from under the approver; it must be decided (or rejected) first.
+const LOCKED_OFFER_STATUSES = ["ACCEPTED", "REJECTED", "L1_PENDING", "L2_PENDING"];
 
 const OfferPoolTab = ({ positionId, isActive }) => {
   const [candidates, setCandidates] = useState([]);

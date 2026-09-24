@@ -57,6 +57,20 @@
   margin: 0;
 }
 
+.clear-filters-link {
+  height: 42px;
+  display: inline-flex;
+  align-items: center;
+  color: #a20e37;
+  font-weight: 500;
+  font-size: 0.875em;
+}
+
+.clear-filters-link:hover,
+.clear-filters-link:focus {
+  color: #7c0a2a;
+}
+
 .bulk-actions-bar {
   background: #fff;
   padding: 12px 16px;

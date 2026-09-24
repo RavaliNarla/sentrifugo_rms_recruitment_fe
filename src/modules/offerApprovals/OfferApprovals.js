@@ -5,6 +5,7 @@ import recruiterApiService from "../../core/recruiterApiService";
 import Pagination from "../../shared/Pagination";
 import PdfViewerModal from "../../shared/PdfViewerModal";
 import { useFilePreview } from "../../shared/useFilePreview";
+import "../jobPosting/JobPostings.css";
 
 const STATUS_BADGE = {
   L1_PENDING: "warning",
@@ -52,11 +53,37 @@ const OfferApprovals = () => {
   const [acting, setActing] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [requisitions, setRequisitions] = useState([]);
+  const [positions, setPositions] = useState([]);
+  const [requisitionId, setRequisitionId] = useState("");
+  const [positionId, setPositionId] = useState("");
   const [page, setPage] = useState(0);
   const [size, setSize] = useState(10);
   const [totalPages, setTotalPages] = useState(0);
   const [historyModal, setHistoryModal] = useState({ show: false, offer: null, rows: [], loading: false });
   const actingRef = useRef(false);
+
+  // Requisition/Position filter dropdowns - shown only for reference/narrowing; candidates
+  // themselves are already driven by the search+status filters below.
+  useEffect(() => {
+    recruiterApiService.getApprovedRequisitions()
+      .then((res) => setRequisitions(res.data.data || []))
+      .catch(() => toast.error("Failed to load requisitions"));
+  }, []);
+
+  useEffect(() => {
+    if (!requisitionId) {
+      setPositions([]);
+      setPositionId("");
+      return;
+    }
+    recruiterApiService.getActivePositionsByRequisition(requisitionId)
+      .then((res) => {
+        setPositions(res.data.data || []);
+        setPositionId("");
+      })
+      .catch(() => toast.error("Failed to load positions"));
+  }, [requisitionId]);
 
   const openApprovalHistory = async (offer) => {
     setHistoryModal({ show: true, offer, rows: [], loading: true });
@@ -81,7 +108,7 @@ const OfferApprovals = () => {
     loadInFlightRef.current = true;
     setLoading(true);
     try {
-      const params = { search: searchText || undefined, status: statusFilter || undefined, page: pageArg ?? page, size };
+      const params = { search: searchText || undefined, status: statusFilter || undefined, positionId: positionId || undefined, page: pageArg ?? page, size };
       const res = await recruiterApiService.getPendingOfferApprovals(params);
       setOffers(res.data.data.content || []);
       setTotalPages(res.data.data.totalPages || 0);
@@ -98,7 +125,7 @@ const OfferApprovals = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, size]);
 
-  // Status filter reloads immediately (and jumps back to page 1) on a genuine change - not on mount.
+  // Status/position filters reload immediately (and jump back to page 1) on a genuine change - not on mount.
   const prevStatusFilterRef = useRef(statusFilter);
   useEffect(() => {
     if (prevStatusFilterRef.current === statusFilter) return;
@@ -107,6 +134,15 @@ const OfferApprovals = () => {
     load(0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter]);
+
+  const prevPositionIdRef = useRef(positionId);
+  useEffect(() => {
+    if (prevPositionIdRef.current === positionId) return;
+    prevPositionIdRef.current = positionId;
+    setPage(0);
+    load(0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [positionId]);
 
   // Search is performed server-side - only reload (and jump back to page 1) on a genuine
   // searchText change, not on mount.
@@ -168,22 +204,54 @@ const OfferApprovals = () => {
         )}
       </div>
 
-      <div className="d-flex align-items-center flex-wrap gap-2 mb-3">
-        <div className="search-boxpost">
-          <i className="bi bi-search" />
-          <input
-            className="form-control form-control-sm"
-            placeholder="Search candidates..."
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-          />
+      <div className="app-card mb-3">
+        <div className="row">
+          <div className="col-md-6 mb-2">
+            <label className="form-label fs-14 text-muted">Requisition</label>
+            <select className="form-select" value={requisitionId} onChange={(e) => setRequisitionId(e.target.value)}>
+              <option value="">All Requisitions</option>
+              {requisitions.map((r) => (
+                <option key={r.id} value={r.id}>{r.requisitionCode} - {r.title}</option>
+              ))}
+            </select>
+          </div>
+          <div className="col-md-6 mb-2">
+            <label className="form-label fs-14 text-muted">Position</label>
+            <select
+              className="form-select"
+              value={positionId}
+              disabled={!requisitionId}
+              onChange={(e) => setPositionId(e.target.value)}
+            >
+              <option value="">All Positions</option>
+              {positions.map((p) => (
+                <option key={p.id} value={p.id}>{p.positionTitleName} - {p.locationName}</option>
+              ))}
+            </select>
+          </div>
         </div>
-        <select className="form-select form-select-sm" style={{ width: 180 }} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-          <option value="">All Status</option>
-          {statusOptions.map((s) => (
-            <option key={s} value={s}>{s.replace(/_/g, " ")}</option>
-          ))}
-        </select>
+      </div>
+
+      <div className="row filters-row g-2 mb-3 align-items-center">
+        <div className="col-lg col-md-4">
+          <div className="search-boxpost">
+            <i className="bi bi-search" />
+            <input
+              className="form-control filter-pill"
+              placeholder="Search candidates..."
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+            />
+          </div>
+        </div>
+        <div className="col-lg-auto col-md-4">
+          <select className="form-select filter-pill" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+            <option value="">All Status</option>
+            {statusOptions.map((s) => (
+              <option key={s} value={s}>{s.replace(/_/g, " ")}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {acting && (
@@ -217,6 +285,7 @@ const OfferApprovals = () => {
                 <span className={`badge bg-${STATUS_BADGE[offer.status] || "secondary"} me-2`}>{offer.status.replace(/_/g, " ")}</span>
                 <span className="fw-bold">{offer.candidateName}</span>
                 {offer.positionTitleName && <span className="text-muted"> — {offer.positionTitleName}</span>}
+                {offer.requisitionCode && <span className="text-muted"> ({offer.requisitionCode})</span>}
                 <button
                   type="button"
                   className="btn btn-link p-0 lh-1 history-icon-btn ms-2"

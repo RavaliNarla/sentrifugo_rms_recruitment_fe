@@ -391,7 +391,7 @@ const JobPostings = () => {
         </div>
         {hasActiveFilters && (
           <div className="col-lg-auto col-md-4">
-            <button type="button" className="btn btn-outline-secondary filter-pill" onClick={clearFilters}>
+            <button type="button" className="btn btn-link clear-filters-link p-0 text-decoration-none" onClick={clearFilters}>
               <i className="bi bi-x-lg me-1" /> Clear Filters
             </button>
           </div>

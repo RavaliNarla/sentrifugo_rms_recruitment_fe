@@ -190,22 +190,26 @@ const Approvals = () => {
         )}
       </div>
 
-      <div className="d-flex align-items-center flex-wrap gap-2 mb-3">
-        <div className="search-boxpost">
-          <i className="bi bi-search" />
-          <input
-            className="form-control form-control-sm"
-            placeholder="Search by requisition code or title..."
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-          />
+      <div className="row filters-row g-2 mb-3 align-items-center">
+        <div className="col-lg col-md-4">
+          <div className="search-boxpost">
+            <i className="bi bi-search" />
+            <input
+              className="form-control filter-pill"
+              placeholder="Search by requisition code or title..."
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+            />
+          </div>
         </div>
-        <select className="form-select form-select-sm" style={{ width: 180 }} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-          <option value="">All Status</option>
-          {statusOptions.map((s) => (
-            <option key={s} value={s}>{s.replace(/_/g, " ")}</option>
-          ))}
-        </select>
+        <div className="col-lg-auto col-md-4">
+          <select className="form-select filter-pill" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+            <option value="">All Status</option>
+            {statusOptions.map((s) => (
+              <option key={s} value={s}>{s.replace(/_/g, " ")}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {acting && (
