@@ -20,6 +20,7 @@ const UsersPage = () => {
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
   const [searchText, setSearchText] = useState("");
+  const [viewOnly, setViewOnly] = useState(false);
   const submittingRef = useRef(false);
   const [confirmState, setConfirmState] = useState({ show: false, message: "", onConfirm: null });
 
@@ -70,6 +71,7 @@ const UsersPage = () => {
   }, [searchText]);
 
   const openAdd = () => {
+    setViewOnly(false);
     setEditing(null);
     setForm(EMPTY_FORM);
     setErrors({});
@@ -77,10 +79,17 @@ const UsersPage = () => {
   };
 
   const openEdit = (user) => {
+    setViewOnly(false);
     setEditing(user);
     setForm({ name: user.name, role: user.role, email: user.email, password: "" });
     setErrors({});
     setShowModal(true);
+  };
+
+  // View reuses the Edit popup with every field disabled and only a Close button.
+  const openView = (user) => {
+    openEdit(user);
+    setViewOnly(true);
   };
 
   const validate = () => {
@@ -180,7 +189,7 @@ const UsersPage = () => {
               <th>Name</th>
               <th>Role</th>
               <th>Email</th>
-              <th style={{ width: 120 }}>Actions</th>
+              <th style={{ width: 160 }}>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -194,10 +203,13 @@ const UsersPage = () => {
                 </td>
                 <td>{user.email}</td>
                 <td>
-                  <button className="icon-btn-circle me-2" onClick={() => openEdit(user)}>
+                  <button className="icon-btn-circle me-2" title="View" onClick={() => openView(user)}>
+                    <i className="bi bi-eye" />
+                  </button>
+                  <button className="icon-btn-circle me-2" title="Edit" onClick={() => openEdit(user)}>
                     <i className="bi bi-pencil" />
                   </button>
-                  <button className="icon-btn-circle danger" onClick={() => handleDelete(user)}>
+                  <button className="icon-btn-circle danger" title="Delete" onClick={() => handleDelete(user)}>
                     <i className="bi bi-trash" />
                   </button>
                 </td>
@@ -219,10 +231,11 @@ const UsersPage = () => {
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">{editing ? "Edit" : "Add"} User</h5>
+                <h5 className="modal-title">{viewOnly ? "View" : editing ? "Edit" : "Add"} User</h5>
                 <button className="btn-close" onClick={() => setShowModal(false)} />
               </div>
               <div className="modal-body">
+                <fieldset disabled={viewOnly} style={{ border: 0, padding: 0, margin: 0 }}>
                 <div className="mb-3">
                   <label className="form-label">Full Name <span className="text-danger">*</span></label>
                   <input
@@ -255,6 +268,7 @@ const UsersPage = () => {
                   />
                   <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.email || ""}</div>
                 </div>
+                {!viewOnly && (
                 <div className="mb-3">
                   <label className="form-label">
                     Password {!editing && <span className="text-danger">*</span>}
@@ -269,18 +283,26 @@ const UsersPage = () => {
                   />
                   <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.password || ""}</div>
                 </div>
+                )}
                 {editing?.employeeId && (
                   <div className="mb-1">
                     <label className="form-label">Employee Code</label>
                     <input className="form-control" value={editing.employeeId} disabled />
                   </div>
                 )}
+                </fieldset>
               </div>
               <div className="modal-footer">
-                <button className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
-                <button className="btn btn-primary" disabled={saving} onClick={handleSave}>
-                  {saving ? "Saving..." : editing ? "Update" : "Save"}
-                </button>
+                {viewOnly ? (
+                  <button className="btn btn-secondary" onClick={() => setShowModal(false)}>Close</button>
+                ) : (
+                  <>
+                    <button className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
+                    <button className="btn btn-primary" disabled={saving} onClick={handleSave}>
+                      {saving ? "Saving..." : editing ? "Update" : "Save"}
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           </div>

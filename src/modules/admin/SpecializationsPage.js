@@ -20,6 +20,7 @@ const SpecializationsPage = () => {
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [viewOnly, setViewOnly] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const [nameError, setNameError] = useState("");
   const [saving, setSaving] = useState(false);
@@ -73,6 +74,7 @@ const SpecializationsPage = () => {
   }, [searchText]);
 
   const openAdd = () => {
+    setViewOnly(false);
     setEditing(null);
     setForm(EMPTY_FORM);
     setNameError("");
@@ -80,10 +82,17 @@ const SpecializationsPage = () => {
   };
 
   const openEdit = (item) => {
+    setViewOnly(false);
     setEditing(item);
     setForm({ name: item.name, educationQualificationId: item.educationQualificationId || "" });
     setNameError("");
     setShowModal(true);
+  };
+
+  // View reuses the Edit popup with every field disabled and only a Close button.
+  const openView = (item) => {
+    openEdit(item);
+    setViewOnly(true);
   };
 
   const handleSave = async () => {
@@ -159,7 +168,7 @@ const SpecializationsPage = () => {
               <th>#</th>
               <th>Name</th>
               <th>Education Level</th>
-              <th style={{ width: 120 }}>Actions</th>
+              <th style={{ width: 160 }}>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -169,10 +178,13 @@ const SpecializationsPage = () => {
                 <td>{item.name}</td>
                 <td>{item.educationQualificationName || <span className="text-muted">General / Any</span>}</td>
                 <td>
-                  <button className="icon-btn-circle me-2" onClick={() => openEdit(item)}>
+                  <button className="icon-btn-circle me-2" title="View" onClick={() => openView(item)}>
+                    <i className="bi bi-eye" />
+                  </button>
+                  <button className="icon-btn-circle me-2" title="Edit" onClick={() => openEdit(item)}>
                     <i className="bi bi-pencil" />
                   </button>
-                  <button className="icon-btn-circle danger" onClick={() => handleDelete(item)}>
+                  <button className="icon-btn-circle danger" title="Delete" onClick={() => handleDelete(item)}>
                     <i className="bi bi-trash" />
                   </button>
                 </td>
@@ -194,9 +206,10 @@ const SpecializationsPage = () => {
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">{editing ? "Edit" : "Add"} Specialization</h5>
+                <h5 className="modal-title">{viewOnly ? "View" : editing ? "Edit" : "Add"} Specialization</h5>
                 <button className="btn-close" onClick={() => setShowModal(false)} />
               </div>
+              <fieldset disabled={viewOnly} style={{ border: 0, padding: 0, margin: 0 }}>
               <div className="modal-body">
                 <div className="mb-3">
                   <label className="form-label">Name <span className="text-danger">*</span></label>
@@ -221,11 +234,16 @@ const SpecializationsPage = () => {
                   <small className="text-muted">Leave as "General / Any" if this specialization isn't tied to one specific education level.</small>
                 </div>
               </div>
+              </fieldset>
               <div className="modal-footer">
-                <button className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
-                <button className="btn btn-primary" disabled={saving} onClick={handleSave}>
-                  {saving ? "Saving..." : editing ? "Update" : "Save"}
+                <button className="btn btn-secondary" onClick={() => setShowModal(false)}>
+                  {viewOnly ? "Close" : "Cancel"}
                 </button>
+                {!viewOnly && (
+                  <button className="btn btn-primary" disabled={saving} onClick={handleSave}>
+                    {saving ? "Saving..." : editing ? "Update" : "Save"}
+                  </button>
+                )}
               </div>
             </div>
           </div>

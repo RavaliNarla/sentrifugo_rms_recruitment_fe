@@ -9,6 +9,7 @@ const DepartmentsPage = () => (
     add={masterApiService.addDepartment}
     update={masterApiService.updateDepartment}
     remove={masterApiService.deleteDepartment}
+    withDescription
   />
 );
 

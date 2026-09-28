@@ -4,7 +4,7 @@ import masterApiService from "../../core/masterApiService";
 import ConfirmModal from "../../shared/ConfirmModal";
 import Pagination from "../../shared/Pagination";
 
-const EMPTY_FORM = { name: "" };
+const EMPTY_FORM = { name: "", description: "" };
 
 /**
  * Certification master (e.g. "NCCBM Certified Quality Controller") - optional,
@@ -19,6 +19,7 @@ const CertificationsPage = () => {
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [viewOnly, setViewOnly] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const [nameError, setNameError] = useState("");
   const [saving, setSaving] = useState(false);
@@ -69,6 +70,7 @@ const CertificationsPage = () => {
   }, [searchText]);
 
   const openAdd = () => {
+    setViewOnly(false);
     setEditing(null);
     setForm(EMPTY_FORM);
     setNameError("");
@@ -76,10 +78,17 @@ const CertificationsPage = () => {
   };
 
   const openEdit = (item) => {
+    setViewOnly(false);
     setEditing(item);
-    setForm({ name: item.name });
+    setForm({ name: item.name, description: item.description || "" });
     setNameError("");
     setShowModal(true);
+  };
+
+  // View reuses the Edit popup with every field disabled and only a Close button.
+  const openView = (item) => {
+    openEdit(item);
+    setViewOnly(true);
   };
 
   const handleSave = async () => {
@@ -153,7 +162,8 @@ const CertificationsPage = () => {
             <tr className="text-muted fs-13">
               <th>#</th>
               <th>Name</th>
-              <th style={{ width: 120 }}>Actions</th>
+              <th>Description</th>
+              <th style={{ width: 160 }}>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -161,11 +171,15 @@ const CertificationsPage = () => {
               <tr key={item.id}>
                 <td>{page * size + idx + 1}</td>
                 <td>{item.name}</td>
+                <td className="text-muted">{item.description || "-"}</td>
                 <td>
-                  <button className="icon-btn-circle me-2" onClick={() => openEdit(item)}>
+                  <button className="icon-btn-circle me-2" title="View" onClick={() => openView(item)}>
+                    <i className="bi bi-eye" />
+                  </button>
+                  <button className="icon-btn-circle me-2" title="Edit" onClick={() => openEdit(item)}>
                     <i className="bi bi-pencil" />
                   </button>
-                  <button className="icon-btn-circle danger" onClick={() => handleDelete(item)}>
+                  <button className="icon-btn-circle danger" title="Delete" onClick={() => handleDelete(item)}>
                     <i className="bi bi-trash" />
                   </button>
                 </td>
@@ -173,7 +187,7 @@ const CertificationsPage = () => {
             ))}
             {items.length === 0 && (
               <tr>
-                <td colSpan={3} className="text-center text-muted py-4">No records found</td>
+                <td colSpan={4} className="text-center text-muted py-4">No records found</td>
               </tr>
             )}
           </tbody>
@@ -187,9 +201,10 @@ const CertificationsPage = () => {
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">{editing ? "Edit" : "Add"} Certification</h5>
+                <h5 className="modal-title">{viewOnly ? "View" : editing ? "Edit" : "Add"} Certification</h5>
                 <button className="btn-close" onClick={() => setShowModal(false)} />
               </div>
+              <fieldset disabled={viewOnly} style={{ border: 0, padding: 0, margin: 0 }}>
               <div className="modal-body">
                 <label className="form-label">Name <span className="text-danger">*</span></label>
                 <input
@@ -199,12 +214,27 @@ const CertificationsPage = () => {
                   autoFocus
                 />
                 <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{nameError || ""}</div>
+                <div className="mt-2">
+                  <label className="form-label">Description</label>
+                  <textarea
+                    className="form-control"
+                    rows={3}
+                    maxLength={1000}
+                    value={form.description}
+                    onChange={(e) => setForm({ ...form, description: e.target.value })}
+                  />
+                </div>
               </div>
+              </fieldset>
               <div className="modal-footer">
-                <button className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
-                <button className="btn btn-primary" disabled={saving} onClick={handleSave}>
-                  {saving ? "Saving..." : editing ? "Update" : "Save"}
+                <button className="btn btn-secondary" onClick={() => setShowModal(false)}>
+                  {viewOnly ? "Close" : "Cancel"}
                 </button>
+                {!viewOnly && (
+                  <button className="btn btn-primary" disabled={saving} onClick={handleSave}>
+                    {saving ? "Saving..." : editing ? "Update" : "Save"}
+                  </button>
+                )}
               </div>
             </div>
           </div>

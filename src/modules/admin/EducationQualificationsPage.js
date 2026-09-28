@@ -9,6 +9,7 @@ const EducationQualificationsPage = () => (
     add={masterApiService.addEducationQualification}
     update={masterApiService.updateEducationQualification}
     remove={masterApiService.deleteEducationQualification}
+    withDescription
   />
 );
 

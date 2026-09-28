@@ -7,7 +7,8 @@ import Pagination from "./Pagination";
  * Generic list + add/edit/delete screen for simple "id + name" master data
  * (Departments, Education Qualifications) - paginated + searched server-side.
  */
-const NamedMasterCrudPage = ({ title, getAll, add, update, remove }) => {
+// withDescription: also capture an optional Description (Departments).
+const NamedMasterCrudPage = ({ title, getAll, add, update, remove, withDescription = false }) => {
   const [items, setItems] = useState([]);
   const [page, setPage] = useState(0);
   const [size, setSize] = useState(10);
@@ -16,7 +17,9 @@ const NamedMasterCrudPage = ({ title, getAll, add, update, remove }) => {
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [viewOnly, setViewOnly] = useState(false);
   const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
   const [nameError, setNameError] = useState("");
   const [saving, setSaving] = useState(false);
   const [searchText, setSearchText] = useState("");
@@ -66,17 +69,27 @@ const NamedMasterCrudPage = ({ title, getAll, add, update, remove }) => {
   }, [searchText]);
 
   const openAdd = () => {
+    setViewOnly(false);
     setEditing(null);
     setName("");
+    setDescription("");
     setNameError("");
     setShowModal(true);
   };
 
   const openEdit = (item) => {
+    setViewOnly(false);
     setEditing(item);
     setName(item.name);
+    setDescription(item.description || "");
     setNameError("");
     setShowModal(true);
+  };
+
+  // View reuses the Edit popup with every field disabled and only a Close button.
+  const openView = (item) => {
+    openEdit(item);
+    setViewOnly(true);
   };
 
   const handleSave = async () => {
@@ -88,11 +101,12 @@ const NamedMasterCrudPage = ({ title, getAll, add, update, remove }) => {
     submittingRef.current = true;
     setSaving(true);
     try {
+      const payload = withDescription ? { name, description } : { name };
       if (editing) {
-        await update(editing.id, { name });
+        await update(editing.id, payload);
         toast.success(`${title} updated successfully`);
       } else {
-        await add({ name });
+        await add(payload);
         toast.success(`${title} added successfully`);
       }
       setShowModal(false);
@@ -150,7 +164,8 @@ const NamedMasterCrudPage = ({ title, getAll, add, update, remove }) => {
             <tr className="text-muted fs-13">
               <th>#</th>
               <th>Name</th>
-              <th style={{ width: 120 }}>Actions</th>
+              {withDescription && <th>Description</th>}
+              <th style={{ width: 160 }}>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -158,11 +173,15 @@ const NamedMasterCrudPage = ({ title, getAll, add, update, remove }) => {
               <tr key={item.id}>
                 <td>{page * size + idx + 1}</td>
                 <td>{item.name}</td>
+                {withDescription && <td className="text-muted">{item.description || "-"}</td>}
                 <td>
-                  <button className="icon-btn-circle me-2" onClick={() => openEdit(item)}>
+                  <button className="icon-btn-circle me-2" title="View" onClick={() => openView(item)}>
+                    <i className="bi bi-eye" />
+                  </button>
+                  <button className="icon-btn-circle me-2" title="Edit" onClick={() => openEdit(item)}>
                     <i className="bi bi-pencil" />
                   </button>
-                  <button className="icon-btn-circle danger" onClick={() => handleDelete(item)}>
+                  <button className="icon-btn-circle danger" title="Delete" onClick={() => handleDelete(item)}>
                     <i className="bi bi-trash" />
                   </button>
                 </td>
@@ -170,7 +189,7 @@ const NamedMasterCrudPage = ({ title, getAll, add, update, remove }) => {
             ))}
             {items.length === 0 && (
               <tr>
-                <td colSpan={3} className="text-center text-muted py-4">
+                <td colSpan={withDescription ? 4 : 3} className="text-center text-muted py-4">
                   No records found
                 </td>
               </tr>
@@ -186,11 +205,12 @@ const NamedMasterCrudPage = ({ title, getAll, add, update, remove }) => {
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">{editing ? "Edit" : "Add"} {title}</h5>
+                <h5 className="modal-title">{viewOnly ? "View" : editing ? "Edit" : "Add"} {title}</h5>
                 <button className="btn-close" onClick={() => setShowModal(false)} />
               </div>
+              <fieldset disabled={viewOnly} style={{ border: 0, padding: 0, margin: 0 }}>
               <div className="modal-body">
-                <label className="form-label">Name</label>
+                <label className="form-label">Name <span className="text-danger">*</span></label>
                 <input
                   className={`form-control ${nameError ? "is-invalid" : ""}`}
                   value={name}
@@ -198,12 +218,29 @@ const NamedMasterCrudPage = ({ title, getAll, add, update, remove }) => {
                   autoFocus
                 />
                 <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{nameError || ""}</div>
+                {withDescription && (
+                  <div className="mt-2">
+                    <label className="form-label">Description</label>
+                    <textarea
+                      className="form-control"
+                      rows={3}
+                      maxLength={1000}
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                    />
+                  </div>
+                )}
               </div>
+              </fieldset>
               <div className="modal-footer">
-                <button className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
-                <button className="btn btn-primary" disabled={saving} onClick={handleSave}>
-                  {saving ? "Saving..." : editing ? "Update" : "Save"}
+                <button className="btn btn-secondary" onClick={() => setShowModal(false)}>
+                  {viewOnly ? "Close" : "Cancel"}
                 </button>
+                {!viewOnly && (
+                  <button className="btn btn-primary" disabled={saving} onClick={handleSave}>
+                    {saving ? "Saving..." : editing ? "Update" : "Save"}
+                  </button>
+                )}
               </div>
             </div>
           </div>
