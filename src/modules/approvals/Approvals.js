@@ -152,12 +152,12 @@ const Approvals = () => {
     setActing(true);
     try {
       await recruiterApiService.approveOrReject({ requisitionIds: selected, approve, comments });
-      toast.success(approve ? "Requisition(s) approved" : "Requisition(s) rejected");
+      toast.success(approve ? "Requisition(s) approved successfully" : "Requisition(s) rejected successfully");
       setSelected([]);
       setComments("");
       load();
     } catch (e) {
-      toast.error(e.response?.data?.message || "Action failed");
+      toast.error(e.response?.data?.message || (approve ? "Failed to approve requisitions" : "Failed to reject requisitions"));
     } finally {
       actingRef.current = false;
       setActing(false);

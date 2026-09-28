@@ -39,7 +39,7 @@ const NamedMasterCrudPage = ({ title, getAll, add, update, remove }) => {
       setTotalPages(data.totalPages || 0);
       setTotalElements(data.totalElements || 0);
     } catch (e) {
-      toast.error(e.response?.data?.message || "Failed to load data");
+      toast.error(e.response?.data?.message || `Failed to load ${title.toLowerCase()}s`);
     } finally {
       setLoading(false);
       loadInFlightRef.current = false;
@@ -98,7 +98,7 @@ const NamedMasterCrudPage = ({ title, getAll, add, update, remove }) => {
       setShowModal(false);
       loadData(searchText, page, size);
     } catch (e) {
-      toast.error(e.response?.data?.message || "Save failed");
+      toast.error(e.response?.data?.message || `Failed to save ${title.toLowerCase()}`);
     } finally {
       submittingRef.current = false;
       setSaving(false);
@@ -113,7 +113,7 @@ const NamedMasterCrudPage = ({ title, getAll, add, update, remove }) => {
         toast.success(`${title} deleted successfully`);
         loadData(searchText, page, size);
       } catch (e) {
-        toast.error(e.response?.data?.message || "Delete failed");
+        toast.error(e.response?.data?.message || `Failed to delete ${title.toLowerCase()}`);
       }
     });
   };

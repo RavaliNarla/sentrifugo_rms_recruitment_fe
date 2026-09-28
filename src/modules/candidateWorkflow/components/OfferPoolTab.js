@@ -257,7 +257,7 @@ const OfferPoolTab = ({ positionId, isActive }) => {
     setSubmitting(true);
     try {
       await recruiterApiService.submitOffersForApproval(ids);
-      toast.success("Offer(s) submitted for approval");
+      toast.success("Offer(s) submitted for approval successfully");
       setSelected([]);
       load();
       window.dispatchEvent(new CustomEvent("rms:notifications-refresh"));

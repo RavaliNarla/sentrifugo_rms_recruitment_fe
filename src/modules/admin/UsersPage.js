@@ -125,7 +125,7 @@ const UsersPage = () => {
       setShowModal(false);
       loadUsers(searchText, page, size);
     } catch (e) {
-      toast.error(e.response?.data?.message || "Save failed");
+      toast.error(e.response?.data?.message || "Failed to save user");
     } finally {
       submittingRef.current = false;
       setSaving(false);
@@ -140,7 +140,7 @@ const UsersPage = () => {
         toast.success("User deleted successfully");
         loadUsers(searchText, page, size);
       } catch (e) {
-        toast.error(e.response?.data?.message || "Delete failed");
+        toast.error(e.response?.data?.message || "Failed to delete user");
       }
     });
   };

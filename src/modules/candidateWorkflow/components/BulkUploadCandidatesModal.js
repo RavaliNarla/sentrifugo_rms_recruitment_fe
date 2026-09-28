@@ -40,7 +40,7 @@ const BulkUploadCandidatesModal = ({ positionId, onClose, onImported }) => {
     }
     const name = chosen.name.toLowerCase();
     if (!name.endsWith(".xlsx") && !name.endsWith(".xls")) {
-      toast.error("Please select an Excel file (.xlsx)");
+      toast.error("Select an Excel file (.xlsx)");
       e.target.value = "";
       setFile(null);
       return;
@@ -50,7 +50,7 @@ const BulkUploadCandidatesModal = ({ positionId, onClose, onImported }) => {
 
   const handleImport = async () => {
     if (!file) {
-      toast.error("Please upload an Excel file first");
+      toast.error("Upload an Excel file first");
       return;
     }
     setBusy(true);

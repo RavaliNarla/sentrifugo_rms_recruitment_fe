@@ -43,7 +43,7 @@ const SpecializationsPage = () => {
       setTotalPages(data.totalPages || 0);
       setTotalElements(data.totalElements || 0);
     } catch (e) {
-      toast.error(e.response?.data?.message || "Failed to load data");
+      toast.error(e.response?.data?.message || "Failed to load specializations");
     } finally {
       setLoading(false);
       loadInFlightRef.current = false;
@@ -106,7 +106,7 @@ const SpecializationsPage = () => {
       setShowModal(false);
       loadData(searchText, page, size);
     } catch (e) {
-      toast.error(e.response?.data?.message || "Save failed");
+      toast.error(e.response?.data?.message || "Failed to save specialization");
     } finally {
       submittingRef.current = false;
       setSaving(false);
@@ -121,7 +121,7 @@ const SpecializationsPage = () => {
         toast.success("Specialization deleted successfully");
         loadData(searchText, page, size);
       } catch (e) {
-        toast.error(e.response?.data?.message || "Delete failed");
+        toast.error(e.response?.data?.message || "Failed to delete specialization");
       }
     });
   };

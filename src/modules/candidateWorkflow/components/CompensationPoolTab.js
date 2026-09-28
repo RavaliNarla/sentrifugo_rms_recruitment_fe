@@ -46,7 +46,7 @@ const CompensationPoolTab = ({ positionId, isActive }) => {
       setDetails(map);
       setTotalPages(res.data.data.totalPages || 0);
     } catch (e) {
-      toast.error("Failed to load compensation section");
+      toast.error("Failed to load Compensation Management");
     } finally {
       setLoading(false);
     }
@@ -111,7 +111,7 @@ const CompensationPoolTab = ({ positionId, isActive }) => {
         compensationComments: d.compensationComments || null,
         agreedCtc: d.agreedCtc || null,
       });
-      toast.success("Compensation details saved");
+      toast.success("Compensation details saved successfully");
     } catch (e) {
       toast.error(e.response?.data?.message || "Failed to save compensation details");
     } finally {
@@ -130,7 +130,7 @@ const CompensationPoolTab = ({ positionId, isActive }) => {
   const handleMoveToOffer = async () => {
     try {
       await recruiterApiService.moveToOffer(selected);
-      toast.success("Candidate(s) moved to Offer Pool");
+      toast.success("Candidate(s) moved to Offer Pool successfully");
       setSelected([]);
       load();
     } catch (e) {

@@ -70,7 +70,7 @@ const CreateRequisition = () => {
         navigate("/job-postings");
       } else {
         const res = await recruiterApiService.createRequisition(form);
-        toast.success("Requisition created successfully");
+        toast.success("Requisition added successfully");
         navigate(`/job-postings/${res.data.data.id}/add-position`);
       }
     } catch (e) {

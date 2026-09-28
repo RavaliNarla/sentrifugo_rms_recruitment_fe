@@ -162,7 +162,7 @@ const Login = () => {
         otp,
         newPassword,
       });
-      toast.success("Password updated. Please sign in.");
+      toast.success("Password updated successfully. Sign in with your new password.");
       closeForgot();
       setPassword("");
     } catch (err) {

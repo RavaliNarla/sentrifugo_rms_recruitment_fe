@@ -158,7 +158,7 @@ const InterviewPoolTab = ({ positionId, isActive }) => {
   const handleMoveToCompensation = async () => {
     try {
       await recruiterApiService.moveToCompensation(selected);
-      toast.success("Candidate(s) moved to Compensation Section");
+      toast.success("Candidate(s) moved to Compensation Management successfully");
       setSelected([]);
       load();
     } catch (e) {

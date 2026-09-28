@@ -42,7 +42,7 @@ const CertificationsPage = () => {
       setTotalPages(data.totalPages || 0);
       setTotalElements(data.totalElements || 0);
     } catch (e) {
-      toast.error(e.response?.data?.message || "Failed to load data");
+      toast.error(e.response?.data?.message || "Failed to load certifications");
     } finally {
       setLoading(false);
       loadInFlightRef.current = false;
@@ -101,7 +101,7 @@ const CertificationsPage = () => {
       setShowModal(false);
       loadData(searchText, page, size);
     } catch (e) {
-      toast.error(e.response?.data?.message || "Save failed");
+      toast.error(e.response?.data?.message || "Failed to save certification");
     } finally {
       submittingRef.current = false;
       setSaving(false);
@@ -116,7 +116,7 @@ const CertificationsPage = () => {
         toast.success("Certification deleted successfully");
         loadData(searchText, page, size);
       } catch (e) {
-        toast.error(e.response?.data?.message || "Delete failed");
+        toast.error(e.response?.data?.message || "Failed to delete certification");
       }
     });
   };

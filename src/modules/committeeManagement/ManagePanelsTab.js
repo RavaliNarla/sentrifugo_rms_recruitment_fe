@@ -88,7 +88,7 @@ const ManagePanelsTab = () => {
         toast.success("Panel updated successfully");
       } else {
         await recruiterApiService.createPanel({ name, memberIds: selectedMembers });
-        toast.success("Panel created successfully");
+        toast.success("Panel added successfully");
       }
       resetForm();
       load();

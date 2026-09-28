@@ -76,9 +76,10 @@ const CandidateProfileModal = ({ candidate, onClose, onDecide, onViewFile }) => 
             <button className="btn btn-secondary" onClick={onClose}>Close</button>
             {showShortlistActions && (
               <>
-                <button className="btn btn-outline-secondary" onClick={() => onDecide(candidate.id, "HOLD")}>On-Hold</button>
-                <button className="btn btn-outline-danger" onClick={() => onDecide(candidate.id, "REJECT")}>Reject</button>
-                <button className="btn btn-primary" onClick={() => onDecide(candidate.id, "SHORTLIST")}>Shortlist</button>
+                {/* The button matching the current status is disabled - re-applying it would be a no-op. */}
+                <button className="btn btn-outline-secondary" disabled={candidate.status === "ON_HOLD"} onClick={() => onDecide(candidate.id, "HOLD")}>On-Hold</button>
+                <button className="btn btn-outline-danger" disabled={candidate.status === "REJECTED"} onClick={() => onDecide(candidate.id, "REJECT")}>Reject</button>
+                <button className="btn btn-primary" disabled={candidate.status === "SHORTLISTED"} onClick={() => onDecide(candidate.id, "SHORTLIST")}>Shortlist</button>
               </>
             )}
           </div>

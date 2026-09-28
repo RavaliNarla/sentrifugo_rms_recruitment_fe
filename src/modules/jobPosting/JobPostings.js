@@ -183,12 +183,12 @@ const JobPostings = () => {
       setSubmitting(true);
       try {
         await recruiterApiService.submitForApproval(selected);
-        toast.success("Requisition(s) submitted for approval");
+        toast.success("Requisition(s) submitted for approval successfully");
         setSelected([]);
         await loadRequisitions();
         window.dispatchEvent(new CustomEvent("rms:notifications-refresh"));
       } catch (e) {
-        toast.error(e.response?.data?.message || "Submit failed");
+        toast.error(e.response?.data?.message || "Failed to submit requisitions for approval");
       } finally {
         setSubmitting(false);
       }
@@ -200,10 +200,10 @@ const JobPostings = () => {
       closeConfirm();
       try {
         await recruiterApiService.markFulfilled(id);
-        toast.success("Requisition marked as fulfilled");
+        toast.success("Requisition marked as fulfilled successfully");
         loadRequisitions();
       } catch (e) {
-        toast.error(e.response?.data?.message || "Action failed");
+        toast.error(e.response?.data?.message || "Failed to mark requisition as fulfilled");
       }
     });
   };
@@ -213,10 +213,10 @@ const JobPostings = () => {
       closeConfirm();
       try {
         await recruiterApiService.unmarkFulfilled(id);
-        toast.success("Requisition reopened");
+        toast.success("Requisition reopened successfully");
         loadRequisitions();
       } catch (e) {
-        toast.error(e.response?.data?.message || "Action failed");
+        toast.error(e.response?.data?.message || "Failed to reopen requisition");
       }
     });
   };

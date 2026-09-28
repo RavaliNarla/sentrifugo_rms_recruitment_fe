@@ -38,7 +38,13 @@ const STATUS_LABELS = {
   DECLINED: "DECLINED",
 };
 
-export const getStatusLabel = (status) => STATUS_LABELS[status] || status.replace(/_/g, " ");
+const DECISION_SUCCESS_MESSAGES = {
+  SHORTLIST: "Candidate shortlisted successfully. A notification email has been sent to the candidate.",
+  REJECT: "Candidate rejected successfully. A notification email has been sent to the candidate.",
+  HOLD: "Candidate put on hold successfully. A notification email has been sent to the candidate.",
+};
+
+export const getStatusLabel =(status) => STATUS_LABELS[status] || status.replace(/_/g, " ");
 
 /** Shortlist buttons only for Applied / SHORTLISTED / REJECTED / ON HOLD. */
 export const canShortlistDecide = (status) =>
@@ -154,7 +160,7 @@ const CandidatePoolTab = ({ requisitionId, positionId, isActive }) => {
   const handleDecide = async (id, decision) => {
     try {
       await recruiterApiService.decideCandidate(id, decision);
-      toast.success("Decision recorded. Status email will be sent.");
+      toast.success(DECISION_SUCCESS_MESSAGES[decision] || "Decision recorded successfully.");
       setProfileCandidate(null);
       load();
     } catch (e) {
