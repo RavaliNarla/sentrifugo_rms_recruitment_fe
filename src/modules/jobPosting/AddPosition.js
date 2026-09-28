@@ -17,7 +17,7 @@ const EMPTY_FORM = {
   specializationId: "",
   experienceYears: "",
   certificationId: "",
-  medicalFitnessRequired: false,
+  medicalFitnessRequired: true,
   employmentType: "",
   contractualPeriod: "",
   vacancies: "",
@@ -287,6 +287,7 @@ const AddPosition = () => {
     } else if (form.approvedOn > todayStr()) {
       next.approvedOn = "Approved On cannot be a future date";
     }
+    if (!form.medicalFitnessRequired) next.medicalFitnessRequired = "Medical Fitness Required must be checked";
     if (!approvalDoc && !editingPosition?.approvalDocUrl) {
       next.approvalDoc = "Upload Approval Email/Document is required";
     }
@@ -296,7 +297,7 @@ const AddPosition = () => {
     const fieldOrder = [
       "departmentId", "positionTitleId", "locationId", "jobDescription",
       "educationQualificationId", "experienceYears", "employmentType",
-      "contractualPeriod", "vacancies", "approvedById", "approvedOn",
+      "contractualPeriod", "vacancies", "medicalFitnessRequired", "approvedById", "approvedOn",
       "approvedByOtherText", "approvalDoc",
     ];
     const firstErrorField = fieldOrder.find((f) => next[f]);
@@ -517,15 +518,25 @@ const AddPosition = () => {
         </div>
       </div>
 
-      <div className="form-check mb-3">
-        <input
-          type="checkbox"
-          className="form-check-input"
-          id="medicalFitnessRequired"
-          checked={form.medicalFitnessRequired}
-          onChange={(e) => setForm({ ...form, medicalFitnessRequired: e.target.checked })}
-        />
-        <label className="form-check-label" htmlFor="medicalFitnessRequired" style={{ fontSize: "0.875rem" }}>Medical Fitness Required</label>
+      <div className="mb-3" ref={(el) => (fieldRefs.current.medicalFitnessRequired = el)}>
+        <div className="form-check">
+          <input
+            type="checkbox"
+            className={`form-check-input ${errors.medicalFitnessRequired ? "is-invalid" : ""}`}
+            id="medicalFitnessRequired"
+            checked={form.medicalFitnessRequired}
+            onChange={(e) => {
+              const checked = e.target.checked;
+              setForm((prev) => ({ ...prev, medicalFitnessRequired: checked }));
+              setErrors((prev) => ({ ...prev, medicalFitnessRequired: checked ? undefined : "Medical Fitness Required must be checked" }));
+            }}
+          />
+          {/* Bootstrap turns a label red next to an .is-invalid checkbox; keep it normal - only the message is red. */}
+          <label className="form-check-label" htmlFor="medicalFitnessRequired" style={{ fontSize: "0.875rem", color: "var(--bs-body-color)" }}>
+            Medical Fitness Required <span className="text-danger">*</span>
+          </label>
+        </div>
+        <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.medicalFitnessRequired || ""}</div>
       </div>
 
       <hr className="my-3" />

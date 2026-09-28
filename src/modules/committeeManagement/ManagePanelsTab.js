@@ -163,7 +163,13 @@ const ManagePanelsTab = () => {
           <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.members || ""}</div>
         </div>
         <div className="d-flex justify-content-end gap-2">
-          {editing && <button className="btn btn-outline-secondary" onClick={resetForm}>Cancel</button>}
+          <button
+            className="btn btn-outline-secondary"
+            onClick={resetForm}
+            disabled={!editing && !name.trim() && selectedMembers.length === 0}
+          >
+            Cancel
+          </button>
           <button className="btn btn-primary" onClick={handleSave}>{editing ? "Update Panel" : "Save Panel"}</button>
         </div>
       </div>

@@ -82,6 +82,8 @@ const recruiterApiService = {
 
   // Interview pool
   searchInterviewPool: (params) => recruiterApi.get("/interview-pool/search", { params }),
+  getMyInterviewRequisitions: () => recruiterApi.get("/interview-pool/my-requisitions"),
+  getMyInterviewPositionIds: (requisitionId) => recruiterApi.get("/interview-pool/my-position-ids", { params: { requisitionId } }),
   getMyInterviews: (positionId, interviewDate) =>
     recruiterApi.get("/interview-pool/my-interviews", { params: { positionId, interviewDate: interviewDate || undefined } }),
   submitScore: (payload) => recruiterApi.post("/interview-pool/score", payload),

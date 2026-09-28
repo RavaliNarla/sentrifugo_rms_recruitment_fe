@@ -399,13 +399,11 @@ const JobPostings = () => {
         )}
       </div>
 
-      {selected.length > 0 && (
-        <div className="bulk-actions-bar">
-          <button className="btn btn-blue-dark" onClick={handleSubmit} disabled={submitting}>
-            <i className="bi bi-send me-1" /> Submit for Approval ({selected.length})
-          </button>
-        </div>
-      )}
+      <div className="bulk-actions-bar">
+        <button className="btn btn-blue-dark" onClick={handleSubmit} disabled={submitting || selected.length === 0}>
+          <i className="bi bi-send me-1" /> Submit for Approval{selected.length > 0 ? ` (${selected.length})` : ""}
+        </button>
+      </div>
 
       {submitting && (
         <div
@@ -436,7 +434,7 @@ const JobPostings = () => {
           return (
             <div className="requisition-card" key={req.id}>
               <div className="d-flex justify-content-between align-items-start" style={{ cursor: "pointer" }} onClick={() => toggleExpand(req.id)}>
-                <div className="d-flex align-items-start gap-2">
+                <div className="d-flex align-items-start gap-2 req-left">
                   <input
                     type="checkbox"
                     className="form-check-input mt-1"
@@ -445,18 +443,18 @@ const JobPostings = () => {
                     onClick={(e) => e.stopPropagation()}
                     onChange={() => toggleSelect(req.id)}
                   />
-                  <div>
+                  <div className="req-left-body">
                     <div className="d-flex align-items-center gap-2 mb-1">
                       <span className="badge bg-light text-dark border">{req.requisitionCode}</span>
                       <span className={`status-pill ${STATUS_PILL[req.status] || "status-pill-secondary"}`}>
                         {req.status === "FULFILLED" ? "Fulfilled" : req.status.replace(/_/g, " ")}
                       </span>
                     </div>
-                    <div className="d-flex align-items-center gap-2">
-                      <div className="req-code">{req.title}</div>
+                    <div className="d-flex align-items-center gap-2 req-title-row">
+                      <div className="req-code req-title" title={req.title}>{req.title}</div>
                       <button
                         type="button"
-                        className="btn btn-link p-0 lh-1 history-icon-btn"
+                        className="btn btn-link p-0 lh-1 history-icon-btn flex-shrink-0"
                         title="Approval History"
                         onClick={(e) => openApprovalHistory(req, e)}
                       >
@@ -470,7 +468,7 @@ const JobPostings = () => {
                   </div>
                 </div>
 
-                <div className="d-flex align-items-center gap-3">
+                <div className="d-flex align-items-center gap-3 req-right">
                   <div className="req-meta d-none d-md-flex me-3">
                     <span><i className="bi bi-diagram-3" />Departments - {departmentCount}</span>
                     <span><i className="bi bi-briefcase" />Positions - {positions.length}</span>
@@ -487,12 +485,12 @@ const JobPostings = () => {
                     </button>
                   )}
                   {req.status === "APPROVED" && (
-                    <button className="btn btn-sm btn-blue-dark" onClick={(e) => { e.stopPropagation(); handleFulfil(req.id); }}>
+                    <button className="btn btn-sm btn-blue-dark text-nowrap" onClick={(e) => { e.stopPropagation(); handleFulfil(req.id); }}>
                       Mark Fulfilled
                     </button>
                   )}
                   {req.status === "FULFILLED" && (
-                    <button className="btn btn-sm btn-outline-secondary" onClick={(e) => { e.stopPropagation(); handleUnfulfil(req.id); }}>
+                    <button className="btn btn-sm btn-outline-secondary text-nowrap" onClick={(e) => { e.stopPropagation(); handleUnfulfil(req.id); }}>
                       Undo Fulfilled
                     </button>
                   )}

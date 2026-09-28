@@ -30,6 +30,8 @@ const poolStatusLabel = (status, round) => {
   return `L${roundNum} ${label}`;
 };
 
+const STATUS_FILTER_OPTIONS = ["INVITE_SENT", "SCHEDULED", "DECLINED", "QUALIFIED", "DISQUALIFIED"];
+
 const decisionLabel = (d) => {
   if (!d) return "-";
   if (d === "SELECT") return "Select (Recommend)";
@@ -76,11 +78,14 @@ const InterviewPoolTab = ({ positionId, isActive }) => {
   const [loading, setLoading] = useState(false);
   const [showNextRoundModal, setShowNextRoundModal] = useState(false);
   const [searchText, setSearchText] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
 
   const load = async (silent) => {
     if (!silent) setLoading(true);
     try {
-      const res = await recruiterApiService.searchInterviewPool({ positionId, page, size, searchText });
+      const res = await recruiterApiService.searchInterviewPool({
+        positionId, page, size, searchText, statuses: statusFilter ? [statusFilter] : undefined,
+      });
       setRows(res.data.data.content || []);
       setTotalPages(res.data.data.totalPages || 0);
     } catch (e) {
@@ -94,7 +99,7 @@ const InterviewPoolTab = ({ positionId, isActive }) => {
     load();
     setSelected([]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [positionId, page, size]);
+  }, [positionId, page, size, statusFilter]);
 
   // Clear the selection and search text when navigating away to another tab - since this tab
   // now stays mounted (to avoid a reload flicker on revisit), they would otherwise persist.
@@ -105,6 +110,7 @@ const InterviewPoolTab = ({ positionId, isActive }) => {
     if (!isActive) {
       setSelected([]);
       setSearchText("");
+      setStatusFilter("");
     } else if (!prevIsActiveRef.current) {
       load(true);
     }
@@ -125,6 +131,12 @@ const InterviewPoolTab = ({ positionId, isActive }) => {
     return () => clearTimeout(timeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchText]);
+
+  const clearFilters = () => {
+    setSearchText("");
+    setStatusFilter("");
+    setPage(0);
+  };
 
   const toggleSelect = (id) => {
     setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
@@ -158,6 +170,12 @@ const InterviewPoolTab = ({ positionId, isActive }) => {
     <div>
       <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <div className="d-flex align-items-center flex-wrap gap-2">
+          <span className="text-muted fs-14">Filter by:</span>
+          <button className="btn btn-link fs-14 text-danger p-0 text-decoration-none" onClick={clearFilters}>Clear all</button>
+          <select className="form-select form-select-sm" style={{ width: 190 }} value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(0); }}>
+            <option value="">All Statuses</option>
+            {STATUS_FILTER_OPTIONS.map((s) => <option key={s} value={s}>{STATUS_LABELS[s] || s.replace(/_/g, " ")}</option>)}
+          </select>
           <div className="search-boxpost">
             <i className="bi bi-search" />
             <input className="form-control form-control-sm" placeholder="Search candidates..." value={searchText} onChange={(e) => setSearchText(e.target.value)} />

@@ -22,16 +22,25 @@ const InterviewerSchedule = () => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  // Only requisitions / positions that have interviews scheduled on the current user's panel(s).
   useEffect(() => {
-    recruiterApiService.getApprovedRequisitions().then((res) => setRequisitions(res.data.data || []));
+    recruiterApiService.getMyInterviewRequisitions()
+      .then((res) => setRequisitions(res.data.data || []))
+      .catch(() => toast.error("Failed to load requisitions"));
   }, []);
 
   useEffect(() => {
     if (!requisitionId) { setPositions([]); setPositionId(""); return; }
-    recruiterApiService.getActivePositionsByRequisition(requisitionId).then((res) => {
-      setPositions(res.data.data || []);
-      setPositionId("");
-    });
+    Promise.all([
+      recruiterApiService.getActivePositionsByRequisition(requisitionId),
+      recruiterApiService.getMyInterviewPositionIds(requisitionId),
+    ])
+      .then(([positionsRes, myIdsRes]) => {
+        const myPositionIds = new Set(myIdsRes.data.data || []);
+        setPositions((positionsRes.data.data || []).filter((p) => myPositionIds.has(p.id)));
+        setPositionId("");
+      })
+      .catch(() => toast.error("Failed to load positions"));
   }, [requisitionId]);
 
   const load = async () => {

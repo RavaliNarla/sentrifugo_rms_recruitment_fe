@@ -241,7 +241,7 @@ const Approvals = () => {
           return (
             <div className="requisition-card" key={req.id}>
               <div className="d-flex justify-content-between align-items-start" style={{ cursor: "pointer" }} onClick={() => toggleExpand(req.id)}>
-                <div className="d-flex align-items-start gap-2">
+                <div className="d-flex align-items-start gap-2 req-left">
                   <input
                     type="checkbox"
                     className="form-check-input mt-1"
@@ -250,18 +250,18 @@ const Approvals = () => {
                     onClick={(e) => e.stopPropagation()}
                     onChange={() => toggleSelect(req.id)}
                   />
-                  <div>
+                  <div className="req-left-body">
                     <div className="d-flex align-items-center gap-2 mb-1">
                       <span className="badge bg-light text-dark border">{req.requisitionCode}</span>
                       <span className={`status-pill ${STATUS_PILL[req.status] || "status-pill-secondary"}`}>
                         {req.status === "FULFILLED" ? "Fulfilled" : req.status.replace(/_/g, " ")}
                       </span>
                     </div>
-                    <div className="d-flex align-items-center gap-2">
-                      <div className="req-code">{req.title}</div>
+                    <div className="d-flex align-items-center gap-2 req-title-row">
+                      <div className="req-code req-title" title={req.title}>{req.title}</div>
                       <button
                         type="button"
-                        className="btn btn-link p-0 lh-1 history-icon-btn"
+                        className="btn btn-link p-0 lh-1 history-icon-btn flex-shrink-0"
                         title="Approval History"
                         onClick={(e) => openApprovalHistory(req, e)}
                       >
@@ -275,7 +275,7 @@ const Approvals = () => {
                   </div>
                 </div>
 
-                <div className="d-flex align-items-center gap-3">
+                <div className="d-flex align-items-center gap-3 req-right">
                   <div className="req-meta d-none d-md-flex me-3">
                     <span><i className="bi bi-diagram-3" />Departments - {departmentCount}</span>
                     <span><i className="bi bi-briefcase" />Positions - {positions.length}</span>

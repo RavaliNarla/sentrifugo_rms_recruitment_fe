@@ -3,6 +3,7 @@ import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import recruiterApiService from "../../core/recruiterApiService";
+import "../jobPosting/JobPostings.css";
 
 const QUICK_ACCESS = [
   { to: "/job-postings", privilege: "JobPostings", icon: "bi-briefcase-fill", label: "Job Postings", desc: "Requisitions & positions" },
@@ -69,28 +70,38 @@ const DashboardDetailModal = ({ open, loading, detail, onClose }) => {
   const rows = detail?.rows || [];
   return (
     <div className="modal show d-block" tabIndex={-1} style={{ background: "rgba(0,0,0,0.45)" }} onClick={onClose}>
-      <div className="modal-dialog modal-xl modal-dialog-scrollable" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl" onClick={(e) => e.stopPropagation()}>
         <div className="modal-content">
           <div className="modal-header">
-            <h5 className="modal-title">{detail?.title || "Details"}{!loading ? ` (${rows.length})` : ""}</h5>
+            <div>
+              <h5 className="modal-title mb-0">{detail?.title || "Details"}</h5>
+              <div className="text-muted fs-13">
+                {loading ? "Loading records…" : `${rows.length} record${rows.length === 1 ? "" : "s"}`}
+              </div>
+            </div>
             <button type="button" className="btn-close" aria-label="Close" onClick={onClose} />
           </div>
           <div className="modal-body">
             {loading ? (
-              <div className="text-muted py-4 text-center">Loading…</div>
+              <div className="text-muted py-5 text-center">
+                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" />
+                Loading…
+              </div>
             ) : rows.length === 0 ? (
-              <div className="text-muted py-4 text-center">No records for this metric.</div>
+              <div className="text-muted py-5 text-center">No records for this metric.</div>
             ) : (
               <div className="table-responsive">
-                <table className="table table-hover align-middle mb-0">
+                <table className="table table-bordered table-hover align-middle mb-0 approval-history-table">
                   <thead>
-                    <tr className="text-muted fs-13">
+                    <tr>
+                      <th style={{ width: 60 }}>S.No</th>
                       {columns.map((col) => <th key={col}>{col}</th>)}
                     </tr>
                   </thead>
                   <tbody>
                     {rows.map((row, idx) => (
                       <tr key={idx}>
+                        <td>{idx + 1}</td>
                         {columns.map((col) => <td key={col}>{row[col] ?? "-"}</td>)}
                       </tr>
                     ))}
@@ -100,7 +111,7 @@ const DashboardDetailModal = ({ open, loading, detail, onClose }) => {
             )}
           </div>
           <div className="modal-footer">
-            <button type="button" className="btn btn-outline-secondary" onClick={onClose}>Close</button>
+            <button type="button" className="btn btn-secondary" onClick={onClose}>Close</button>
           </div>
         </div>
       </div>

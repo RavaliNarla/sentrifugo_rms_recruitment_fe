@@ -98,6 +98,32 @@
   font-size: 1rem;
 }
 
+/* Long titles: keep them to one line (full text on hover) so the history icon and the
+   right-hand meta/actions never get pushed out of place. */
+.requisition-card .req-left,
+.requisition-card .req-left-body,
+.requisition-card .req-title-row {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.requisition-card .req-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.requisition-card .req-right {
+  flex-shrink: 0;
+  margin-left: 16px;
+}
+
+.requisition-card .req-right .req-meta {
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
 .requisition-card .req-dates,
 .requisition-card .req-meta {
   display: flex;

@@ -7,6 +7,7 @@ import PdfViewerModal from "../../../shared/PdfViewerModal";
 import { formatDate } from "../../../shared/dateFormat";
 import { useFilePreview } from "../../../shared/useFilePreview";
 import DateInput from "../../../shared/DateInput";
+import "../../jobPosting/JobPostings.css";
 
 const OFFER_STATUS_PILL = {
   GENERATED: "status-pill-secondary",
@@ -24,8 +25,30 @@ const OFFER_STATUS_LABELS = {
   SENT: "OFFER LETTER SENT",
 };
 
+// Offer Pool status filter: offer status, plus candidates with no offer generated yet.
+const OFFER_FILTER_OPTIONS = [
+  { value: "NOT_GENERATED", label: "Not Generated" },
+  ...["GENERATED", "L1_PENDING", "L2_PENDING", "L1_REJECTED", "L2_REJECTED", "SENT", "ACCEPTED", "REJECTED", "EXPIRED"]
+    .map((s) => ({ value: s, label: s === "SENT" ? "OFFER LETTER SENT" : s.replace(/_/g, " ") })),
+];
+
 const getOfferStatusLabel = (status) =>
   OFFER_STATUS_LABELS[status] || (status ? String(status).replace(/_/g, " ") : "-");
+
+/** Same "09-09-2026 12.45pm" format as the Job Postings approval-history popup. */
+const formatApprovalDateTime = (iso) => {
+  if (!iso) return "-";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return String(iso);
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const yyyy = d.getFullYear();
+  let hours = d.getHours();
+  const minutes = String(d.getMinutes()).padStart(2, "0");
+  const ampm = hours >= 12 ? "pm" : "am";
+  hours = hours % 12 || 12;
+  return `${dd}-${mm}-${yyyy} ${hours}.${minutes}${ampm}`;
+};
 
 // SCL_39: Accept Before Date must be a future date.
 const tomorrowStr = () => {
@@ -64,7 +87,25 @@ const OfferPoolTab = ({ positionId, isActive }) => {
   const [errors, setErrors] = useState({});
   const [generatedInfo, setGeneratedInfo] = useState(null);
   const [searchText, setSearchText] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
   const filePreview = useFilePreview();
+  const [historyModal, setHistoryModal] = useState({ show: false, candidate: null, rows: [], loading: false });
+
+  // Approval history exists only once the offer has been submitted (anything past GENERATED).
+  const hasApprovalHistory = (offer) => !!offer && offer.status !== "GENERATED";
+
+  const openApprovalHistory = async (candidate, offer) => {
+    setHistoryModal({ show: true, candidate, rows: [], loading: true });
+    try {
+      const res = await recruiterApiService.getOfferApprovalHistory(offer.id);
+      setHistoryModal({ show: true, candidate, rows: res.data.data || [], loading: false });
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to load approval history");
+      setHistoryModal({ show: true, candidate, rows: [], loading: false });
+    }
+  };
+
+  const closeApprovalHistory = () => setHistoryModal({ show: false, candidate: null, rows: [], loading: false });
 
   useEffect(() => {
     masterApiService.getOfferTemplates().then((res) => setTemplates(res.data.data || []));
@@ -73,7 +114,9 @@ const OfferPoolTab = ({ positionId, isActive }) => {
   const load = async (silent) => {
     if (!silent) setLoading(true);
     try {
-      const res = await recruiterApiService.searchCandidates({ positionId, statuses: ["MOVED_TO_OFFER"], page, size, searchText });
+      const res = await recruiterApiService.searchCandidates({
+        positionId, statuses: ["MOVED_TO_OFFER"], page, size, searchText, offerStatus: statusFilter || undefined,
+      });
       const content = res.data.data.content || [];
       setCandidates(content);
       setTotalPages(res.data.data.totalPages || 0);
@@ -95,7 +138,7 @@ const OfferPoolTab = ({ positionId, isActive }) => {
     load();
     setSelected([]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [positionId, page, size]);
+  }, [positionId, page, size, statusFilter]);
 
   // Clear the selection and filter fields when navigating away to another tab - since this
   // tab now stays mounted (to avoid a reload flicker on revisit), they would otherwise persist.
@@ -110,6 +153,7 @@ const OfferPoolTab = ({ positionId, isActive }) => {
       setJoiningDate("");
       setErrors({});
       setSearchText("");
+      setStatusFilter("");
     } else if (!prevIsActiveRef.current) {
       load(true);
     }
@@ -134,6 +178,12 @@ const OfferPoolTab = ({ positionId, isActive }) => {
   const canSelect = (c) => {
     const offer = offers[c.id];
     return !offer || !LOCKED_OFFER_STATUSES.includes(offer.status);
+  };
+
+  const clearFilters = () => {
+    setSearchText("");
+    setStatusFilter("");
+    setPage(0);
   };
 
   const toggleSelect = (id) => {
@@ -185,6 +235,10 @@ const OfferPoolTab = ({ positionId, isActive }) => {
       await recruiterApiService.generateOffers({ candidateIds: selected, templateId, acceptBeforeDate, joiningDate });
       setGeneratedInfo(count);
       setSelected([]);
+      setTemplateId("");
+      setAcceptBeforeDate("");
+      setJoiningDate("");
+      setErrors({});
       load();
     } catch (e) {
       toast.error(e.response?.data?.message || "Failed to generate offers");
@@ -266,6 +320,12 @@ const OfferPoolTab = ({ positionId, isActive }) => {
 
       <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <div className="d-flex align-items-center flex-wrap gap-2">
+          <span className="text-muted fs-14">Filter by:</span>
+          <button className="btn btn-link fs-14 text-danger p-0 text-decoration-none" onClick={clearFilters}>Clear all</button>
+          <select className="form-select form-select-sm" style={{ width: 190 }} value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(0); }}>
+            <option value="">All Statuses</option>
+            {OFFER_FILTER_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
           <div className="search-boxpost">
             <i className="bi bi-search" />
             <input className="form-control form-control-sm" placeholder="Search candidates..." value={searchText} onChange={(e) => setSearchText(e.target.value)} />
@@ -304,7 +364,21 @@ const OfferPoolTab = ({ positionId, isActive }) => {
                       onChange={() => toggleSelect(c.id)}
                     />
                   </td>
-                  <td>{c.name}</td>
+                  <td>
+                    <div className="d-flex align-items-center gap-2">
+                      <span>{c.name}</span>
+                      {hasApprovalHistory(offer) && (
+                        <button
+                          type="button"
+                          className="btn btn-link p-0 lh-1 history-icon-btn"
+                          title="Approval History"
+                          onClick={() => openApprovalHistory(c, offer)}
+                        >
+                          <i className="bi bi-clock-history" />
+                        </button>
+                      )}
+                    </div>
+                  </td>
                   <td>{c.email}</td>
                   <td>{c.agreedCtc ?? c.salary ?? "-"}</td>
                   <td>{formatDate(offer?.acceptBeforeDate)}</td>
@@ -381,6 +455,58 @@ const OfferPoolTab = ({ positionId, isActive }) => {
               </div>
               <div className="modal-footer">
                 <button className="btn btn-primary" onClick={() => setGeneratedInfo(null)}>Got it</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {historyModal.show && (
+        <div className="modal show d-block" style={{ background: "rgba(0, 0, 0, 0.45)" }} onClick={closeApprovalHistory}>
+          <div className="modal-dialog modal-dialog-centered modal-lg" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-content">
+              <div className="modal-header">
+                <div>
+                  <h5 className="modal-title mb-0">Approval History</h5>
+                  <div className="text-muted fs-13">
+                    Track approvals and decisions
+                    {historyModal.candidate ? ` — ${historyModal.candidate.name}` : ""}
+                  </div>
+                </div>
+                <button type="button" className="btn-close" onClick={closeApprovalHistory} />
+              </div>
+              <div className="modal-body">
+                {historyModal.loading ? (
+                  <div className="text-muted">Loading...</div>
+                ) : historyModal.rows.length === 0 ? (
+                  <div className="text-muted text-center py-4">No approval history yet for this offer.</div>
+                ) : (
+                  <div className="table-responsive">
+                    <table className="table table-bordered align-middle mb-0 approval-history-table">
+                      <thead>
+                        <tr>
+                          <th>Approver</th>
+                          <th>Approval Date</th>
+                          <th>Status</th>
+                          <th>Comments</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {historyModal.rows.map((row) => (
+                          <tr key={row.id}>
+                            <td>{row.approverName || "-"}</td>
+                            <td>{formatApprovalDateTime(row.approvalDate)}</td>
+                            <td>{(row.status || "").replace(/_/g, " ")}</td>
+                            <td>{row.comments?.trim() ? row.comments : "-"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={closeApprovalHistory}>Close</button>
               </div>
             </div>
           </div>
