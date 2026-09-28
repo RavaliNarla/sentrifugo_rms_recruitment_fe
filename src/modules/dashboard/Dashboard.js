@@ -8,7 +8,7 @@ const QUICK_ACCESS = [
   { to: "/job-postings", privilege: "JobPostings", icon: "bi-briefcase-fill", label: "Job Postings", desc: "Requisitions & positions" },
   { to: "/candidate-workflow", anyPrivilege: ["CandidatePool", "InterviewPool", "CompensationPool", "OfferPool"], icon: "bi-people-fill", label: "Candidate Management", desc: "Screening to offer" },
   { to: "/committee-management", privilege: "CommitteeManagement", icon: "bi-diagram-3-fill", label: "Committee Management", desc: "Panels & schedules" },
-  { to: "/approvals", anyPrivilege: ["L1Approval", "L2Approval"], icon: "bi-check2-square", label: "Approvals", desc: "Requisition sign-off" },
+  { to: "/approvals", anyPrivilege: ["L1Approval", "L2Approval"], icon: "bi-check2-square", label: "Requisition Approvals", desc: "Requisition sign-off" },
   { to: "/offer-approvals", anyPrivilege: ["L1Approval", "L2Approval"], icon: "bi-envelope-check", label: "Offer Approvals", desc: "Offer letter sign-off" },
   { to: "/interviewer", privilege: "Interview", icon: "bi-person-video3", label: "My Interviews", desc: "Score candidates" },
   { to: "/admin/users", privilege: "Admin", icon: "bi-gear-fill", label: "Admin", desc: "Users & master data" },

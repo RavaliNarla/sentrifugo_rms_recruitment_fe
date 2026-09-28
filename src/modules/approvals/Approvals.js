@@ -272,7 +272,6 @@ const Approvals = () => {
                       <span><i className="bi bi-calendar-event" />Start: {formatDate(req.startDate)}</span>
                       <span><i className="bi bi-calendar-check" />Expected Fulfilment: {formatDate(req.expectedFulfilmentDate)}</span>
                     </div>
-                    {req.comments && <div className="text-muted fs-13 mt-1">Last comments: {req.comments}</div>}
                   </div>
                 </div>
 

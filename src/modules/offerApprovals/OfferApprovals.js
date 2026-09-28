@@ -304,7 +304,6 @@ const OfferApprovals = () => {
                 <div className="text-muted small mt-1">
                   Accept Before: {offer.acceptBeforeDate} | Joining Date: {offer.joiningDate || "-"}
                 </div>
-                {offer.approvalComments && <div className="text-muted small">Last comments: {offer.approvalComments}</div>}
               </div>
               {offer.offerFileUrl && (
                 <button

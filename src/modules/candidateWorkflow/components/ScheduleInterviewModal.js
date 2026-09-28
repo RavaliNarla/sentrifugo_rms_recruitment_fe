@@ -436,7 +436,7 @@ const ScheduleInterviewModal = ({ candidates, round = 1, onClose, onScheduled })
                 <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.endTime || ""}</div>
               </div>
               <div className="col-md-4">
-                <label className="form-label">Each interview (mins)</label>
+                <label className="form-label">Interview Duration (mins)</label>
                 <select
                   className={`form-select ${errors.durationMinutes ? "is-invalid" : ""}`}
                   value={durationMinutes}

@@ -113,6 +113,12 @@ const AddCandidateModal = ({
       setResume(null);
       return;
     }
+    if (file && file.size === 0) {
+      setErrors((prev) => ({ ...prev, resume: "The selected file is empty (0 bytes). Please choose a resume with content." }));
+      e.target.value = "";
+      setResume(null);
+      return;
+    }
     setResume(file || null);
   };
 
@@ -141,8 +147,11 @@ const AddCandidateModal = ({
     } else if (!EMAIL_REGEX.test(form.email)) {
       next.email = "Please enter a valid email address";
     }
-    setErrors((prev) => ({ ...prev, name: next.name, phone: next.phone, email: next.email }));
-    return !next.name && !next.phone && !next.email;
+    if (!resume && !existingDocs.hasResume) {
+      next.resume = "Resume is required";
+    }
+    setErrors((prev) => ({ ...prev, name: next.name, phone: next.phone, email: next.email, resume: next.resume }));
+    return !next.name && !next.phone && !next.email && !next.resume;
   };
 
   const handleSave = async () => {
@@ -165,7 +174,25 @@ const AddCandidateModal = ({
       }
       onSaved();
     } catch (e) {
-      toast.error(e.response?.data?.message || "Failed to save candidate");
+      const message = e.response?.data?.message || "Failed to save candidate";
+      // The backend can report email and phone conflicts together in one message
+      // (e.g. "...email already exists. ...phone number already exists.") - route each
+      // sentence to its own field so both show at once instead of one-at-a-time.
+      const sentences = message.split(/(?<=\.)\s+/).filter(Boolean);
+      const fieldErrors = {};
+      const unmatched = [];
+      sentences.forEach((sentence) => {
+        const lower = sentence.toLowerCase();
+        if (lower.includes("email")) fieldErrors.email = sentence;
+        else if (lower.includes("phone")) fieldErrors.phone = sentence;
+        else unmatched.push(sentence);
+      });
+      if (Object.keys(fieldErrors).length > 0) {
+        setErrors((prev) => ({ ...prev, ...fieldErrors }));
+        if (unmatched.length) toast.error(unmatched.join(" "));
+      } else {
+        toast.error(message);
+      }
     } finally {
       submittingRef.current = false;
       setSaving(false);
@@ -293,7 +320,7 @@ const AddCandidateModal = ({
 
             <div className="row">
               <div className="col-md-6 mb-3">
-                <label className="form-label">Resume (optional)</label>
+                <label className="form-label">Resume <span className="text-danger">*</span></label>
                 <input
                   type="file"
                   className={`form-control ${errors.resume ? "is-invalid" : ""}`}
@@ -331,7 +358,7 @@ const AddCandidateModal = ({
           <div className="modal-footer">
             <button className="btn btn-secondary" onClick={onClose}>Cancel</button>
             <button className="btn btn-primary" disabled={saving} onClick={handleSave}>
-              {saving ? "Saving..." : editingCandidate ? "Save Changes" : "Add"}
+              {saving ? (editingCandidate ? "Updating..." : "Saving...") : editingCandidate ? "Update" : "Add"}
             </button>
           </div>
         </div>
