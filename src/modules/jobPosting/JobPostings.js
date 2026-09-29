@@ -548,7 +548,7 @@ const JobPostings = () => {
                                 <div className="position-meta-inline">
                                   <span><b>Location:</b> {pos.locationName}</span>
                                   <span><b>Vacancies:</b> {pos.vacancies}</span>
-                                  <span><b>Experience:</b> {pos.experienceYears ?? "-"} yrs</span>
+                                  <span><b>Experience:</b> {pos.experienceYears ?? "-"} years</span>
                                   <span><b>Education:</b> {pos.educationQualificationName || "-"}</span>
                                 </div>
                               </div>
