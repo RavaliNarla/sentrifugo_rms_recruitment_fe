@@ -105,6 +105,10 @@ const ManagePanelsTab = () => {
   };
 
   const handleEdit = (panel) => {
+    if (panel.hasSchedules) {
+      toast.error("This panel has interview schedules and cannot be edited");
+      return;
+    }
     setEditing(panel);
     setName(panel.name);
     setSelectedMembers(panel.memberIds);
@@ -112,6 +116,10 @@ const ManagePanelsTab = () => {
   };
 
   const handleDelete = (panel) => {
+    if (panel.hasSchedules) {
+      toast.error("This panel has interview schedules and cannot be deleted");
+      return;
+    }
     askConfirm(`Are you sure you want to delete the panel "${panel.name}"?`, async () => {
       closeConfirm();
       try {
@@ -201,8 +209,16 @@ const ManagePanelsTab = () => {
                   <td>{p.name}</td>
                   <td>{(p.memberNames || []).join(", ")}</td>
                   <td>
-                    <button className="table-icon-btn" onClick={() => handleEdit(p)} title="Edit"><i className="bi bi-pencil" /></button>
-                    <button className="table-icon-btn delete" onClick={() => handleDelete(p)} title="Delete"><i className="bi bi-trash" /></button>
+                    {p.hasSchedules ? (
+                      <span className="table-icon-btn text-muted" title="Locked — panel has interview schedules">
+                        <i className="bi bi-lock-fill" />
+                      </span>
+                    ) : (
+                      <>
+                        <button className="table-icon-btn" onClick={() => handleEdit(p)} title="Edit"><i className="bi bi-pencil" /></button>
+                        <button className="table-icon-btn delete" onClick={() => handleDelete(p)} title="Delete"><i className="bi bi-trash" /></button>
+                      </>
+                    )}
                   </td>
                 </tr>
               ))}

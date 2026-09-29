@@ -41,7 +41,7 @@ const CandidateProfileModal = ({ candidate, onClose, onDecide, onViewFile }) => 
               </div>
               <div>
                 <div className="fw-bold fs-5">{candidate.name}</div>
-                <span className="status-pill status-pill-secondary">{getStatusLabel(candidate.status)}</span>
+                <span className="status-pill status-pill-secondary">{getStatusLabel(candidate.status, candidate.interviewRound)}</span>
               </div>
             </div>
 

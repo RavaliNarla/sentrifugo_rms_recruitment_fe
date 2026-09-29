@@ -825,9 +825,9 @@ button.stat-tile-v2 {
   left: auto;
   top: calc(100% + 6px);
   z-index: 20;
-  min-width: 240px;
-  max-width: 320px;
-  max-height: 280px;
+  min-width: 260px;
+  max-width: 360px;
+  max-height: 420px;
   overflow-y: auto;
   padding: 10px 12px;
   background: #fff;

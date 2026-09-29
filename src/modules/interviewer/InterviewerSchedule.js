@@ -84,23 +84,38 @@ const InterviewerSchedule = () => {
 
   const handleSubmit = async () => {
     const requests = [];
-    for (const [candidateId, v] of Object.entries(scores)) {
-      if (v.score === "" || v.score === undefined) continue;
-      const score = Number(v.score);
+    for (const row of rows) {
+      const v = scores[row.candidateId] || {};
+      const scoreRaw = v.score;
+      const rationale = (v.rationale || "").trim();
+      const decision = (v.decision || "").trim();
+      if (scoreRaw === "" || scoreRaw === undefined) {
+        toast.error(`Enter Rating for ${row.candidateName}`);
+        return;
+      }
+      const score = Number(scoreRaw);
       if (Number.isNaN(score) || score < 1 || score > 10) {
         toast.error("Ratings must be between 1 and 10 (decimals like 7.5 allowed)");
         return;
       }
+      if (!rationale) {
+        toast.error(`Enter Rationale for ${row.candidateName}`);
+        return;
+      }
+      if (!decision) {
+        toast.error(`Select Decision for ${row.candidateName}`);
+        return;
+      }
       requests.push({
-        candidateId,
+        candidateId: row.candidateId,
         score,
-        rationale: v.rationale,
-        decision: v.decision || null,
+        rationale,
+        decision,
       });
     }
 
     if (requests.length === 0) {
-      toast.error("Enter at least one score before submitting");
+      toast.error("No candidates to score");
       return;
     }
     setSaving(true);
@@ -158,16 +173,16 @@ const InterviewerSchedule = () => {
                     <th>Date</th>
                     <th>Time</th>
                     <th>Status</th>
-                    <th style={{ width: 110 }}>Rating (1-10)</th>
-                    <th>Rationale</th>
-                    <th style={{ width: 160 }}>Decision</th>
+                    <th style={{ width: 110 }}>Rating (1-10) <span className="text-danger">*</span></th>
+                    <th>Rationale <span className="text-danger">*</span></th>
+                    <th style={{ width: 160 }}>Decision <span className="text-danger">*</span></th>
                   </tr>
                 </thead>
                 <tbody>
                   {rows.map((r) => (
                     <tr key={r.candidateId}>
                       <td>{r.candidateName}</td>
-                      <td>{r.round != null ? r.round : 1}</td>
+                      <td>{r.roundName ? `${r.round != null ? r.round : 1} (${r.roundName})` : (r.round != null ? r.round : 1)}</td>
                       <td>{formatDate(r.interviewDate)}</td>
                       <td>{r.startTime} - {r.endTime}</td>
                       <td><span className="badge bg-secondary">{r.applicationStatus}</span></td>

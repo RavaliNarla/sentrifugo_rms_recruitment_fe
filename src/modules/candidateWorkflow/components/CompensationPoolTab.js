@@ -53,6 +53,7 @@ const CompensationPoolTab = ({ positionId, isActive }) => {
   };
 
   useEffect(() => {
+    if (!isActive) return;
     load();
     setSelected([]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -112,6 +113,7 @@ const CompensationPoolTab = ({ positionId, isActive }) => {
         agreedCtc: d.agreedCtc || null,
       });
       toast.success("Compensation details saved successfully");
+      await load(true);
     } catch (e) {
       toast.error(e.response?.data?.message || "Failed to save compensation details");
     } finally {
@@ -119,7 +121,14 @@ const CompensationPoolTab = ({ positionId, isActive }) => {
     }
   };
 
+  const canSelectForOffer = (c) => c.status === "COMPENSATION_SUBMITTED" && !!details[c.id]?.agreedCtc;
+
   const toggleSelect = (id) => {
+    const row = rows.find((r) => r.id === id);
+    if (!row || row.status !== "COMPENSATION_SUBMITTED") {
+      toast.error("Save compensation details first — status must be Compensation Submitted");
+      return;
+    }
     if (!details[id]?.agreedCtc) {
       toast.error("Enter and save Agreed CTC before selecting this candidate");
       return;
@@ -180,7 +189,14 @@ const CompensationPoolTab = ({ positionId, isActive }) => {
               return (
                 <tr key={c.id}>
                   <td>
-                    <input type="checkbox" className="form-check-input" checked={selected.includes(c.id)} onChange={() => toggleSelect(c.id)} />
+                    <input
+                      type="checkbox"
+                      className="form-check-input"
+                      checked={selected.includes(c.id)}
+                      disabled={!canSelectForOffer(c)}
+                      onChange={() => toggleSelect(c.id)}
+                      title={canSelectForOffer(c) ? "Select for Offer Pool" : "Save compensation details first"}
+                    />
                   </td>
                   <td>{c.name}</td>
                   <td>{c.finalScore ?? "-"}</td>

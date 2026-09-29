@@ -136,13 +136,14 @@ const Login = () => {
       await authApiService.forgotPassword({ username: forgotUsername.trim() });
       toast.success(isResend
         ? "A new OTP has been sent to the registered email."
-        : "If an account exists, an OTP has been sent to the registered email.");
+        : "OTP has been sent to your registered email.");
       setForgotStep(2);
       setOtpDigits(["", "", "", "", "", ""]);
       setResendCooldown(30);
       setTimeout(() => focusOtpBox(0), 50);
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to send OTP");
+      toast.error(err.response?.data?.message || "No account found for this Employee ID or email");
+      // Stay on step 1 — do not advance to OTP when the account does not exist.
     } finally {
       setForgotBusy(false);
     }

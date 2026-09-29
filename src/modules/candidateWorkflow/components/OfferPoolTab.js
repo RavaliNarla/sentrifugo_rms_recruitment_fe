@@ -23,6 +23,9 @@ const OFFER_STATUS_PILL = {
 
 const OFFER_STATUS_LABELS = {
   SENT: "OFFER LETTER SENT",
+  REJECTED: "REJECTED",
+  L1_REJECTED: "REJECTED",
+  L2_REJECTED: "REJECTED",
 };
 
 // Offer Pool status filter: offer status, plus candidates with no offer generated yet.
@@ -135,6 +138,7 @@ const OfferPoolTab = ({ positionId, isActive }) => {
   };
 
   useEffect(() => {
+    if (!isActive) return;
     load();
     setSelected([]);
     // eslint-disable-next-line react-hooks/exhaustive-deps

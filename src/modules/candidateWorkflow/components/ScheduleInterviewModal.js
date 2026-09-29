@@ -73,7 +73,7 @@ const newBreakId = () => `brk-${Date.now()}-${Math.random().toString(36).slice(2
 /**
  * One-day schedule: panel + date + window, optional breaks, per-candidate slot edits.
  */
-const ScheduleInterviewModal = ({ candidates, round = 1, onClose, onScheduled }) => {
+const ScheduleInterviewModal = ({ candidates, round = 1, mode = "schedule", onClose, onScheduled }) => {
   const [panels, setPanels] = useState([]);
   const [panelId, setPanelId] = useState("");
   const [interviewDate, setInterviewDate] = useState("");
@@ -87,6 +87,7 @@ const ScheduleInterviewModal = ({ candidates, round = 1, onClose, onScheduled })
   const [editDraft, setEditDraft] = useState({ start: "", end: "" });
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
+  const [roundName, setRoundName] = useState("");
   const interviewRound = Number(round) > 0 ? Number(round) : 1;
 
   const setField = (field, value, setter) => {
@@ -311,6 +312,9 @@ const ScheduleInterviewModal = ({ candidates, round = 1, onClose, onScheduled })
     if (hasBreakErrors) next.breaks = "Fix break time errors before scheduling";
     if (assignedCount < candidates.length) next.slots = "Every candidate needs a time slot";
     if (hasAssignmentWarnings) next.slots = next.slots || "Resolve slot warnings before scheduling";
+    if (roundName && roundName.trim().length > 120) {
+      next.roundName = "Round name must be at most 120 characters";
+    }
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -320,7 +324,7 @@ const ScheduleInterviewModal = ({ candidates, round = 1, onClose, onScheduled })
     setSaving(true);
     try {
       const toApiTime = (t) => (t && t.length === 5 ? `${t}:00` : t);
-      await recruiterApiService.scheduleInterviews({
+      const payload = {
         candidateIds: candidates.map((c) => c.id),
         panelId,
         interviewDate,
@@ -328,6 +332,7 @@ const ScheduleInterviewModal = ({ candidates, round = 1, onClose, onScheduled })
         endTime: toApiTime(endTime),
         durationMinutes: Number(durationMinutes),
         round: interviewRound,
+        roundName: roundName.trim() || undefined,
         breaks: breaks
           .filter((b) => b.start && b.end)
           .map((b) => ({ startTime: toApiTime(b.start), endTime: toApiTime(b.end) })),
@@ -336,12 +341,18 @@ const ScheduleInterviewModal = ({ candidates, round = 1, onClose, onScheduled })
           startTime: toApiTime(assignments[c.id].start),
           endTime: toApiTime(assignments[c.id].end),
         })),
-      });
-      toast.success(`Scheduled ${candidates.length} candidate(s) for Round ${interviewRound}. Each will receive an email.`);
+      };
+      if (mode === "reschedule") {
+        await recruiterApiService.rescheduleInterviews(payload);
+        toast.success(`Rescheduled ${candidates.length} candidate(s) for Round ${interviewRound}. Updated invites sent.`);
+      } else {
+        await recruiterApiService.scheduleInterviews(payload);
+        toast.success(`Scheduled ${candidates.length} candidate(s) for Round ${interviewRound}. Each will receive an email.`);
+      }
       window.dispatchEvent(new CustomEvent("rms:notifications-refresh"));
       onScheduled();
     } catch (e) {
-      toast.error(e.response?.data?.message || "Failed to schedule interviews");
+      toast.error(e.response?.data?.message || (mode === "reschedule" ? "Failed to reschedule interviews" : "Failed to schedule interviews"));
     } finally {
       setSaving(false);
     }
@@ -356,7 +367,7 @@ const ScheduleInterviewModal = ({ candidates, round = 1, onClose, onScheduled })
         <div className="modal-content">
           <div className="modal-header">
             <div>
-              <h5 className="modal-title mb-0">Schedule Interviews</h5>
+              <h5 className="modal-title mb-0">{mode === "reschedule" ? "Reschedule Interviews" : "Schedule Interviews"}</h5>
               <div className="text-muted small">
                 {candidates.length} candidate(s) · Round {interviewRound} · one day at a time
               </div>
@@ -373,10 +384,23 @@ const ScheduleInterviewModal = ({ candidates, round = 1, onClose, onScheduled })
             <div className="mb-3">
               <span className="badge text-bg-light border text-app-primary">
                 Round {interviewRound}{interviewRound > 1 ? " (next round)" : ""}
+                {roundName.trim() ? ` — ${roundName.trim()}` : ""}
               </span>
             </div>
 
             <div className="row g-3">
+              <div className="col-12">
+                <label className="form-label">Round name</label>
+                <input
+                  type="text"
+                  className={`form-control ${errors.roundName ? "is-invalid" : ""}`}
+                  placeholder={interviewRound === 1 ? "e.g. Technical" : "e.g. Managerial"}
+                  maxLength={120}
+                  value={roundName}
+                  onChange={(e) => setField("roundName", e.target.value, setRoundName)}
+                />
+                <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.roundName || ""}</div>
+              </div>
               <div className="col-md-6">
                 <label className="form-label">Panel <span className="text-danger">*</span></label>
                 <select

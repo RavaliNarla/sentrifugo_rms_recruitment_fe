@@ -30,6 +30,13 @@ const poolStatusLabel = (status, round) => {
   return `L${roundNum} ${label}`;
 };
 
+const formatRoundCell = (round, roundName) => {
+  const r = round != null && round !== "" ? Number(round) : 1;
+  const roundNum = Number.isFinite(r) && r > 0 ? r : 1;
+  const name = typeof roundName === "string" ? roundName.trim() : "";
+  return name ? `${roundNum} (${name})` : String(roundNum);
+};
+
 const STATUS_FILTER_OPTIONS = ["INVITE_SENT", "SCHEDULED", "DECLINED", "QUALIFIED", "DISQUALIFIED"];
 
 const decisionLabel = (d) => {
@@ -46,8 +53,20 @@ const formatScore = (s) => {
   return Number.isNaN(n) ? String(s) : (Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/\.?0+$/, ""));
 };
 
-const InterviewerScoresHint = ({ scores }) => {
-  if (!scores || scores.length === 0) return null;
+const formatRoundHeading = (round, roundName) => {
+  const r = round != null && round !== "" ? Number(round) : 1;
+  const roundNum = Number.isFinite(r) && r > 0 ? r : 1;
+  const name = typeof roundName === "string" ? roundName.trim() : "";
+  return name ? `Round ${roundNum} (${name})` : `Round ${roundNum}`;
+};
+
+const InterviewerScoresHint = ({ roundFeedback, legacyScores }) => {
+  const rounds = Array.isArray(roundFeedback) && roundFeedback.length > 0
+    ? roundFeedback.filter((rf) => Array.isArray(rf.scores) && rf.scores.length > 0)
+    : (legacyScores?.length
+      ? [{ round: null, roundName: null, scores: legacyScores }]
+      : []);
+  if (rounds.length === 0) return null;
   return (
     <span className="ms-1 interviewer-scores-hint" title="">
       <i className="bi bi-info-circle text-app-primary" style={{ cursor: "pointer" }} />
@@ -56,12 +75,21 @@ const InterviewerScoresHint = ({ scores }) => {
         <div className="text-muted mb-2" style={{ fontSize: "0.72rem" }}>
           Status uses average score only (pass ≥ 5). Decisions below are advisory.
         </div>
-        {scores.map((s, idx) => (
-          <div key={idx} className="mb-2 pb-2 border-bottom" style={{ fontSize: "0.8rem" }}>
-            <div className="fw-semibold">{s.interviewerName || "Interviewer"}</div>
-            <div>Rating: {formatScore(s.score)}</div>
-            <div>Rationale: {s.rationale?.trim() ? s.rationale : "-"}</div>
-            <div>Decision: {decisionLabel(s.decision)}</div>
+        {rounds.map((rf, rIdx) => (
+          <div key={`round-${rf.round ?? rIdx}`} className={rIdx < rounds.length - 1 ? "mb-3" : ""}>
+            {rf.round != null && (
+              <div className="fw-semibold text-app-primary mb-2" style={{ fontSize: "0.78rem" }}>
+                {formatRoundHeading(rf.round, rf.roundName)}
+              </div>
+            )}
+            {rf.scores.map((s, idx) => (
+              <div key={idx} className="mb-2 pb-2 border-bottom" style={{ fontSize: "0.8rem" }}>
+                <div className="fw-semibold">{s.interviewerName || "Interviewer"}</div>
+                <div>Rating: {formatScore(s.score)}</div>
+                <div>Rationale: {s.rationale?.trim() ? s.rationale : "-"}</div>
+                <div>Decision: {decisionLabel(s.decision)}</div>
+              </div>
+            ))}
           </div>
         ))}
       </span>
@@ -77,8 +105,10 @@ const InterviewPoolTab = ({ positionId, isActive }) => {
   const [selected, setSelected] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showNextRoundModal, setShowNextRoundModal] = useState(false);
+  const [showRescheduleModal, setShowRescheduleModal] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [confirmCancel, setConfirmCancel] = useState(false);
 
   const load = async (silent) => {
     if (!silent) setLoading(true);
@@ -96,6 +126,7 @@ const InterviewPoolTab = ({ positionId, isActive }) => {
   };
 
   useEffect(() => {
+    if (!isActive) return;
     load();
     setSelected([]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -145,6 +176,16 @@ const InterviewPoolTab = ({ positionId, isActive }) => {
   const selectedRows = rows.filter((r) => selected.includes(r.candidateId));
   const canMove = selectedRows.length > 0 && selectedRows.every((r) => r.applicationStatus === "QUALIFIED");
 
+  const canSelectRow = (r) =>
+    r.applicationStatus === "QUALIFIED"
+    || ((r.applicationStatus === "SCHEDULED" || r.applicationStatus === "INVITE_SENT")
+      && Number(r.membersScored || 0) === 0);
+
+  const canRescheduleOrCancel = selectedRows.length > 0
+    && selectedRows.every((r) =>
+      (r.applicationStatus === "SCHEDULED" || r.applicationStatus === "INVITE_SENT")
+      && Number(r.membersScored || 0) === 0);
+
   const sharedRound = (() => {
     if (selectedRows.length === 0) return null;
     if (!selectedRows.every((r) => r.applicationStatus === "QUALIFIED")) return null;
@@ -155,6 +196,13 @@ const InterviewPoolTab = ({ positionId, isActive }) => {
   const nextRound = sharedRound != null ? sharedRound + 1 : null;
   const canScheduleNext = nextRound != null;
 
+  const rescheduleRound = (() => {
+    if (!canRescheduleOrCancel) return null;
+    const rounds = selectedRows.map((r) => r.round ?? 1);
+    const first = rounds[0];
+    return rounds.every((x) => x === first) ? first : null;
+  })();
+
   const handleMoveToCompensation = async () => {
     try {
       await recruiterApiService.moveToCompensation(selected);
@@ -163,6 +211,19 @@ const InterviewPoolTab = ({ positionId, isActive }) => {
       load();
     } catch (e) {
       toast.error(e.response?.data?.message || "Failed to move candidates");
+    }
+  };
+
+  const handleCancelInterviews = async () => {
+    setConfirmCancel(false);
+    try {
+      await recruiterApiService.cancelInterviews(selected);
+      toast.success("Interview(s) cancelled — slots freed");
+      setSelected([]);
+      load();
+      window.dispatchEvent(new CustomEvent("rms:notifications-refresh"));
+    } catch (e) {
+      toast.error(e.response?.data?.message || "Failed to cancel interviews");
     }
   };
 
@@ -185,6 +246,28 @@ const InterviewPoolTab = ({ positionId, isActive }) => {
           )}
         </div>
         <div className="d-flex gap-2">
+          {canRescheduleOrCancel && rescheduleRound != null && (
+            <>
+              <button
+                type="button"
+                className="btn btn-outline-primary"
+                title="Reschedule selected interviews"
+                onClick={() => setShowRescheduleModal(true)}
+              >
+                <i className="bi bi-calendar2-week me-1" />
+                Reschedule ({selected.length})
+              </button>
+              <button
+                type="button"
+                className="btn btn-outline-danger"
+                title="Cancel selected interviews"
+                onClick={() => setConfirmCancel(true)}
+              >
+                <i className="bi bi-x-circle me-1" />
+                Cancel ({selected.length})
+              </button>
+            </>
+          )}
           {canScheduleNext && (
             <button className="btn btn-outline-primary" onClick={() => setShowNextRoundModal(true)}>
               Schedule Next Round ({selected.length})
@@ -216,19 +299,33 @@ const InterviewPoolTab = ({ positionId, isActive }) => {
             {rows.map((r) => (
               <tr key={r.candidateId}>
                 <td>
-                  {r.applicationStatus === "QUALIFIED" && (
-                    <input type="checkbox" className="form-check-input" checked={selected.includes(r.candidateId)} onChange={() => toggleSelect(r.candidateId)} />
+                  {canSelectRow(r) && (
+                    <input
+                      type="checkbox"
+                      className="form-check-input"
+                      checked={selected.includes(r.candidateId)}
+                      onChange={() => toggleSelect(r.candidateId)}
+                      title={
+                        (r.applicationStatus === "SCHEDULED" || r.applicationStatus === "INVITE_SENT")
+                        && Number(r.membersScored || 0) > 0
+                          ? "Cannot reschedule — scoring has started"
+                          : undefined
+                      }
+                    />
                   )}
                 </td>
                 <td>{r.candidateName}</td>
-                <td>{r.round != null ? r.round : 1}</td>
+                <td>{formatRoundCell(r.round, r.roundName)}</td>
                 <td>{formatDate(r.interviewDate)}</td>
                 <td>{r.startTime ? `${r.startTime} - ${r.endTime}` : "-"}</td>
                 <td>{r.panelName || "-"}</td>
                 <td>
                   {r.finalScore != null ? formatScore(r.finalScore) : "-"}
                   <small className="text-muted ms-1">({r.membersScored}/{r.membersTotal} scored)</small>
-                  {(r.membersScored > 0) && <InterviewerScoresHint scores={r.memberScores} />}
+                  {((r.roundFeedback && r.roundFeedback.some((rf) => rf.scores?.length > 0))
+                    || (r.membersScored > 0 && r.memberScores?.length > 0)) && (
+                    <InterviewerScoresHint roundFeedback={r.roundFeedback} legacyScores={r.memberScores} />
+                  )}
                 </td>
                 <td><span className={`status-pill ${STATUS_PILL[r.applicationStatus] || "status-pill-secondary"}`}>{poolStatusLabel(r.applicationStatus, r.round)}</span></td>
               </tr>
@@ -253,6 +350,40 @@ const InterviewPoolTab = ({ positionId, isActive }) => {
             load();
           }}
         />
+      )}
+
+      {showRescheduleModal && canRescheduleOrCancel && rescheduleRound != null && (
+        <ScheduleInterviewModal
+          candidates={selectedRows.map((r) => ({ id: r.candidateId, name: r.candidateName }))}
+          round={rescheduleRound}
+          mode="reschedule"
+          onClose={() => setShowRescheduleModal(false)}
+          onScheduled={() => {
+            setShowRescheduleModal(false);
+            setSelected([]);
+            load();
+          }}
+        />
+      )}
+
+      {confirmCancel && (
+        <div className="modal show d-block" style={{ background: "rgba(0,0,0,0.45)" }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Cancel interviews?</h5>
+                <button type="button" className="btn-close" onClick={() => setConfirmCancel(false)} />
+              </div>
+              <div className="modal-body">
+                Cancel interview for {selected.length} candidate(s)? Panel slots will be freed and candidates return to Shortlisted / Qualified.
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={() => setConfirmCancel(false)}>Keep</button>
+                <button type="button" className="btn btn-danger" onClick={handleCancelInterviews}>Cancel interviews</button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -78,6 +78,8 @@ const recruiterApiService = {
 
   // Interview scheduling
   scheduleInterviews: (payload) => recruiterApi.post("/interview-scheduling/schedule", payload),
+  rescheduleInterviews: (payload) => recruiterApi.post("/interview-scheduling/reschedule", payload),
+  cancelInterviews: (candidateIds) => recruiterApi.post("/interview-scheduling/cancel", { candidateIds }),
   getInterviewSchedules: (params) => recruiterApi.get("/interview-scheduling/schedules", { params }),
 
   // Interview pool

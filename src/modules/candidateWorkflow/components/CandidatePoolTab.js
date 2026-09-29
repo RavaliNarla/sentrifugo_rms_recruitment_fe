@@ -22,10 +22,11 @@ const STATUS_PILL = {
   QUALIFIED: "status-pill-success",
   DISQUALIFIED: "status-pill-danger",
   COMPENSATION_PENDING: "status-pill-warning",
+  COMPENSATION_SUBMITTED: "status-pill-success",
   MOVED_TO_OFFER: "status-pill-secondary",
 };
 
-const STATUS_OPTIONS = ["DRAFT", "ADDED", "SHORTLISTED", "REJECTED", "ON_HOLD", "INVITE_SENT", "SCHEDULED", "DECLINED", "QUALIFIED", "DISQUALIFIED", "COMPENSATION_PENDING", "MOVED_TO_OFFER"];
+const STATUS_OPTIONS = ["DRAFT", "ADDED", "SHORTLISTED", "REJECTED", "ON_HOLD", "INVITE_SENT", "SCHEDULED", "DECLINED", "QUALIFIED", "DISQUALIFIED", "COMPENSATION_PENDING", "COMPENSATION_SUBMITTED", "MOVED_TO_OFFER"];
 
 const STATUS_LABELS = {
   DRAFT: "Draft",
@@ -36,6 +37,8 @@ const STATUS_LABELS = {
   INVITE_SENT: "INVITE SENT",
   SCHEDULED: "SCHEDULED",
   DECLINED: "DECLINED",
+  COMPENSATION_PENDING: "COMPENSATION PENDING",
+  COMPENSATION_SUBMITTED: "COMPENSATION SUBMITTED",
 };
 
 const DECISION_SUCCESS_MESSAGES = {
@@ -44,7 +47,18 @@ const DECISION_SUCCESS_MESSAGES = {
   HOLD: "Candidate put on hold successfully. A notification email has been sent to the candidate.",
 };
 
-export const getStatusLabel =(status) => STATUS_LABELS[status] || status.replace(/_/g, " ");
+const ROUND_PREFIX_STATUSES = new Set([
+  "INVITE_SENT", "SCHEDULED", "DECLINED", "QUALIFIED", "DISQUALIFIED",
+]);
+
+export const getStatusLabel = (status, interviewRound) => {
+  if (!status) return "-";
+  const base = STATUS_LABELS[status] || String(status).replace(/_/g, " ");
+  if (!ROUND_PREFIX_STATUSES.has(status)) return base;
+  const r = interviewRound != null && interviewRound !== "" ? Number(interviewRound) : 1;
+  const roundNum = Number.isFinite(r) && r > 0 ? r : 1;
+  return `L${roundNum} ${base}`;
+};
 
 /** Shortlist buttons only for Applied / SHORTLISTED / REJECTED / ON HOLD. */
 export const canShortlistDecide = (status) =>
@@ -77,10 +91,10 @@ const CandidatePoolTab = ({ requisitionId, positionId, isActive }) => {
   // Guards against two overlapping fetches (e.g. React StrictMode's dev-only double-invoke
   // of effects on first mount) turning into two separate loading-spinner flips.
   const loadInFlightRef = useRef(false);
-  const load = async () => {
+  const load = async (silent) => {
     if (loadInFlightRef.current) return;
     loadInFlightRef.current = true;
-    setLoading(true);
+    if (!silent) setLoading(true);
     try {
       const res = await recruiterApiService.searchCandidates({
         positionId,
@@ -100,6 +114,7 @@ const CandidatePoolTab = ({ requisitionId, positionId, isActive }) => {
   };
 
   useEffect(() => {
+    if (!isActive) return;
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [positionId, page, size, statusFilter]);
@@ -112,15 +127,20 @@ const CandidatePoolTab = ({ requisitionId, positionId, isActive }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [positionId, statusFilter]);
 
-  // Also clear the selection and filter fields when navigating away to another tab - since
-  // this tab now stays mounted (to avoid a reload flicker on revisit), they'd otherwise persist.
+  // Clear selection/filters when leaving; silent re-fetch when returning so status changes
+  // made in other pools (e.g. Compensation Submitted) show without a full page refresh.
+  const prevIsActiveRef = useRef(isActive);
   useEffect(() => {
     if (!isActive) {
       setSelected([]);
       setSelectedCandidatesMap({});
       setSearchText("");
       setStatusFilter("");
+    } else if (!prevIsActiveRef.current) {
+      load(true);
     }
+    prevIsActiveRef.current = isActive;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isActive]);
 
   // Only reload on a genuine searchText change, not on mount (compares actual values rather
@@ -244,7 +264,7 @@ const CandidatePoolTab = ({ requisitionId, positionId, isActive }) => {
                 <td>{c.name}</td>
                 <td>{c.phone}</td>
                 <td>{c.email}</td>
-                <td><span className={`status-pill ${STATUS_PILL[c.status] || "status-pill-secondary"}`}>{getStatusLabel(c.status)}</span></td>
+                <td><span className={`status-pill ${STATUS_PILL[c.status] || "status-pill-secondary"}`}>{getStatusLabel(c.status, c.interviewRound)}</span></td>
                 <td>
                   <button className="icon-btn-circle me-2" title="View Profile" onClick={() => setProfileCandidate(c)}>
                     <i className="bi bi-person" />

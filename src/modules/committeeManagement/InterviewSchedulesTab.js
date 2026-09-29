@@ -5,12 +5,13 @@ import masterApiService from "../../core/masterApiService";
 import Pagination from "../../shared/Pagination";
 import { formatDate } from "../../shared/dateFormat";
 
-const todayStr = () => new Date().toISOString().slice(0, 10);
 const plusDaysStr = (n) => {
   const d = new Date();
   d.setDate(d.getDate() + n);
   return d.toISOString().slice(0, 10);
 };
+/** Default range includes past rounds (history) plus upcoming. */
+const defaultFromStr = () => plusDaysStr(-90);
 
 const formatTime = (t) => {
   if (!t) return "-";
@@ -27,8 +28,8 @@ const InterviewSchedulesTab = () => {
   const [panels, setPanels] = useState([]);
   const [interviewers, setInterviewers] = useState([]);
   const [selectedId, setSelectedId] = useState("");
-  const [fromDate, setFromDate] = useState(todayStr());
-  const [toDate, setToDate] = useState(plusDaysStr(14));
+  const [fromDate, setFromDate] = useState(defaultFromStr);
+  const [toDate, setToDate] = useState(() => plusDaysStr(14));
   const [rows, setRows] = useState([]);
   const [page, setPage] = useState(0);
   const [size, setSize] = useState(10);
@@ -96,7 +97,7 @@ const InterviewSchedulesTab = () => {
       <div className="mb-3">
         <div className="fw-bold">Interview Schedules</div>
         <div className="text-muted small">
-          See what a panel or interviewer has coming up — without digging through the candidate list.
+          Live and past rounds for a panel or interviewer (history kept when a candidate moves to a later round / different panel).
         </div>
       </div>
 
@@ -154,7 +155,11 @@ const InterviewSchedulesTab = () => {
                   <tr key={r.id}>
                     <td>{formatDate(r.interviewDate)}</td>
                     <td>{formatTime(r.startTime)} – {formatTime(r.endTime)}</td>
-                    <td>{r.round != null ? r.round : 1}</td>
+                    <td>
+                      {r.roundName
+                        ? `${r.round != null ? r.round : 1} (${r.roundName})`
+                        : (r.round != null ? r.round : 1)}
+                    </td>
                     <td>
                       <div>{r.candidateName || "-"}</div>
                       <div className="text-muted small">{r.candidateEmail || ""}</div>
