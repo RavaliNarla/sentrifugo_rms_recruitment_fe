@@ -22,35 +22,49 @@ const OFFER_STATUS_PILL = {
 };
 
 const OFFER_STATUS_LABELS = {
+  GENERATED: "GENERATED",
+  L1_PENDING: "L1 PENDING",
+  L2_PENDING: "L2 PENDING",
+  L1_REJECTED: "L1 REJECTED",
+  L2_REJECTED: "L2 REJECTED",
   SENT: "OFFER LETTER SENT",
-  REJECTED: "REJECTED",
-  L1_REJECTED: "REJECTED",
-  L2_REJECTED: "REJECTED",
+  ACCEPTED: "OFFER ACCEPTED",
+  REJECTED: "OFFER REJECTED",
+  EXPIRED: "EXPIRED",
 };
 
 // Offer Pool status filter: offer status, plus candidates with no offer generated yet.
 const OFFER_FILTER_OPTIONS = [
   { value: "NOT_GENERATED", label: "Not Generated" },
   ...["GENERATED", "L1_PENDING", "L2_PENDING", "L1_REJECTED", "L2_REJECTED", "SENT", "ACCEPTED", "REJECTED", "EXPIRED"]
-    .map((s) => ({ value: s, label: s === "SENT" ? "OFFER LETTER SENT" : s.replace(/_/g, " ") })),
+    .map((s) => ({ value: s, label: OFFER_STATUS_LABELS[s] || s.replace(/_/g, " ") })),
 ];
 
-const getOfferStatusLabel = (status) =>
+export const getOfferStatusLabel = (status) =>
   OFFER_STATUS_LABELS[status] || (status ? String(status).replace(/_/g, " ") : "-");
 
-/** Same "09-09-2026 12.45pm" format as the Job Postings approval-history popup. */
+/** Same "09-09-2026 12.45pm" format as the Job Postings approval-history popup — always IST. */
 const formatApprovalDateTime = (iso) => {
   if (!iso) return "-";
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return String(iso);
-  const dd = String(d.getDate()).padStart(2, "0");
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const yyyy = d.getFullYear();
-  let hours = d.getHours();
-  const minutes = String(d.getMinutes()).padStart(2, "0");
-  const ampm = hours >= 12 ? "pm" : "am";
-  hours = hours % 12 || 12;
-  return `${dd}-${mm}-${yyyy} ${hours}.${minutes}${ampm}`;
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Kolkata",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  }).formatToParts(d);
+  const get = (type) => parts.find((p) => p.type === type)?.value || "";
+  const day = get("day");
+  const month = get("month");
+  const year = get("year");
+  let hour = Number(get("hour"));
+  const minute = get("minute");
+  const dayPeriod = (get("dayPeriod") || "").toLowerCase();
+  return `${day}-${month}-${year} ${hour}.${minute}${dayPeriod}`;
 };
 
 // SCL_39: Accept Before Date must be a future date.

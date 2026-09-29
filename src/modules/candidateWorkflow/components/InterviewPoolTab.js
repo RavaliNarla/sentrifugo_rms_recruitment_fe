@@ -40,9 +40,12 @@ const STATUS_FILTER_OPTIONS = ["INVITE_SENT", "SCHEDULED", "DECLINED", "QUALIFIE
 
 const decisionLabel = (d) => {
   if (!d) return "-";
+  if (d === "STRONG_HIRE") return "Strong Hire";
+  if (d === "HIRE") return "Hire";
+  if (d === "HOLD") return "Hold";
+  if (d === "DO_NOT_HIRE") return "Do Not Hire";
   if (d === "SELECT") return "Select (Recommend)";
   if (d === "REJECT") return "Reject";
-  if (d === "HOLD") return "Hold";
   return d;
 };
 

@@ -598,6 +598,14 @@ a {
 }
 .qa-card .fw-bold { font-size: 0.85rem; color: var(--tb-title); }
 .qa-card .qa-desc { font-size: 0.75rem; color: var(--tb-sub); margin-top: 2px; }
+.qa-card .qa-tip {
+  display: block;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid #d7dde5;
+  font-size: 0.72rem;
+  color: #8a94a6;
+}
 
 .section-title-mini {
   color: var(--brand-primary); font-weight: 700; font-size: 0.95rem; margin: 4px 0 12px;

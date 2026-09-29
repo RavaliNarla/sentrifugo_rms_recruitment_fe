@@ -12,7 +12,7 @@ const QUICK_ACCESS = [
   { to: "/approvals", anyPrivilege: ["L1Approval", "L2Approval"], icon: "bi-check2-square", label: "Requisition Approvals", desc: "Requisition sign-off" },
   { to: "/offer-approvals", anyPrivilege: ["L1Approval", "L2Approval"], icon: "bi-envelope-check", label: "Offer Approvals", desc: "Offer letter sign-off" },
   { to: "/interviewer", privilege: "Interview", icon: "bi-person-video3", label: "My Interviews", desc: "Score candidates" },
-  { to: "/admin/users", privilege: "Admin", icon: "bi-gear-fill", label: "Admin", desc: "Users & master data" },
+  { to: "/admin/users", privilege: "Admin", icon: "bi-people", label: "Users", desc: "Users & master data", tip: "Manage users" },
 ];
 
 /** SCL_38: tip under Quick access, matched to what that login can actually do.
@@ -172,6 +172,7 @@ const Dashboard = () => {
                   <span className="qa-icon"><i className={`bi ${item.icon}`} /></span>
                   <span className="fw-bold">{item.label}</span>
                   <span className="qa-desc">{item.desc}</span>
+                  {item.tip && <span className="qa-tip">{item.tip}</span>}
                 </Link>
               </div>
             ))}

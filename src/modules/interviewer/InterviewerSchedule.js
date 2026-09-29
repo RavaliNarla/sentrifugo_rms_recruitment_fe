@@ -6,10 +6,111 @@ import { formatDate } from "../../shared/dateFormat";
 
 const DECISION_OPTIONS = [
   { value: "", label: "Select" },
-  { value: "SELECT", label: "Select (Recommend)" },
-  { value: "REJECT", label: "Reject" },
+  { value: "STRONG_HIRE", label: "Strong Hire" },
+  { value: "HIRE", label: "Hire" },
   { value: "HOLD", label: "Hold" },
+  { value: "DO_NOT_HIRE", label: "Do Not Hire" },
 ];
+
+const COMPETENCY_ROWS = [
+  { key: "TECHNICAL_KNOWLEDGE", label: "Technical Knowledge" },
+  { key: "RELEVANT_EXPERIENCE", label: "Relevant Experience" },
+  { key: "COMMUNICATION", label: "Communication" },
+  { key: "PROBLEM_SOLVING", label: "Problem Solving" },
+  { key: "ATTITUDE_APPROACH", label: "Attitude & Approach" },
+];
+
+const emptyCompetency = () =>
+  COMPETENCY_ROWS.reduce((acc, row) => {
+    acc[row.key] = "";
+    return acc;
+  }, {});
+
+const CompetencyModal = ({ open, candidateName, draft, onChange, onClose }) => {
+  if (!open) return null;
+  const ratings = draft?.competencyRatings || emptyCompetency();
+  const observations = draft?.keyObservations || "";
+
+  const setRating = (key, value) => {
+    onChange({
+      ...draft,
+      competencyRatings: { ...ratings, [key]: value },
+    });
+  };
+
+  const clearRating = (key) => {
+    setRating(key, "");
+  };
+
+  return (
+    <div className="modal show d-block" tabIndex={-1} style={{ background: "rgba(0,0,0,0.45)" }} onClick={onClose}>
+      <div className="modal-dialog modal-dialog-centered modal-lg" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-content">
+          <div className="modal-header">
+            <div>
+              <h5 className="modal-title mb-0" style={{ color: "#1b5e20" }}>
+                Competency Assessment (1=Poor, 5=Excellent)
+              </h5>
+              <div className="text-muted fs-13">{candidateName} — optional</div>
+            </div>
+            <button type="button" className="btn-close" aria-label="Close" onClick={onClose} />
+          </div>
+          <div className="modal-body">
+            <div className="table-responsive">
+              <table className="table table-bordered align-middle mb-3">
+                <thead className="table-light">
+                  <tr>
+                    <th>Competency</th>
+                    {[1, 2, 3, 4, 5].map((n) => (
+                      <th key={n} className="text-center" style={{ width: 52 }}>{n}</th>
+                    ))}
+                    <th style={{ width: 72 }} />
+                  </tr>
+                </thead>
+                <tbody>
+                  {COMPETENCY_ROWS.map((row) => (
+                    <tr key={row.key}>
+                      <td>{row.label}</td>
+                      {[1, 2, 3, 4, 5].map((n) => (
+                        <td key={n} className="text-center">
+                          <input
+                            type="radio"
+                            name={`comp-${row.key}`}
+                            checked={String(ratings[row.key]) === String(n)}
+                            onChange={() => setRating(row.key, String(n))}
+                          />
+                        </td>
+                      ))}
+                      <td className="text-center">
+                        <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => clearRating(row.key)}>
+                          Clear
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <label className="form-label fw-semibold" style={{ color: "#1b5e20" }}>Key Observations</label>
+            <textarea
+              className="form-control"
+              rows={4}
+              placeholder="Optional notes"
+              value={observations}
+              onChange={(e) => onChange({ ...draft, keyObservations: e.target.value })}
+            />
+            <div className="form-text mt-2">
+              Competency assessment is optional. If you rate any competency, all five must be rated. Rating / Rationale / Decision outside become required for this candidate.
+            </div>
+          </div>
+          <div className="modal-footer">
+            <button type="button" className="btn btn-primary" onClick={onClose}>Done</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const InterviewerSchedule = () => {
   const [requisitions, setRequisitions] = useState([]);
@@ -21,8 +122,8 @@ const InterviewerSchedule = () => {
   const [scores, setScores] = useState({});
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [competencyFor, setCompetencyFor] = useState(null);
 
-  // Only requisitions / positions that have interviews scheduled on the current user's panel(s).
   useEffect(() => {
     recruiterApiService.getMyInterviewRequisitions()
       .then((res) => setRequisitions(res.data.data || []))
@@ -50,19 +151,26 @@ const InterviewerSchedule = () => {
       const res = await recruiterApiService.getMyInterviews(positionId, dateFilter);
       const data = res.data.data || [];
       setRows(data);
-      // SCL_29: redisplay the interviewer's own previously-saved score/rationale/decision, not blank fields.
       const initial = {};
       data.forEach((r) => {
-        // Keep decimal precision from BE (e.g. 7.5), strip useless trailing zeros.
         let scoreStr = "";
         if (r.myScore != null && r.myScore !== "") {
           const n = Number(r.myScore);
           scoreStr = Number.isNaN(n) ? String(r.myScore) : String(n);
         }
+        const ratings = { ...emptyCompetency() };
+        if (r.myCompetencyRatings && typeof r.myCompetencyRatings === "object") {
+          COMPETENCY_ROWS.forEach((row) => {
+            const v = r.myCompetencyRatings[row.key];
+            if (v != null && v !== "") ratings[row.key] = String(v);
+          });
+        }
         initial[r.candidateId] = {
           score: scoreStr,
           rationale: r.myRationale || "",
           decision: r.myDecision || "",
+          competencyRatings: ratings,
+          keyObservations: r.myKeyObservations || "",
         };
       });
       setScores(initial);
@@ -82,6 +190,9 @@ const InterviewerSchedule = () => {
     setScores((prev) => ({ ...prev, [candidateId]: { ...prev[candidateId], [field]: value } }));
   };
 
+  const competencyFilledCount = (ratings = {}) =>
+    COMPETENCY_ROWS.filter((row) => ratings[row.key] !== "" && ratings[row.key] != null).length;
+
   const handleSubmit = async () => {
     const requests = [];
     for (const row of rows) {
@@ -89,33 +200,67 @@ const InterviewerSchedule = () => {
       const scoreRaw = v.score;
       const rationale = (v.rationale || "").trim();
       const decision = (v.decision || "").trim();
-      if (scoreRaw === "" || scoreRaw === undefined) {
+      const ratings = v.competencyRatings || emptyCompetency();
+      const keyObservations = (v.keyObservations || "").trim();
+      const filledComp = competencyFilledCount(ratings);
+      const hasScore = !(scoreRaw === "" || scoreRaw === undefined || scoreRaw === null);
+      const hasRationale = !!rationale;
+      const hasDecision = !!decision;
+      const anyMain = hasScore || hasRationale || hasDecision;
+      const anyComp = filledComp > 0 || !!keyObservations;
+
+      if (!anyMain && !anyComp) {
+        // Untouched candidate — skip (all-or-none across candidates).
+        continue;
+      }
+
+      if (filledComp > 0 && filledComp < COMPETENCY_ROWS.length) {
+        toast.error(`In competency assessment for ${row.candidateName}: rate all five competencies (or clear them all).`);
+        return;
+      }
+
+      if (anyComp && filledComp === COMPETENCY_ROWS.length && !(hasScore && hasRationale && hasDecision)) {
+        toast.error(`Competency assessment for ${row.candidateName} requires Rating, Rationale, and Decision.`);
+        return;
+      }
+
+      if (anyMain && !(hasScore && hasRationale && hasDecision)) {
+        if (!hasScore) toast.error(`Enter Rating for ${row.candidateName}`);
+        else if (!hasRationale) toast.error(`Enter Rationale for ${row.candidateName}`);
+        else toast.error(`Select Decision for ${row.candidateName}`);
+        return;
+      }
+
+      if (!hasScore) {
         toast.error(`Enter Rating for ${row.candidateName}`);
         return;
       }
+
       const score = Number(scoreRaw);
       if (Number.isNaN(score) || score < 1 || score > 10) {
         toast.error("Ratings must be between 1 and 10 (decimals like 7.5 allowed)");
         return;
       }
-      if (!rationale) {
-        toast.error(`Enter Rationale for ${row.candidateName}`);
-        return;
-      }
-      if (!decision) {
-        toast.error(`Select Decision for ${row.candidateName}`);
-        return;
-      }
+
+      const competencyRatings = filledComp === COMPETENCY_ROWS.length
+        ? COMPETENCY_ROWS.reduce((acc, rowDef) => {
+            acc[rowDef.key] = Number(ratings[rowDef.key]);
+            return acc;
+          }, {})
+        : undefined;
+
       requests.push({
         candidateId: row.candidateId,
         score,
         rationale,
         decision,
+        competencyRatings,
+        keyObservations: keyObservations || undefined,
       });
     }
 
     if (requests.length === 0) {
-      toast.error("No candidates to score");
+      toast.error("Fill Rating, Rationale, and Decision for at least one candidate before submitting.");
       return;
     }
     setSaving(true);
@@ -173,56 +318,73 @@ const InterviewerSchedule = () => {
                     <th>Date</th>
                     <th>Time</th>
                     <th>Status</th>
-                    <th style={{ width: 110 }}>Rating (1-10) <span className="text-danger">*</span></th>
-                    <th>Rationale <span className="text-danger">*</span></th>
-                    <th style={{ width: 160 }}>Decision <span className="text-danger">*</span></th>
+                    <th style={{ width: 100 }}>Rating (1-10)</th>
+                    <th>Rationale</th>
+                    <th style={{ width: 140 }}>Decision</th>
+                    <th style={{ width: 150 }}>Competency</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {rows.map((r) => (
-                    <tr key={r.candidateId}>
-                      <td>{r.candidateName}</td>
-                      <td>{r.roundName ? `${r.round != null ? r.round : 1} (${r.roundName})` : (r.round != null ? r.round : 1)}</td>
-                      <td>{formatDate(r.interviewDate)}</td>
-                      <td>{r.startTime} - {r.endTime}</td>
-                      <td><span className="badge bg-secondary">{r.applicationStatus}</span></td>
-                      <td>
-                        <input
-                          type="number"
-                          min={1}
-                          max={10}
-                          step="0.1"
-                          className="form-control form-control-sm"
-                          value={scores[r.candidateId]?.score ?? ""}
-                          onChange={(e) => updateScore(r.candidateId, "score", e.target.value)}
-                        />
-                      </td>
-                      <td>
-                        <input
-                          className="form-control form-control-sm"
-                          placeholder="Why this score?"
-                          value={scores[r.candidateId]?.rationale ?? ""}
-                          onChange={(e) => updateScore(r.candidateId, "rationale", e.target.value)}
-                        />
-                      </td>
-                      <td>
-                        <select
-                          className="form-select form-select-sm"
-                          value={scores[r.candidateId]?.decision ?? ""}
-                          onChange={(e) => updateScore(r.candidateId, "decision", e.target.value)}
-                        >
-                          {DECISION_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                        </select>
-                      </td>
-                    </tr>
-                  ))}
+                  {rows.map((r) => {
+                    const draft = scores[r.candidateId] || {};
+                    const filled = competencyFilledCount(draft.competencyRatings);
+                    return (
+                      <tr key={r.candidateId}>
+                        <td>{r.candidateName}</td>
+                        <td>{r.roundName ? `${r.round != null ? r.round : 1} (${r.roundName})` : (r.round != null ? r.round : 1)}</td>
+                        <td>{formatDate(r.interviewDate)}</td>
+                        <td>{r.startTime} - {r.endTime}</td>
+                        <td><span className="badge bg-secondary">{r.applicationStatus}</span></td>
+                        <td>
+                          <input
+                            type="number"
+                            min={1}
+                            max={10}
+                            step="0.1"
+                            className="form-control form-control-sm"
+                            value={draft.score ?? ""}
+                            onChange={(e) => updateScore(r.candidateId, "score", e.target.value)}
+                          />
+                        </td>
+                        <td>
+                          <input
+                            className="form-control form-control-sm"
+                            placeholder="Why this score?"
+                            value={draft.rationale ?? ""}
+                            onChange={(e) => updateScore(r.candidateId, "rationale", e.target.value)}
+                          />
+                        </td>
+                        <td>
+                          <select
+                            className="form-select form-select-sm"
+                            value={draft.decision ?? ""}
+                            onChange={(e) => updateScore(r.candidateId, "decision", e.target.value)}
+                          >
+                            {DECISION_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                          </select>
+                        </td>
+                        <td>
+                          <button
+                            type="button"
+                            className="btn btn-sm btn-outline-success"
+                            onClick={() => setCompetencyFor(r)}
+                          >
+                            {filled > 0 ? `Assessment (${filled}/5)` : "Fill assessment"}
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
                   {rows.length === 0 && (
-                    <tr><td colSpan={8} className="text-center text-muted py-4">No candidates scheduled with your panel for this position on this date.</td></tr>
+                    <tr><td colSpan={9} className="text-center text-muted py-4">No candidates scheduled with your panel for this position on this date.</td></tr>
                   )}
                 </tbody>
               </table>
               {rows.length > 0 && (
-                <div className="d-flex justify-content-end">
+                <div className="d-flex justify-content-between align-items-center">
+                  <div className="text-muted fs-13">
+                    Only fill candidates you interviewed. Rating, Rationale, and Decision must be filled together for those rows.
+                  </div>
                   <button className="btn btn-primary" disabled={saving} onClick={handleSubmit}>
                     {saving ? "Submitting..." : "Submit Scores"}
                   </button>
@@ -232,6 +394,14 @@ const InterviewerSchedule = () => {
           )}
         </div>
       )}
+
+      <CompetencyModal
+        open={!!competencyFor}
+        candidateName={competencyFor?.candidateName || ""}
+        draft={competencyFor ? scores[competencyFor.candidateId] : null}
+        onChange={(next) => competencyFor && setScores((prev) => ({ ...prev, [competencyFor.candidateId]: next }))}
+        onClose={() => setCompetencyFor(null)}
+      />
     </div>
   );
 };

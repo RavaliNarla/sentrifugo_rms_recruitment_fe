@@ -38,6 +38,31 @@ const STATUS_LABELS = {
   DECLINED: "DECLINED",
   COMPENSATION_PENDING: "COMPENSATION PENDING",
   COMPENSATION_SUBMITTED: "COMPENSATION SUBMITTED",
+  MOVED_TO_OFFER: "MOVED TO OFFER",
+};
+
+const OFFER_LIVE_LABELS = {
+  GENERATED: "GENERATED",
+  L1_PENDING: "L1 PENDING",
+  L2_PENDING: "L2 PENDING",
+  L1_REJECTED: "L1 REJECTED",
+  L2_REJECTED: "L2 REJECTED",
+  SENT: "OFFER LETTER SENT",
+  ACCEPTED: "OFFER ACCEPTED",
+  REJECTED: "OFFER REJECTED",
+  EXPIRED: "EXPIRED",
+};
+
+const OFFER_LIVE_PILL = {
+  GENERATED: "status-pill-secondary",
+  L1_PENDING: "status-pill-warning",
+  L2_PENDING: "status-pill-warning",
+  L1_REJECTED: "status-pill-danger",
+  L2_REJECTED: "status-pill-danger",
+  SENT: "status-pill-info",
+  ACCEPTED: "status-pill-success",
+  REJECTED: "status-pill-danger",
+  EXPIRED: "status-pill-secondary",
 };
 
 const DECISION_SUCCESS_MESSAGES = {
@@ -50,13 +75,25 @@ const ROUND_PREFIX_STATUSES = new Set([
   "INVITE_SENT", "SCHEDULED", "DECLINED", "QUALIFIED", "DISQUALIFIED",
 ]);
 
-export const getStatusLabel = (status, interviewRound) => {
+/** Live candidate-pool label. Once moved to offer, show offer status (not "MOVED TO OFFER"). */
+export const getStatusLabel = (status, interviewRound, offerStatus) => {
   if (!status) return "-";
+  if (status === "MOVED_TO_OFFER") {
+    if (offerStatus && OFFER_LIVE_LABELS[offerStatus]) return OFFER_LIVE_LABELS[offerStatus];
+    return offerStatus ? String(offerStatus).replace(/_/g, " ") : "OFFER POOL";
+  }
   const base = STATUS_LABELS[status] || String(status).replace(/_/g, " ");
   if (!ROUND_PREFIX_STATUSES.has(status)) return base;
   const r = interviewRound != null && interviewRound !== "" ? Number(interviewRound) : 1;
   const roundNum = Number.isFinite(r) && r > 0 ? r : 1;
   return `R${roundNum} ${base}`;
+};
+
+export const getStatusPillClass = (status, offerStatus) => {
+  if (status === "MOVED_TO_OFFER" && offerStatus && OFFER_LIVE_PILL[offerStatus]) {
+    return OFFER_LIVE_PILL[offerStatus];
+  }
+  return STATUS_PILL[status] || "status-pill-secondary";
 };
 
 /** Shortlist buttons only for Applied / SHORTLISTED / REJECTED / ON HOLD. */
@@ -262,7 +299,7 @@ const CandidatePoolTab = ({ requisitionId, positionId, isActive, onScheduleInter
                 <td>{c.name}</td>
                 <td>{c.phone}</td>
                 <td>{c.email}</td>
-                <td><span className={`status-pill ${STATUS_PILL[c.status] || "status-pill-secondary"}`}>{getStatusLabel(c.status, c.interviewRound)}</span></td>
+                <td><span className={`status-pill ${getStatusPillClass(c.status, c.offerStatus)}`}>{getStatusLabel(c.status, c.interviewRound, c.offerStatus)}</span></td>
                 <td>
                   <button className="icon-btn-circle me-2" title="View Profile" onClick={() => setProfileCandidate(c)}>
                     <i className="bi bi-person" />
