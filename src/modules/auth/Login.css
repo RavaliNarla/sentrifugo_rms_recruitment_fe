@@ -210,3 +210,42 @@
   .auth-left { display: none; }
   .auth-right { flex: 1 1 100%; }
 }
+
+/* Password field with show/hide eye button */
+.auth-password-wrap {
+  position: relative;
+}
+
+.auth-password-wrap .form-control {
+  padding-right: 2.5rem;
+}
+
+/* The eye button sits where Bootstrap draws its invalid icon - drop that icon (red border stays). */
+.auth-password-wrap .form-control.is-invalid {
+  background-image: none;
+  padding-right: 2.5rem;
+}
+
+/* Hide the browser's own reveal button (Edge) so only one eye shows. */
+.auth-password-wrap input::-ms-reveal,
+.auth-password-wrap input::-ms-clear {
+  display: none;
+}
+
+.auth-password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 0.5rem;
+  transform: translateY(-50%);
+  border: 0;
+  background: transparent;
+  padding: 0.25rem;
+  line-height: 1;
+  color: #6c757d;
+  cursor: pointer;
+}
+
+.auth-password-toggle:hover,
+.auth-password-toggle:focus-visible {
+  color: #212529;
+}

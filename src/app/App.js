@@ -13,6 +13,7 @@ import AddPosition from "../modules/jobPosting/AddPosition";
 import Approvals from "../modules/approvals/Approvals";
 import OfferApprovals from "../modules/offerApprovals/OfferApprovals";
 import CandidateWorkflow from "../modules/candidateWorkflow/CandidateWorkflow";
+import ScheduleInterviewPage from "../modules/candidateWorkflow/ScheduleInterviewPage";
 import CommitteeManagement from "../modules/committeeManagement/CommitteeManagement";
 import InterviewerSchedule from "../modules/interviewer/InterviewerSchedule";
 import UsersPage from "../modules/admin/UsersPage";
@@ -93,6 +94,16 @@ function App() {
                 privilegesRequired={["CandidatePool", "InterviewPool", "CompensationPool", "OfferPool"]}
               >
                 {withLayout(<CandidateWorkflow />)}
+              </PrivilegeRoute>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/candidate-workflow/schedule-interview"
+          element={
+            <PrivateRoute>
+              <PrivilegeRoute privilegesRequired={["CandidatePool", "InterviewPool"]}>
+                {withLayout(<ScheduleInterviewPage />)}
               </PrivilegeRoute>
             </PrivateRoute>
           }

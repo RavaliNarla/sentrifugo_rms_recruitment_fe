@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import recruiterApiService from "../../core/recruiterApiService";
@@ -24,10 +25,18 @@ const CandidateWorkflow = () => {
     { key: "OFFER_POOL", label: "Offer Pool", privilege: "OfferPool" },
   ].filter((t) => privileges[t.privilege]);
 
-  const [activeTab, setActiveTab] = useState(tabs[0]?.key);
+  const navigate = useNavigate();
+  const location = useLocation();
+  // Coming back from the Schedule Interviews page: reselect the same requisition / position / tab.
+  const restore = location.state?.restore || {};
+  const pendingPositionIdRef = useRef(restore.positionId || "");
+
+  const [activeTab, setActiveTab] = useState(
+    tabs.some((t) => t.key === restore.activeTab) ? restore.activeTab : tabs[0]?.key
+  );
   const [requisitions, setRequisitions] = useState([]);
   const [positions, setPositions] = useState([]);
-  const [requisitionId, setRequisitionId] = useState("");
+  const [requisitionId, setRequisitionId] = useState(restore.requisitionId || "");
   const [positionId, setPositionId] = useState("");
   // Once a tab has been switched to, keep it mounted (just hidden) so revisiting it doesn't
   // unmount/remount/refetch and flash a "Loading..." state again.
@@ -49,13 +58,31 @@ const CandidateWorkflow = () => {
       setPositionId("");
       return;
     }
+    // Ignore stale responses (requisition changed, or StrictMode's dev double-invoke) so an
+    // older response can't consume/clear the position restored from the Schedule page.
+    let cancelled = false;
     recruiterApiService.getActivePositionsByRequisition(requisitionId)
       .then((res) => {
-        setPositions(res.data.data || []);
-        setPositionId("");
+        if (cancelled) return;
+        const list = res.data.data || [];
+        setPositions(list);
+        const pending = pendingPositionIdRef.current;
+        pendingPositionIdRef.current = "";
+        setPositionId(pending && list.some((p) => p.id === pending) ? pending : "");
       })
-      .catch(() => toast.error("Failed to load positions"));
+      .catch(() => { if (!cancelled) toast.error("Failed to load positions"); });
+    return () => { cancelled = true; };
   }, [requisitionId]);
+
+  /**
+   * candidates: [{ id, name }] - in reschedule mode each also carries its current
+   * { panelId, panelName, interviewDate, startTime, endTime, durationMinutes, roundName }.
+   */
+  const openSchedulePage = (candidates, round = 1, mode = "schedule") => {
+    navigate("/candidate-workflow/schedule-interview", {
+      state: { candidates, round, mode, returnTo: { requisitionId, positionId, activeTab } },
+    });
+  };
 
   return (
     <div>
@@ -102,12 +129,12 @@ const CandidateWorkflow = () => {
           <>
             {visitedTabs.has("CANDIDATE_POOL") && (
               <div style={{ display: activeTab === "CANDIDATE_POOL" ? "block" : "none" }}>
-                <CandidatePoolTab requisitionId={requisitionId} positionId={positionId} isActive={activeTab === "CANDIDATE_POOL"} />
+                <CandidatePoolTab requisitionId={requisitionId} positionId={positionId} isActive={activeTab === "CANDIDATE_POOL"} onScheduleInterviews={openSchedulePage} />
               </div>
             )}
             {visitedTabs.has("INTERVIEW_POOL") && (
               <div style={{ display: activeTab === "INTERVIEW_POOL" ? "block" : "none" }}>
-                <InterviewPoolTab positionId={positionId} isActive={activeTab === "INTERVIEW_POOL"} />
+                <InterviewPoolTab positionId={positionId} isActive={activeTab === "INTERVIEW_POOL"} onScheduleInterviews={openSchedulePage} />
               </div>
             )}
             {visitedTabs.has("COMPENSATION_POOL") && (

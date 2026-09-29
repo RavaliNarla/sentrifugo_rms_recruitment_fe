@@ -39,3 +39,8 @@
   background-color: #e9ecef;
   opacity: 0.75;
 }
+
+/* Red border when the wrapper is marked invalid (e.g. className="is-invalid"). */
+.date-input-wrap.is-invalid .date-input-display {
+  border-color: var(--bs-form-invalid-border-color, #dc3545);
+}

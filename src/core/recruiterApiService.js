@@ -78,12 +78,15 @@ const recruiterApiService = {
 
   // Interview scheduling
   scheduleInterviews: (payload) => recruiterApi.post("/interview-scheduling/schedule", payload),
+  scheduleInterviewsMultiDay: (payload) => recruiterApi.post("/interview-scheduling/schedule-multi-day", payload),
   rescheduleInterviews: (payload) => recruiterApi.post("/interview-scheduling/reschedule", payload),
+  rescheduleInterviewsMultiDay: (payload) => recruiterApi.post("/interview-scheduling/reschedule-multi-day", payload),
   cancelInterviews: (candidateIds) => recruiterApi.post("/interview-scheduling/cancel", { candidateIds }),
   getInterviewSchedules: (params) => recruiterApi.get("/interview-scheduling/schedules", { params }),
 
   // Interview pool
   searchInterviewPool: (params) => recruiterApi.get("/interview-pool/search", { params }),
+  getInterviewPoolRounds: (positionId) => recruiterApi.get("/interview-pool/rounds", { params: { positionId } }),
   getMyInterviewRequisitions: () => recruiterApi.get("/interview-pool/my-requisitions"),
   getMyInterviewPositionIds: (requisitionId) => recruiterApi.get("/interview-pool/my-position-ids", { params: { requisitionId } }),
   getMyInterviews: (positionId, interviewDate) =>

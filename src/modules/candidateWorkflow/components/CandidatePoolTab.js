@@ -8,7 +8,6 @@ import ConfirmModal from "../../../shared/ConfirmModal";
 import AddCandidateModal from "./AddCandidateModal";
 import BulkUploadCandidatesModal from "./BulkUploadCandidatesModal";
 import CandidateProfileModal from "./CandidateProfileModal";
-import ScheduleInterviewModal from "./ScheduleInterviewModal";
 
 const STATUS_PILL = {
   DRAFT: "status-pill-secondary",
@@ -57,14 +56,14 @@ export const getStatusLabel = (status, interviewRound) => {
   if (!ROUND_PREFIX_STATUSES.has(status)) return base;
   const r = interviewRound != null && interviewRound !== "" ? Number(interviewRound) : 1;
   const roundNum = Number.isFinite(r) && r > 0 ? r : 1;
-  return `L${roundNum} ${base}`;
+  return `R${roundNum} ${base}`;
 };
 
 /** Shortlist buttons only for Applied / SHORTLISTED / REJECTED / ON HOLD. */
 export const canShortlistDecide = (status) =>
   ["ADDED", "SHORTLISTED", "REJECTED", "ON_HOLD"].includes(status);
 
-const CandidatePoolTab = ({ requisitionId, positionId, isActive }) => {
+const CandidatePoolTab = ({ requisitionId, positionId, isActive, onScheduleInterviews }) => {
   const [candidates, setCandidates] = useState([]);
   const [page, setPage] = useState(0);
   const [size, setSize] = useState(10);
@@ -78,7 +77,6 @@ const CandidatePoolTab = ({ requisitionId, positionId, isActive }) => {
   const [showBulkModal, setShowBulkModal] = useState(false);
   const [editingCandidate, setEditingCandidate] = useState(null);
   const [profileCandidate, setProfileCandidate] = useState(null);
-  const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -228,7 +226,7 @@ const CandidatePoolTab = ({ requisitionId, positionId, isActive }) => {
 
         <div className="d-flex gap-2">
           {canSchedule && (
-            <button className="btn btn-blue-dark" onClick={() => setShowScheduleModal(true)}>
+            <button className="btn btn-blue-dark" onClick={() => onScheduleInterviews(selectedCandidates, 1)}>
               Schedule Interview ({selected.length})
             </button>
           )}
@@ -344,14 +342,6 @@ const CandidatePoolTab = ({ requisitionId, positionId, isActive }) => {
         loading={filePreview.loading}
         title={filePreview.title}
       />
-
-      {showScheduleModal && (
-        <ScheduleInterviewModal
-          candidates={selectedCandidates}
-          onClose={() => setShowScheduleModal(false)}
-          onScheduled={() => { setShowScheduleModal(false); setSelected([]); setSelectedCandidatesMap({}); load(); }}
-        />
-      )}
 
       <ConfirmModal
         show={confirmState.show}

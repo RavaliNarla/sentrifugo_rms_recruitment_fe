@@ -3,7 +3,6 @@ import { toast } from "react-toastify";
 import recruiterApiService from "../../../core/recruiterApiService";
 import Pagination from "../../../shared/Pagination";
 import { formatDate } from "../../../shared/dateFormat";
-import ScheduleInterviewModal from "./ScheduleInterviewModal";
 
 const STATUS_PILL = {
   INVITE_SENT: "status-pill-info",
@@ -21,13 +20,13 @@ const STATUS_LABELS = {
   DISQUALIFIED: "DISQUALIFIED",
 };
 
-/** Display-only: L{round} + status (e.g. L1 QUALIFIED). Backend status values unchanged. */
+/** Display-only: R{round} + status (e.g. R1 QUALIFIED). Backend status values unchanged. */
 const poolStatusLabel = (status, round) => {
   if (!status) return "-";
   const label = STATUS_LABELS[status] || String(status).replace(/_/g, " ");
   const r = round != null && round !== "" ? Number(round) : 1;
   const roundNum = Number.isFinite(r) && r > 0 ? r : 1;
-  return `L${roundNum} ${label}`;
+  return `R${roundNum} ${label}`;
 };
 
 const formatRoundCell = (round, roundName) => {
@@ -97,27 +96,36 @@ const InterviewerScoresHint = ({ roundFeedback, legacyScores }) => {
   );
 };
 
-const InterviewPoolTab = ({ positionId, isActive }) => {
+const InterviewPoolTab = ({ positionId, isActive, onScheduleInterviews }) => {
   const [rows, setRows] = useState([]);
   const [page, setPage] = useState(0);
   const [size, setSize] = useState(10);
   const [totalPages, setTotalPages] = useState(0);
   const [selected, setSelected] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [showNextRoundModal, setShowNextRoundModal] = useState(false);
-  const [showRescheduleModal, setShowRescheduleModal] = useState(false);
   const [searchText, setSearchText] = useState("");
+  /** "" = all, otherwise "{round}|{STATUS}" (e.g. "2|SCHEDULED" = R2 SCHEDULED). */
   const [statusFilter, setStatusFilter] = useState("");
+  /** Rounds present for this position (R1, R2, ...) - builds the status filter options. */
+  const [rounds, setRounds] = useState([1]);
   const [confirmCancel, setConfirmCancel] = useState(false);
 
   const load = async (silent) => {
     if (!silent) setLoading(true);
+    const [filterRound, filterStatus] = statusFilter ? statusFilter.split("|") : [];
     try {
-      const res = await recruiterApiService.searchInterviewPool({
-        positionId, page, size, searchText, statuses: statusFilter ? [statusFilter] : undefined,
-      });
+      const [res, roundsRes] = await Promise.all([
+        recruiterApiService.searchInterviewPool({
+          positionId, page, size, searchText,
+          statuses: filterStatus ? [filterStatus] : undefined,
+          round: filterRound ? Number(filterRound) : undefined,
+        }),
+        recruiterApiService.getInterviewPoolRounds(positionId).catch(() => null),
+      ]);
       setRows(res.data.data.content || []);
       setTotalPages(res.data.data.totalPages || 0);
+      const levels = roundsRes?.data?.data;
+      if (Array.isArray(levels) && levels.length) setRounds(levels);
     } catch (e) {
       toast.error("Failed to load interview pool");
     } finally {
@@ -235,7 +243,9 @@ const InterviewPoolTab = ({ positionId, isActive }) => {
           <button className="btn btn-link fs-14 text-danger p-0 text-decoration-none" onClick={clearFilters}>Clear all</button>
           <select className="form-select form-select-sm" style={{ width: 190 }} value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(0); }}>
             <option value="">All Statuses</option>
-            {STATUS_FILTER_OPTIONS.map((s) => <option key={s} value={s}>{STATUS_LABELS[s] || s.replace(/_/g, " ")}</option>)}
+            {rounds.flatMap((r) => STATUS_FILTER_OPTIONS.map((s) => (
+              <option key={`${r}|${s}`} value={`${r}|${s}`}>{poolStatusLabel(s, r)}</option>
+            )))}
           </select>
           <div className="search-boxpost">
             <i className="bi bi-search" />
@@ -252,7 +262,17 @@ const InterviewPoolTab = ({ positionId, isActive }) => {
                 type="button"
                 className="btn btn-outline-primary"
                 title="Reschedule selected interviews"
-                onClick={() => setShowRescheduleModal(true)}
+                onClick={() => onScheduleInterviews(selectedRows.map((r) => ({
+                  id: r.candidateId,
+                  name: r.candidateName,
+                  panelId: r.panelId,
+                  panelName: r.panelName,
+                  interviewDate: r.interviewDate,
+                  startTime: r.startTime,
+                  endTime: r.endTime,
+                  durationMinutes: r.durationMinutes,
+                  roundName: r.roundName,
+                })), rescheduleRound, "reschedule")}
               >
                 <i className="bi bi-calendar2-week me-1" />
                 Reschedule ({selected.length})
@@ -269,7 +289,7 @@ const InterviewPoolTab = ({ positionId, isActive }) => {
             </>
           )}
           {canScheduleNext && (
-            <button className="btn btn-outline-primary" onClick={() => setShowNextRoundModal(true)}>
+            <button className="btn btn-outline-primary" onClick={() => onScheduleInterviews(selectedRows.map((r) => ({ id: r.candidateId, name: r.candidateName })), nextRound)}>
               Schedule Next Round ({selected.length})
             </button>
           )}
@@ -339,32 +359,6 @@ const InterviewPoolTab = ({ positionId, isActive }) => {
 
       <Pagination page={page} totalPages={totalPages} onChange={setPage} size={size} onSizeChange={(s) => { setSize(s); setPage(0); }} />
 
-      {showNextRoundModal && canScheduleNext && (
-        <ScheduleInterviewModal
-          candidates={selectedRows.map((r) => ({ id: r.candidateId, name: r.candidateName }))}
-          round={nextRound}
-          onClose={() => setShowNextRoundModal(false)}
-          onScheduled={() => {
-            setShowNextRoundModal(false);
-            setSelected([]);
-            load();
-          }}
-        />
-      )}
-
-      {showRescheduleModal && canRescheduleOrCancel && rescheduleRound != null && (
-        <ScheduleInterviewModal
-          candidates={selectedRows.map((r) => ({ id: r.candidateId, name: r.candidateName }))}
-          round={rescheduleRound}
-          mode="reschedule"
-          onClose={() => setShowRescheduleModal(false)}
-          onScheduled={() => {
-            setShowRescheduleModal(false);
-            setSelected([]);
-            load();
-          }}
-        />
-      )}
 
       {confirmCancel && (
         <div className="modal show d-block" style={{ background: "rgba(0,0,0,0.45)" }}>

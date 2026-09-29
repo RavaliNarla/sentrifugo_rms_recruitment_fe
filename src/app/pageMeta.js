@@ -18,6 +18,11 @@ const ROUTES = [
     subtitle: "Create, submit and track requisitions through approval",
   },
   {
+    prefix: "/candidate-workflow/schedule-interview",
+    title: "Candidate Management",
+    subtitle: "Schedule or reschedule interviews for the selected candidates",
+  },
+  {
     prefix: "/candidate-workflow",
     title: "Candidate Management",
     subtitle: "Manage candidates through screening, interview, compensation and offer",

@@ -9,6 +9,30 @@ import logo from "../../assets/sagar-logo.png";
 import companyLogo from "../../assets/sagar-cement-logo.png";
 import "./Login.css";
 
+/** Password field with an eye button to show / hide the typed value. */
+const PasswordInput = ({ invalid, ...inputProps }) => {
+  const [visible, setVisible] = useState(false);
+  return (
+    <div className="auth-password-wrap">
+      <input
+        {...inputProps}
+        type={visible ? "text" : "password"}
+        className={`form-control ${invalid ? "is-invalid" : ""}`}
+      />
+      <button
+        type="button"
+        className="auth-password-toggle"
+        onClick={() => setVisible((v) => !v)}
+        aria-label={visible ? "Hide password" : "Show password"}
+        title={visible ? "Hide password" : "Show password"}
+        tabIndex={-1}
+      >
+        <i className={`bi ${visible ? "bi-eye-slash" : "bi-eye"}`} />
+      </button>
+    </div>
+  );
+};
+
 const Login = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -216,9 +240,8 @@ const Login = () => {
               </div>
               <div className="mb-2 text-start">
                 <label className="form-label auth-label">Password</label>
-                <input
-                  type="password"
-                  className={`form-control ${errors.password ? "is-invalid" : ""}`}
+                <PasswordInput
+                  invalid={!!errors.password}
                   value={password}
                   autoComplete="current-password"
                   onChange={(e) => {
@@ -304,9 +327,9 @@ const Login = () => {
                     </div>
                     <div className="mb-3">
                       <label className="form-label">New Password</label>
-                      <input
-                        type="password"
-                        className={`form-control ${forgotErrors.newPassword ? "is-invalid" : ""}`}
+                      <PasswordInput
+                        invalid={!!forgotErrors.newPassword}
+                        autoComplete="new-password"
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
                       />
@@ -314,9 +337,9 @@ const Login = () => {
                     </div>
                     <div className="mb-1">
                       <label className="form-label">Confirm Password</label>
-                      <input
-                        type="password"
-                        className={`form-control ${forgotErrors.confirmPassword ? "is-invalid" : ""}`}
+                      <PasswordInput
+                        invalid={!!forgotErrors.confirmPassword}
+                        autoComplete="new-password"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                       />
