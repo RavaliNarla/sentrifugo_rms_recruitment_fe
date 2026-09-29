@@ -4,7 +4,7 @@ import recruiterApiService from "../../../core/recruiterApiService";
 import masterApiService from "../../../core/masterApiService";
 import Pagination from "../../../shared/Pagination";
 import PdfViewerModal from "../../../shared/PdfViewerModal";
-import { formatDate } from "../../../shared/dateFormat";
+import { formatDate, formatIstDateTime } from "../../../shared/dateFormat";
 import { useFilePreview } from "../../../shared/useFilePreview";
 import DateInput from "../../../shared/DateInput";
 import "../../jobPosting/JobPostings.css";
@@ -43,29 +43,8 @@ const OFFER_FILTER_OPTIONS = [
 export const getOfferStatusLabel = (status) =>
   OFFER_STATUS_LABELS[status] || (status ? String(status).replace(/_/g, " ") : "-");
 
-/** Same "09-09-2026 12.45pm" format as the Job Postings approval-history popup — always IST. */
-const formatApprovalDateTime = (iso) => {
-  if (!iso) return "-";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return String(iso);
-  const parts = new Intl.DateTimeFormat("en-GB", {
-    timeZone: "Asia/Kolkata",
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  }).formatToParts(d);
-  const get = (type) => parts.find((p) => p.type === type)?.value || "";
-  const day = get("day");
-  const month = get("month");
-  const year = get("year");
-  let hour = Number(get("hour"));
-  const minute = get("minute");
-  const dayPeriod = (get("dayPeriod") || "").toLowerCase();
-  return `${day}-${month}-${year} ${hour}.${minute}${dayPeriod}`;
-};
+/** Same "09-09-2026 12.45pm" format as Job Postings approval history — always IST. */
+const formatApprovalDateTime = formatIstDateTime;
 
 // SCL_39: Accept Before Date must be a future date.
 const tomorrowStr = () => {

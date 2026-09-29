@@ -4,7 +4,7 @@ import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import recruiterApiService from "../../core/recruiterApiService";
 import Pagination from "../../shared/Pagination";
-import { formatDate } from "../../shared/dateFormat";
+import { formatDate, formatIstDateTime } from "../../shared/dateFormat";
 import "../jobPosting/JobPostings.css";
 
 const STATUS_PILL = {
@@ -21,20 +21,8 @@ const STATUS_PILL = {
 const L1_STATUS_OPTIONS = ["L1_PENDING", "L2_PENDING", "APPROVED", "L1_REJECTED", "L2_REJECTED"];
 const L2_STATUS_OPTIONS = ["L2_PENDING", "APPROVED", "L2_REJECTED"];
 
-/** SCL_53: BOB-style "09-09-2026 12.45pm" from ISO datetime. */
-const formatApprovalDateTime = (iso) => {
-  if (!iso) return "-";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return String(iso);
-  const dd = String(d.getDate()).padStart(2, "0");
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const yyyy = d.getFullYear();
-  let hours = d.getHours();
-  const minutes = String(d.getMinutes()).padStart(2, "0");
-  const ampm = hours >= 12 ? "pm" : "am";
-  hours = hours % 12 || 12;
-  return `${dd}-${mm}-${yyyy} ${hours}.${minutes}${ampm}`;
-};
+/** SCL_53: BOB-style "09-09-2026 12.45pm" in IST. */
+const formatApprovalDateTime = formatIstDateTime;
 
 const Approvals = () => {
   const navigate = useNavigate();

@@ -4,7 +4,7 @@ import { toast } from "react-toastify";
 import recruiterApiService from "../../core/recruiterApiService";
 import ConfirmModal from "../../shared/ConfirmModal";
 import Pagination from "../../shared/Pagination";
-import { formatDate } from "../../shared/dateFormat";
+import { formatDate, formatIstDateTime } from "../../shared/dateFormat";
 import "./JobPostings.css";
 
 const STATUS_PILL = {
@@ -44,20 +44,8 @@ const MONTH_OPTIONS = [
   { value: "12", label: "December" },
 ];
 
-/** SCL_53: BOB-style "09-09-2026 12.45pm" from ISO datetime. */
-const formatApprovalDateTime = (iso) => {
-  if (!iso) return "-";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return String(iso);
-  const dd = String(d.getDate()).padStart(2, "0");
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const yyyy = d.getFullYear();
-  let hours = d.getHours();
-  const minutes = String(d.getMinutes()).padStart(2, "0");
-  const ampm = hours >= 12 ? "pm" : "am";
-  hours = hours % 12 || 12;
-  return `${dd}-${mm}-${yyyy} ${hours}.${minutes}${ampm}`;
-};
+/** SCL_53: BOB-style "09-09-2026 12.45pm" in IST. */
+const formatApprovalDateTime = formatIstDateTime;
 
 const JobPostings = () => {
   const navigate = useNavigate();

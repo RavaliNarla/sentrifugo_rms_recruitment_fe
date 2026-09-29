@@ -5,6 +5,7 @@ import { clearUser } from "../store/userSlice";
 import { clearAccessToken } from "../core/tokenStorage";
 import authApiService from "../core/authApiService";
 import { getPageMeta } from "./pageMeta";
+import { formatIstNotifTime } from "../shared/dateFormat";
 
 const getInitials = (name = "") => {
   const parts = name.trim().split(" ").filter(Boolean);
@@ -16,21 +17,6 @@ const getInitials = (name = "") => {
 
 const formatRole = (role = "") =>
   role.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
-
-const formatNotifTime = (iso) => {
-  if (!iso) return "";
-  try {
-    const d = new Date(iso);
-    return d.toLocaleString(undefined, {
-      day: "2-digit",
-      month: "short",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  } catch {
-    return "";
-  }
-};
 
 /**
  * Horizontal bar to the right of the sidebar: page title/subtitle on the left,
@@ -154,7 +140,7 @@ const Topbar = () => {
                   notifications.map((n) => (
                     <div key={n.id} className={`topbar-notif-item${n.unread ? " unread" : ""}`}>
                       <div className="topbar-notif-text">{n.message}</div>
-                      <div className="topbar-notif-time">{formatNotifTime(n.createdDate)}</div>
+                      <div className="topbar-notif-time">{formatIstNotifTime(n.createdDate)}</div>
                     </div>
                   ))
                 )}
