@@ -38,6 +38,14 @@ const formatRoundCell = (round, roundName) => {
 
 const STATUS_FILTER_OPTIONS = ["INVITE_SENT", "SCHEDULED", "DECLINED", "QUALIFIED", "DISQUALIFIED"];
 
+const COMPETENCY_LABELS = [
+  { key: "TECHNICAL_KNOWLEDGE", label: "Technical Knowledge" },
+  { key: "RELEVANT_EXPERIENCE", label: "Relevant Experience" },
+  { key: "COMMUNICATION", label: "Communication" },
+  { key: "PROBLEM_SOLVING", label: "Problem Solving" },
+  { key: "ATTITUDE_APPROACH", label: "Attitude & Approach" },
+];
+
 const decisionLabel = (d) => {
   if (!d) return "-";
   if (d === "STRONG_HIRE") return "Strong Hire";
@@ -62,6 +70,14 @@ const formatRoundHeading = (round, roundName) => {
   return name ? `Round ${roundNum} (${name})` : `Round ${roundNum}`;
 };
 
+/** Flat competency lines for the (i) popover — e.g. "Technical Knowledge: 5/5". */
+const competencyLines = (ratings) => {
+  if (!ratings || typeof ratings !== "object") return [];
+  return COMPETENCY_LABELS
+    .filter((row) => ratings[row.key] != null && ratings[row.key] !== "")
+    .map((row) => `${row.label}: ${ratings[row.key]}/5`);
+};
+
 const InterviewerScoresHint = ({ roundFeedback, legacyScores }) => {
   const rounds = Array.isArray(roundFeedback) && roundFeedback.length > 0
     ? roundFeedback.filter((rf) => Array.isArray(rf.scores) && rf.scores.length > 0)
@@ -84,14 +100,22 @@ const InterviewerScoresHint = ({ roundFeedback, legacyScores }) => {
                 {formatRoundHeading(rf.round, rf.roundName)}
               </div>
             )}
-            {rf.scores.map((s, idx) => (
-              <div key={idx} className="mb-2 pb-2 border-bottom" style={{ fontSize: "0.8rem" }}>
-                <div className="fw-semibold">{s.interviewerName || "Interviewer"}</div>
-                <div>Rating: {formatScore(s.score)}</div>
-                <div>Rationale: {s.rationale?.trim() ? s.rationale : "-"}</div>
-                <div>Decision: {decisionLabel(s.decision)}</div>
-              </div>
-            ))}
+            {rf.scores.map((s, idx) => {
+              const comps = competencyLines(s.competencyRatings);
+              const observations = typeof s.keyObservations === "string" ? s.keyObservations.trim() : "";
+              return (
+                <div key={idx} className="mb-2 pb-2 border-bottom" style={{ fontSize: "0.8rem" }}>
+                  <div className="fw-semibold">{s.interviewerName || "Interviewer"}</div>
+                  <div>Rating: {formatScore(s.score)}</div>
+                  <div>Rationale: {s.rationale?.trim() ? s.rationale : "-"}</div>
+                  <div>Decision: {decisionLabel(s.decision)}</div>
+                  {comps.length > 0 && comps.map((line) => (
+                    <div key={line}>{line}</div>
+                  ))}
+                  {observations ? <div>Key Observations: {observations}</div> : null}
+                </div>
+              );
+            })}
           </div>
         ))}
       </span>
