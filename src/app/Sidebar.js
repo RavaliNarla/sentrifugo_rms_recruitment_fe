@@ -110,11 +110,6 @@ const Sidebar = () => {
           </>
         )}
       </nav>
-
-      <div className="sidebar-footer">
-        <div className="label">Sagar Cement</div>
-        <div>© {new Date().getFullYear()} Sagarsoft</div>
-      </div>
     </aside>
   );
 };
