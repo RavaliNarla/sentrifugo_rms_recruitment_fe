@@ -64,10 +64,10 @@ const BulkUploadCandidatesModal = ({ positionId, onClose, onImported }) => {
       setErrors(rowErrors);
 
       if (success > 0 && failure === 0) {
-        toast.success(`${success} candidate(s) imported successfully`);
+        toast.success(`${success} candidate(s) imported successfully as Resume Pending. Upload resumes via Edit to move them to Applied.`);
         onImported?.();
       } else if (success > 0) {
-        toast.warning(`${success} imported, ${failure} failed. See details below.`);
+        toast.warning(`${success} imported as Resume Pending, ${failure} failed. See details below.`);
         // Keep modal open so row errors stay visible; refresh list in background.
         onImported?.(false);
       } else {

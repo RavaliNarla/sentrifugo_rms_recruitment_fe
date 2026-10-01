@@ -4,6 +4,8 @@ import recruiterApiService from "../../core/recruiterApiService";
 import masterApiService from "../../core/masterApiService";
 import Pagination from "../../shared/Pagination";
 import { formatDate } from "../../shared/dateFormat";
+import DateInput from "../../shared/DateInput";
+import { formatTime12 } from "../../shared/TimeInput";
 
 const plusDaysStr = (n) => {
   const d = new Date();
@@ -13,11 +15,7 @@ const plusDaysStr = (n) => {
 /** Default range includes past rounds (history) plus upcoming. */
 const defaultFromStr = () => plusDaysStr(-90);
 
-const formatTime = (t) => {
-  if (!t) return "-";
-  const s = String(t);
-  return s.length >= 5 ? s.slice(0, 5) : s;
-};
+const formatTime = (t) => formatTime12(t) || "-";
 
 /**
  * Read-only look-ahead: what interviews a panel (or an interviewer) has in a date range.
@@ -122,11 +120,11 @@ const InterviewSchedulesTab = () => {
         </div>
         <div className="col-md-2">
           <label className="form-label small">From</label>
-          <input type="date" className="form-control" value={fromDate} onChange={(e) => { setFromDate(e.target.value); setPage(0); }} />
+          <DateInput value={fromDate} max={toDate || undefined} onChange={(v) => { setFromDate(v); setPage(0); }} />
         </div>
         <div className="col-md-2">
           <label className="form-label small">To</label>
-          <input type="date" className="form-control" value={toDate} onChange={(e) => { setToDate(e.target.value); setPage(0); }} />
+          <DateInput value={toDate} min={fromDate || undefined} onChange={(v) => { setToDate(v); setPage(0); }} />
         </div>
       </div>
 

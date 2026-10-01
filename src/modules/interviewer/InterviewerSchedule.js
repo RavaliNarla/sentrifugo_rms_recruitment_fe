@@ -3,6 +3,7 @@ import { toast } from "react-toastify";
 import recruiterApiService from "../../core/recruiterApiService";
 import DateInput from "../../shared/DateInput";
 import { formatDate } from "../../shared/dateFormat";
+import { formatTime12 } from "../../shared/TimeInput";
 
 const DECISION_OPTIONS = [
   { value: "", label: "Select" },
@@ -333,7 +334,7 @@ const InterviewerSchedule = () => {
                         <td>{r.candidateName}</td>
                         <td>{r.roundName ? `${r.round != null ? r.round : 1} (${r.roundName})` : (r.round != null ? r.round : 1)}</td>
                         <td>{formatDate(r.interviewDate)}</td>
-                        <td>{r.startTime} - {r.endTime}</td>
+                        <td>{formatTime12(r.startTime)} - {formatTime12(r.endTime)}</td>
                         <td><span className="badge bg-secondary">{r.applicationStatus}</span></td>
                         <td>
                           <input

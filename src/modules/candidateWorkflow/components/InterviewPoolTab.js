@@ -3,6 +3,7 @@ import { toast } from "react-toastify";
 import recruiterApiService from "../../../core/recruiterApiService";
 import Pagination from "../../../shared/Pagination";
 import { formatDate } from "../../../shared/dateFormat";
+import { formatTime12 } from "../../../shared/TimeInput";
 
 const STATUS_PILL = {
   INVITE_SENT: "status-pill-info",
@@ -364,7 +365,7 @@ const InterviewPoolTab = ({ positionId, isActive, onScheduleInterviews }) => {
                 <td>{r.candidateName}</td>
                 <td>{formatRoundCell(r.round, r.roundName)}</td>
                 <td>{formatDate(r.interviewDate)}</td>
-                <td>{r.startTime ? `${r.startTime} - ${r.endTime}` : "-"}</td>
+                <td>{r.startTime ? `${formatTime12(r.startTime)} - ${formatTime12(r.endTime)}` : "-"}</td>
                 <td>{r.panelName || "-"}</td>
                 <td>
                   {r.finalScore != null ? formatScore(r.finalScore) : "-"}

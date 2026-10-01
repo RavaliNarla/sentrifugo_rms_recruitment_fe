@@ -1,0 +1,67 @@
+/* One input-looking box: [hh] : [mm] [AM/PM]  (clock icon). Each part is a borderless select. */
+.time-input {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  cursor: default;
+}
+
+.time-input:focus-within {
+  border-color: var(--bs-primary-border-subtle, #86b7fe);
+  box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.15);
+}
+
+.time-input select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 0 2px;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  text-align: center;
+  text-align-last: center;
+  cursor: pointer;
+  border-radius: 4px;
+  outline: none;
+}
+
+.time-input select:hover:not(:disabled),
+.time-input select:focus {
+  background: var(--bs-tertiary-bg, #f1f3f5);
+}
+
+.time-input select:disabled {
+  cursor: default;
+  color: var(--bs-secondary-color, #6c757d);
+}
+
+.time-input .time-input-hour,
+.time-input .time-input-minute {
+  width: 2.4em;
+}
+
+.time-input .time-input-period {
+  width: 3.2em;
+  margin-left: 4px;
+}
+
+.time-input-sep {
+  color: var(--bs-secondary-color, #6c757d);
+}
+
+.time-input-icon {
+  margin-left: auto;
+  padding-left: 6px;
+  color: var(--bs-secondary-color, #6c757d);
+}
+
+/* Red border only - Bootstrap's invalid icon would sit on top of the clock icon. */
+.time-input.is-invalid {
+  border-color: var(--bs-form-invalid-border-color, #dc3545);
+  background-image: none;
+  padding-right: 0.75rem;
+}

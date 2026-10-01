@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import recruiterApiService from "../../core/recruiterApiService";
 import ConfirmModal from "../../shared/ConfirmModal";
 import DateInput from "../../shared/DateInput";
+import TimeInput, { formatTime12 } from "../../shared/TimeInput";
 import { formatDate } from "../../shared/dateFormat";
 import { generateSlotsSkippingBreaks } from "./components/ScheduleInterviewModal";
 
@@ -442,14 +443,14 @@ const ScheduleInterviewPage = () => {
                   </div>
                   <div className="col-4">
                     <label className="form-label">Start time <span className="text-danger">*</span></label>
-                    <input type="time" className={`form-control ${err(day.id, "start") ? "is-invalid" : ""}`} value={day.start}
-                      onChange={(e) => updateDay(day.id, { start: e.target.value })} />
+                    <TimeInput value={day.start} invalid={!!err(day.id, "start")} ariaLabel="Start time"
+                      onChange={(v) => updateDay(day.id, { start: v })} />
                     {fieldError(err(day.id, "start"))}
                   </div>
                   <div className="col-4">
                     <label className="form-label">End time <span className="text-danger">*</span></label>
-                    <input type="time" className={`form-control ${endError(day) ? "is-invalid" : ""}`} value={day.end}
-                      onChange={(e) => updateDay(day.id, { end: e.target.value })} />
+                    <TimeInput value={day.end} invalid={!!endError(day)} ariaLabel="End time"
+                      onChange={(v) => updateDay(day.id, { end: v })} />
                     {fieldError(endError(day))}
                   </div>
                   <div className="col-4">
@@ -471,11 +472,15 @@ const ScheduleInterviewPage = () => {
                   {day.breaks.map((b) => (
                     <div key={b.id} className="mb-1">
                       <div className="d-flex align-items-center gap-2">
-                        <input type="time" className={`form-control form-control-sm ${breakErrors[b.id] ? "is-invalid" : ""}`} style={{ maxWidth: 130 }}
-                          value={b.start} onChange={(e) => updateBreak(day, b.id, "start", e.target.value)} aria-label="Break start" />
+                        <div style={{ width: 160 }}>
+                          <TimeInput size="sm" value={b.start} invalid={!!breakErrors[b.id]} ariaLabel="Break start"
+                            onChange={(v) => updateBreak(day, b.id, "start", v)} />
+                        </div>
                         <span className="text-muted small">to</span>
-                        <input type="time" className={`form-control form-control-sm ${breakErrors[b.id] ? "is-invalid" : ""}`} style={{ maxWidth: 130 }}
-                          value={b.end} onChange={(e) => updateBreak(day, b.id, "end", e.target.value)} aria-label="Break end" />
+                        <div style={{ width: 160 }}>
+                          <TimeInput size="sm" value={b.end} invalid={!!breakErrors[b.id]} ariaLabel="Break end"
+                            onChange={(v) => updateBreak(day, b.id, "end", v)} />
+                        </div>
                         <button type="button" className="btn btn-sm btn-link text-danger p-0" title="Remove break" onClick={() => removeBreak(day, b.id)}>
                           <i className="bi bi-x-circle" />
                         </button>
@@ -505,10 +510,10 @@ const ScheduleInterviewPage = () => {
               <tr className="text-muted fs-13">
                 <th style={{ width: 50 }}>#</th>
                 <th>Candidate</th>
-                {isReschedule && <th style={{ width: 210 }}>Current slot</th>}
-                <th style={{ width: 170 }}>Day</th>
-                <th style={{ width: 260 }}>Slot</th>
-                <th style={{ width: 110 }} className="text-end">Actions</th>
+                {isReschedule && <th style={{ width: 280 }}>Current slot</th>}
+                <th style={{ width: 230 }}>Day</th>
+                <th style={{ width: 240 }}>Slot</th>
+                <th style={{ width: 100 }} className="text-end">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -528,7 +533,7 @@ const ScheduleInterviewPage = () => {
                       <td className="fs-13">
                         {c.interviewDate ? (
                           <>
-                            <div>{formatDate(c.interviewDate)} · {hhmm(c.startTime)}–{hhmm(c.endTime)}</div>
+                            <div className="text-nowrap">{formatDate(c.interviewDate)} · {formatTime12(hhmm(c.startTime))} – {formatTime12(hhmm(c.endTime))}</div>
                             {c.panelName && <div className="text-muted">{c.panelName}</div>}
                           </>
                         ) : <span className="text-muted">—</span>}
@@ -545,19 +550,19 @@ const ScheduleInterviewPage = () => {
                     <td>
                       {isEditing ? (
                         <>
-                          <div className="d-flex align-items-center gap-1">
-                            <input type="time" className="form-control form-control-sm" value={draft.start}
-                              onChange={(e) => onDraftStartChange(c.id, e.target.value)} />
-                            <span className="text-muted">–</span>
-                            <input type="time" className={`form-control form-control-sm ${draftInvalid ? "is-invalid" : ""}`} value={draft.end}
-                              onChange={(e) => setDraft((d) => ({ ...d, end: e.target.value }))} />
+                          {/* Start above end - two 12-hour pickers side by side don't fit the Slot column. */}
+                          <div className="d-flex flex-column gap-1">
+                            <TimeInput size="sm" value={draft.start} ariaLabel="Slot start"
+                              onChange={(v) => onDraftStartChange(c.id, v)} />
+                            <TimeInput size="sm" value={draft.end} invalid={draftInvalid} ariaLabel="Slot end"
+                              onChange={(v) => setDraft((d) => ({ ...d, end: v }))} />
                           </div>
                           {draftInvalid && <div className="text-danger fs-13 mt-1">End time must be after start time</div>}
                         </>
                       ) : (
                         <div>
                           <span className={warn ? "text-danger" : ""}>
-                            {a.start && a.end ? `${a.start} – ${a.end}` : "—"}
+                            {a.start && a.end ? `${formatTime12(a.start)} – ${formatTime12(a.end)}` : "—"}
                           </span>
                           {a.manual && a.start && <span className="badge text-bg-light border ms-2 fw-normal">edited</span>}
                           {warn && <div className="text-danger fs-13">{warn}</div>}

@@ -10,7 +10,7 @@ import BulkUploadCandidatesModal from "./BulkUploadCandidatesModal";
 import CandidateProfileModal from "./CandidateProfileModal";
 
 const STATUS_PILL = {
-  DRAFT: "status-pill-secondary",
+  RESUME_PENDING: "status-pill-warning",
   ADDED: "status-pill-secondary",
   SHORTLISTED: "status-pill-warning",
   REJECTED: "status-pill-danger",
@@ -25,10 +25,10 @@ const STATUS_PILL = {
   MOVED_TO_OFFER: "status-pill-secondary",
 };
 
-const STATUS_OPTIONS = ["DRAFT", "ADDED", "SHORTLISTED", "REJECTED", "ON_HOLD", "INVITE_SENT", "SCHEDULED", "DECLINED", "QUALIFIED", "DISQUALIFIED", "COMPENSATION_PENDING", "COMPENSATION_SUBMITTED", "MOVED_TO_OFFER"];
+const STATUS_OPTIONS = ["RESUME_PENDING", "ADDED", "SHORTLISTED", "REJECTED", "ON_HOLD", "INVITE_SENT", "SCHEDULED", "DECLINED", "QUALIFIED", "DISQUALIFIED", "COMPENSATION_PENDING", "COMPENSATION_SUBMITTED", "MOVED_TO_OFFER"];
 
 const STATUS_LABELS = {
-  DRAFT: "Draft",
+  RESUME_PENDING: "RESUME PENDING",
   ADDED: "Applied",
   SHORTLISTED: "SHORTLISTED",
   REJECTED: "REJECTED",
@@ -314,7 +314,7 @@ const CandidatePoolTab = ({ requisitionId, positionId, isActive, onScheduleInter
                       <i className="bi bi-file-earmark-text" />
                     </button>
                   )}
-                  {(c.status === "DRAFT" || c.status === "ADDED") && (
+                  {(c.status === "RESUME_PENDING" || c.status === "ADDED") && (
                     <>
                       <button className="icon-btn-circle me-2" title="Edit Candidate" onClick={() => { setEditingCandidate(c); setShowAddModal(true); }}>
                         <i className="bi bi-pencil" />
