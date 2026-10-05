@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import recruiterApiService from "../../core/recruiterApiService";
 import DateInput from "../../shared/DateInput";
-import { formatDate } from "../../shared/dateFormat";
+import { formatDate, istTodayStr } from "../../shared/dateFormat";
 import { formatTime12 } from "../../shared/TimeInput";
 
 const DECISION_OPTIONS = [
@@ -194,9 +194,17 @@ const InterviewerSchedule = () => {
   const competencyFilledCount = (ratings = {}) =>
     COMPETENCY_ROWS.filter((row) => ratings[row.key] !== "" && ratings[row.key] != null).length;
 
+  // Scores open on the interview date (IST) - future-dated interviews are view-only.
+  // The backend enforces the same rule.
+  const today = istTodayStr();
+  const isFutureInterview = (row) => !!row.interviewDate && row.interviewDate > today;
+  const lockedTitle = (row) => (isFutureInterview(row) ? `Scoring opens on ${formatDate(row.interviewDate)}` : undefined);
+  const allLocked = rows.length > 0 && rows.every(isFutureInterview);
+
   const handleSubmit = async () => {
     const requests = [];
     for (const row of rows) {
+      if (isFutureInterview(row)) continue;
       const v = scores[row.candidateId] || {};
       const scoreRaw = v.score;
       const rationale = (v.rationale || "").trim();
@@ -311,6 +319,15 @@ const InterviewerSchedule = () => {
         <div className="app-card">
           {loading ? <div>Loading...</div> : (
             <>
+              {dateFilter > today && rows.length > 0 && (
+                <div className="alert alert-info py-2 fs-14 d-flex align-items-center gap-2">
+                  <i className="bi bi-info-circle" />
+                  <span>
+                    Interviews on {formatDate(dateFilter)} haven&apos;t happened yet. You can view the schedule now;
+                    scores can be entered from {formatDate(dateFilter)}.
+                  </span>
+                </div>
+              )}
               <table className="table">
                 <thead className="table-light">
                   <tr>
@@ -329,6 +346,7 @@ const InterviewerSchedule = () => {
                   {rows.map((r) => {
                     const draft = scores[r.candidateId] || {};
                     const filled = competencyFilledCount(draft.competencyRatings);
+                    const locked = isFutureInterview(r);
                     return (
                       <tr key={r.candidateId}>
                         <td>{r.candidateName}</td>
@@ -343,6 +361,8 @@ const InterviewerSchedule = () => {
                             max={10}
                             step="0.1"
                             className="form-control form-control-sm"
+                            disabled={locked}
+                            title={lockedTitle(r)}
                             value={draft.score ?? ""}
                             onChange={(e) => updateScore(r.candidateId, "score", e.target.value)}
                           />
@@ -351,6 +371,8 @@ const InterviewerSchedule = () => {
                           <input
                             className="form-control form-control-sm"
                             placeholder="Why this score?"
+                            disabled={locked}
+                            title={lockedTitle(r)}
                             value={draft.rationale ?? ""}
                             onChange={(e) => updateScore(r.candidateId, "rationale", e.target.value)}
                           />
@@ -358,6 +380,8 @@ const InterviewerSchedule = () => {
                         <td>
                           <select
                             className="form-select form-select-sm"
+                            disabled={locked}
+                            title={lockedTitle(r)}
                             value={draft.decision ?? ""}
                             onChange={(e) => updateScore(r.candidateId, "decision", e.target.value)}
                           >
@@ -368,6 +392,8 @@ const InterviewerSchedule = () => {
                           <button
                             type="button"
                             className="btn btn-sm btn-outline-success"
+                            disabled={locked}
+                            title={lockedTitle(r)}
                             onClick={() => setCompetencyFor(r)}
                           >
                             {filled > 0 ? `Assessment (${filled}/5)` : "Fill assessment"}
@@ -386,7 +412,12 @@ const InterviewerSchedule = () => {
                   <div className="text-muted fs-13">
                     Only fill candidates you interviewed. Rating, Rationale, and Decision must be filled together for those rows.
                   </div>
-                  <button className="btn btn-primary" disabled={saving} onClick={handleSubmit}>
+                  <button
+                    className="btn btn-primary"
+                    disabled={saving || allLocked}
+                    title={allLocked ? `Scoring opens on ${formatDate(rows[0].interviewDate)}` : undefined}
+                    onClick={handleSubmit}
+                  >
                     {saving ? "Submitting..." : "Submit Scores"}
                   </button>
                 </div>

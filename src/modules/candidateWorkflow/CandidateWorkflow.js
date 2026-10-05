@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import recruiterApiService from "../../core/recruiterApiService";
+import SearchableSelect from "../../shared/SearchableSelect";
 import CandidatePoolTab from "./components/CandidatePoolTab";
 import InterviewPoolTab from "./components/InterviewPoolTab";
 import CompensationPoolTab from "./components/CompensationPoolTab";
@@ -90,21 +91,32 @@ const CandidateWorkflow = () => {
         <div className="row">
           <div className="col-md-6 mb-2">
             <label className="form-label fs-14 text-muted">Requisition</label>
-            <select className="form-select" value={requisitionId} onChange={(e) => setRequisitionId(e.target.value)}>
-              <option value="">Select Requisition</option>
-              {requisitions.map((r) => (
-                <option key={r.id} value={r.id}>{r.requisitionCode} - {r.title}</option>
-              ))}
-            </select>
+            <SearchableSelect
+              value={requisitionId}
+              onChange={setRequisitionId}
+              placeholder="Select Requisition"
+              searchPlaceholder="Search requisitions..."
+              ariaLabel="Requisition"
+              options={[
+                { value: "", label: "Select Requisition" },
+                ...requisitions.map((r) => ({ value: r.id, label: `${r.requisitionCode} - ${r.title}` })),
+              ]}
+            />
           </div>
           <div className="col-md-6 mb-2">
             <label className="form-label fs-14 text-muted">Position</label>
-            <select className="form-select" value={positionId} onChange={(e) => setPositionId(e.target.value)} disabled={!requisitionId}>
-              <option value="">Select Position</option>
-              {positions.map((p) => (
-                <option key={p.id} value={p.id}>{p.positionTitleName} - {p.locationName}</option>
-              ))}
-            </select>
+            <SearchableSelect
+              value={positionId}
+              onChange={setPositionId}
+              disabled={!requisitionId}
+              placeholder="Select Position"
+              searchPlaceholder="Search positions..."
+              ariaLabel="Position"
+              options={[
+                { value: "", label: "Select Position" },
+                ...positions.map((p) => ({ value: p.id, label: `${p.positionTitleName} - ${p.locationName}` })),
+              ]}
+            />
           </div>
         </div>
       </div>

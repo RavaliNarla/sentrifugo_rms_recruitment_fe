@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import recruiterApiService from "../../../core/recruiterApiService";
+import SearchableSelect from "../../../shared/SearchableSelect";
 import masterApiService from "../../../core/masterApiService";
 import Pagination from "../../../shared/Pagination";
 import PdfViewerModal from "../../../shared/PdfViewerModal";
@@ -319,10 +320,16 @@ const OfferPoolTab = ({ positionId, isActive }) => {
         <div className="d-flex align-items-center flex-wrap gap-2">
           <span className="text-muted fs-14">Filter by:</span>
           <button className="btn btn-link fs-14 text-danger p-0 text-decoration-none" onClick={clearFilters}>Clear all</button>
-          <select className="form-select form-select-sm" style={{ width: 190 }} value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(0); }}>
-            <option value="">All Statuses</option>
-            {OFFER_FILTER_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-          </select>
+          <SearchableSelect
+            size="sm"
+            style={{ width: 210 }}
+            value={statusFilter}
+            onChange={(v) => { setStatusFilter(v); setPage(0); }}
+            placeholder="All Statuses"
+            searchPlaceholder="Search statuses..."
+            ariaLabel="Status filter"
+            options={[{ value: "", label: "All Statuses" }, ...OFFER_FILTER_OPTIONS]}
+          />
           <div className="search-boxpost">
             <i className="bi bi-search" />
             <input className="form-control form-control-sm" placeholder="Search candidates..." value={searchText} onChange={(e) => setSearchText(e.target.value)} />

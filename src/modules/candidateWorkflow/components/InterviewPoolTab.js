@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
+import { Modal } from "react-bootstrap";
 import { toast } from "react-toastify";
 import recruiterApiService from "../../../core/recruiterApiService";
+import SearchableSelect from "../../../shared/SearchableSelect";
 import Pagination from "../../../shared/Pagination";
 import { formatDate } from "../../../shared/dateFormat";
 import { formatTime12 } from "../../../shared/TimeInput";
@@ -71,56 +73,107 @@ const formatRoundHeading = (round, roundName) => {
   return name ? `Round ${roundNum} (${name})` : `Round ${roundNum}`;
 };
 
-/** Flat competency lines for the (i) popover — e.g. "Technical Knowledge: 5/5". */
-const competencyLines = (ratings) => {
-  if (!ratings || typeof ratings !== "object") return [];
-  return COMPETENCY_LABELS
-    .filter((row) => ratings[row.key] != null && ratings[row.key] !== "")
-    .map((row) => `${row.label}: ${ratings[row.key]}/5`);
+const DECISION_PILL = {
+  STRONG_HIRE: "status-pill-success",
+  HIRE: "status-pill-success",
+  SELECT: "status-pill-success",
+  HOLD: "status-pill-warning",
+  DO_NOT_HIRE: "status-pill-danger",
+  REJECT: "status-pill-danger",
 };
 
-const InterviewerScoresHint = ({ roundFeedback, legacyScores }) => {
-  const rounds = Array.isArray(roundFeedback) && roundFeedback.length > 0
-    ? roundFeedback.filter((rf) => Array.isArray(rf.scores) && rf.scores.length > 0)
-    : (legacyScores?.length
-      ? [{ round: null, roundName: null, scores: legacyScores }]
-      : []);
-  if (rounds.length === 0) return null;
+/** Scored rounds for a row, newest round first (falls back to the legacy flat score list). */
+const feedbackRounds = (row) => {
+  const rounds = Array.isArray(row?.roundFeedback) && row.roundFeedback.length > 0
+    ? row.roundFeedback.filter((rf) => Array.isArray(rf.scores) && rf.scores.length > 0)
+    : (row?.memberScores?.length ? [{ round: null, roundName: null, scores: row.memberScores }] : []);
+  return [...rounds].sort((a, b) => (Number(b.round) || 0) - (Number(a.round) || 0));
+};
+
+const hasCompetency = (ratings) =>
+  !!ratings && typeof ratings === "object" && COMPETENCY_LABELS.some((c) => ratings[c.key] != null && ratings[c.key] !== "");
+
+/** Click the (i) next to a score: full interviewer feedback in a popup (nothing cut off, scrolls if long). */
+const InterviewFeedbackModal = ({ row, onClose }) => {
+  if (!row) return null;
+  const rounds = feedbackRounds(row);
   return (
-    <span className="ms-1 interviewer-scores-hint" title="">
-      <i className="bi bi-info-circle text-app-primary" style={{ cursor: "pointer" }} />
-      <span className="interviewer-scores-popover">
-        <div className="fw-semibold mb-1">Interviewer markings</div>
-        <div className="text-muted mb-2" style={{ fontSize: "0.72rem" }}>
-          Status uses average score only (pass ≥ 5). Decisions below are advisory.
+    <Modal show onHide={onClose} centered scrollable size="lg">
+      <Modal.Header closeButton>
+        <div>
+          <Modal.Title className="text-app-primary" style={{ fontSize: "1.05rem" }}>
+            Interview Feedback — {row.candidateName}
+          </Modal.Title>
+          <div className="text-muted fs-13 mt-1">
+            Average score <span className="fw-semibold text-body">{formatScore(row.finalScore)}</span>
+            {" · "}{row.membersScored}/{row.membersTotal} scored
+            {" · "}
+            <span className={`status-pill ${STATUS_PILL[row.applicationStatus] || "status-pill-secondary"}`}>
+              {poolStatusLabel(row.applicationStatus, row.round)}
+            </span>
+          </div>
         </div>
+      </Modal.Header>
+      <Modal.Body>
         {rounds.map((rf, rIdx) => (
-          <div key={`round-${rf.round ?? rIdx}`} className={rIdx < rounds.length - 1 ? "mb-3" : ""}>
+          <div key={`round-${rf.round ?? rIdx}`} className={rIdx < rounds.length - 1 ? "mb-4" : ""}>
             {rf.round != null && (
-              <div className="fw-semibold text-app-primary mb-2" style={{ fontSize: "0.78rem" }}>
+              <div className="fw-semibold text-app-primary mb-2 ps-2" style={{ borderLeft: "3px solid currentColor" }}>
                 {formatRoundHeading(rf.round, rf.roundName)}
               </div>
             )}
-            {rf.scores.map((s, idx) => {
-              const comps = competencyLines(s.competencyRatings);
-              const observations = typeof s.keyObservations === "string" ? s.keyObservations.trim() : "";
+            {rf.scores.map((sc, idx) => {
+              const observations = typeof sc.keyObservations === "string" ? sc.keyObservations.trim() : "";
               return (
-                <div key={idx} className="mb-2 pb-2 border-bottom" style={{ fontSize: "0.8rem" }}>
-                  <div className="fw-semibold">{s.interviewerName || "Interviewer"}</div>
-                  <div>Rating: {formatScore(s.score)}</div>
-                  <div>Rationale: {s.rationale?.trim() ? s.rationale : "-"}</div>
-                  <div>Decision: {decisionLabel(s.decision)}</div>
-                  {comps.length > 0 && comps.map((line) => (
-                    <div key={line}>{line}</div>
-                  ))}
-                  {observations ? <div>Key Observations: {observations}</div> : null}
+                <div key={idx} className="border rounded p-3 mb-2">
+                  <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                    <span className="fw-semibold">{sc.interviewerName || "Interviewer"}</span>
+                    <span className="d-flex align-items-center gap-2">
+                      <span className="fs-14">Rating <span className="fw-semibold">{formatScore(sc.score)}</span></span>
+                      {sc.decision && (
+                        <span className={`status-pill ${DECISION_PILL[sc.decision] || "status-pill-secondary"}`}>
+                          {decisionLabel(sc.decision)}
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                  <div className="fs-14 mb-2">
+                    <span className="text-muted">Rationale: </span>
+                    <span style={{ whiteSpace: "pre-wrap" }}>{sc.rationale?.trim() ? sc.rationale : "-"}</span>
+                  </div>
+                  {hasCompetency(sc.competencyRatings) && (
+                    <table className="table table-sm table-borderless mb-2 fs-14" style={{ maxWidth: 360 }}>
+                      <thead>
+                        <tr className="text-muted fs-13"><th className="fw-normal">Competency</th><th className="fw-normal text-end">Rating</th></tr>
+                      </thead>
+                      <tbody>
+                        {COMPETENCY_LABELS.map((c) => (
+                          <tr key={c.key}>
+                            <td className="py-1">{c.label}</td>
+                            <td className="py-1 text-end">
+                              {sc.competencyRatings[c.key] != null && sc.competencyRatings[c.key] !== "" ? `${sc.competencyRatings[c.key]}/5` : "-"}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                  {observations && (
+                    <div className="fs-14">
+                      <span className="text-muted">Key Observations: </span>
+                      <span style={{ whiteSpace: "pre-wrap" }}>{observations}</span>
+                    </div>
+                  )}
                 </div>
               );
             })}
           </div>
         ))}
-      </span>
-    </span>
+      </Modal.Body>
+      <Modal.Footer>
+        <button type="button" className="btn btn-secondary" onClick={onClose}>Close</button>
+      </Modal.Footer>
+    </Modal>
   );
 };
 
@@ -137,6 +190,8 @@ const InterviewPoolTab = ({ positionId, isActive, onScheduleInterviews }) => {
   /** Rounds present for this position (R1, R2, ...) - builds the status filter options. */
   const [rounds, setRounds] = useState([1]);
   const [confirmCancel, setConfirmCancel] = useState(false);
+  /** Row whose interviewer feedback popup is open (null = closed). */
+  const [feedbackRow, setFeedbackRow] = useState(null);
 
   const load = async (silent) => {
     if (!silent) setLoading(true);
@@ -269,12 +324,19 @@ const InterviewPoolTab = ({ positionId, isActive, onScheduleInterviews }) => {
         <div className="d-flex align-items-center flex-wrap gap-2">
           <span className="text-muted fs-14">Filter by:</span>
           <button className="btn btn-link fs-14 text-danger p-0 text-decoration-none" onClick={clearFilters}>Clear all</button>
-          <select className="form-select form-select-sm" style={{ width: 190 }} value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(0); }}>
-            <option value="">All Statuses</option>
-            {rounds.flatMap((r) => STATUS_FILTER_OPTIONS.map((s) => (
-              <option key={`${r}|${s}`} value={`${r}|${s}`}>{poolStatusLabel(s, r)}</option>
-            )))}
-          </select>
+          <SearchableSelect
+            size="sm"
+            style={{ width: 210 }}
+            value={statusFilter}
+            onChange={(v) => { setStatusFilter(v); setPage(0); }}
+            placeholder="All Statuses"
+            searchPlaceholder="Search statuses..."
+            ariaLabel="Status filter"
+            options={[
+              { value: "", label: "All Statuses" },
+              ...rounds.flatMap((r) => STATUS_FILTER_OPTIONS.map((s) => ({ value: `${r}|${s}`, label: poolStatusLabel(s, r) }))),
+            ]}
+          />
           <div className="search-boxpost">
             <i className="bi bi-search" />
             <input className="form-control form-control-sm" placeholder="Search candidates..." value={searchText} onChange={(e) => setSearchText(e.target.value)} />
@@ -370,9 +432,16 @@ const InterviewPoolTab = ({ positionId, isActive, onScheduleInterviews }) => {
                 <td>
                   {r.finalScore != null ? formatScore(r.finalScore) : "-"}
                   <small className="text-muted ms-1">({r.membersScored}/{r.membersTotal} scored)</small>
-                  {((r.roundFeedback && r.roundFeedback.some((rf) => rf.scores?.length > 0))
-                    || (r.membersScored > 0 && r.memberScores?.length > 0)) && (
-                    <InterviewerScoresHint roundFeedback={r.roundFeedback} legacyScores={r.memberScores} />
+                  {feedbackRounds(r).length > 0 && (
+                    <button
+                      type="button"
+                      className="btn btn-link p-0 ms-1 align-baseline"
+                      title="View interviewer feedback"
+                      aria-label={`View interviewer feedback for ${r.candidateName}`}
+                      onClick={() => setFeedbackRow(r)}
+                    >
+                      <i className="bi bi-info-circle text-app-primary" />
+                    </button>
                   )}
                 </td>
                 <td><span className={`status-pill ${STATUS_PILL[r.applicationStatus] || "status-pill-secondary"}`}>{poolStatusLabel(r.applicationStatus, r.round)}</span></td>
@@ -387,6 +456,8 @@ const InterviewPoolTab = ({ positionId, isActive, onScheduleInterviews }) => {
 
       <Pagination page={page} totalPages={totalPages} onChange={setPage} size={size} onSizeChange={(s) => { setSize(s); setPage(0); }} />
 
+
+      <InterviewFeedbackModal row={feedbackRow} onClose={() => setFeedbackRow(null)} />
 
       {confirmCancel && (
         <div className="modal show d-block" style={{ background: "rgba(0,0,0,0.45)" }}>

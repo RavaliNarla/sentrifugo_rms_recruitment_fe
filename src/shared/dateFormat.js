@@ -106,3 +106,8 @@ export const formatIstNotifTime = (iso) => {
     return "";
   }
 };
+
+/** Today's date in IST as "YYYY-MM-DD" (same format as API dates, so strings compare correctly). */
+export const istTodayStr = () =>
+  new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata", year: "numeric", month: "2-digit", day: "2-digit" })
+    .format(new Date());
