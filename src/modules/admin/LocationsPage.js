@@ -4,7 +4,7 @@ import masterApiService from "../../core/masterApiService";
 import ConfirmModal from "../../shared/ConfirmModal";
 import Pagination from "../../shared/Pagination";
 
-const EMPTY_FORM = { name: "", stateId: "", address: "" };
+const EMPTY_FORM = { name: "", code: "", stateId: "", address: "" };
 
 const LocationsPage = () => {
   const [locations, setLocations] = useState([]);
@@ -85,7 +85,7 @@ const LocationsPage = () => {
   const openEdit = (loc) => {
     setViewOnly(false);
     setEditing(loc);
-    setForm({ name: loc.name, stateId: loc.stateId, address: loc.address || "" });
+    setForm({ name: loc.name, code: loc.code || "", stateId: loc.stateId, address: loc.address || "" });
     setErrors({});
     setShowModal(true);
   };
@@ -99,6 +99,9 @@ const LocationsPage = () => {
   const validate = () => {
     const next = {};
     if (!form.name.trim()) next.name = "Location Name is required";
+    if (!/^[A-Z0-9]{3}$/.test((form.code || "").trim().toUpperCase())) {
+      next.code = "Code must be exactly 3 letters/digits";
+    }
     if (!form.stateId) next.stateId = "State is required";
     setErrors(next);
     return Object.keys(next).length === 0;
@@ -111,10 +114,16 @@ const LocationsPage = () => {
     setSaving(true);
     try {
       if (editing) {
-        await masterApiService.updateLocation(editing.id, form);
+        await masterApiService.updateLocation(editing.id, {
+          ...form,
+          code: form.code.trim().toUpperCase(),
+        });
         toast.success("Location updated successfully");
       } else {
-        await masterApiService.addLocation(form);
+        await masterApiService.addLocation({
+          ...form,
+          code: form.code.trim().toUpperCase(),
+        });
         toast.success("Location added successfully");
       }
       setShowModal(false);
@@ -172,6 +181,7 @@ const LocationsPage = () => {
             <tr className="text-muted fs-13">
               <th>#</th>
               <th>Location Name</th>
+              <th>Code</th>
               <th>State</th>
               <th>Address</th>
               <th style={{ width: 160 }}>Actions</th>
@@ -182,6 +192,7 @@ const LocationsPage = () => {
               <tr key={loc.id}>
                 <td>{page * size + idx + 1}</td>
                 <td>{loc.name}</td>
+                <td><code>{loc.code || "-"}</code></td>
                 <td>{loc.stateName}</td>
                 <td>{loc.address}</td>
                 <td>
@@ -199,7 +210,7 @@ const LocationsPage = () => {
             ))}
             {locations.length === 0 && (
               <tr>
-                <td colSpan={5} className="text-center text-muted py-4">No locations found</td>
+                <td colSpan={6} className="text-center text-muted py-4">No locations found</td>
               </tr>
             )}
           </tbody>
@@ -226,6 +237,18 @@ const LocationsPage = () => {
                     onChange={(e) => setField("name", e.target.value)}
                   />
                   <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.name || ""}</div>
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">Code <span className="text-danger">*</span></label>
+                  <input
+                    className={`form-control ${errors.code ? "is-invalid" : ""}`}
+                    value={form.code}
+                    maxLength={3}
+                    placeholder="e.g. HYD"
+                    onChange={(e) => setField("code", e.target.value.toUpperCase().replace(/[^A-Z0-9]/gi, "").slice(0, 3))}
+                  />
+                  <small className="text-muted">Exactly 3 characters (A–Z, 0–9). Used in requisition codes.</small>
+                  <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.code || ""}</div>
                 </div>
                 <div className="mb-3">
                   <label className="form-label">State <span className="text-danger">*</span></label>

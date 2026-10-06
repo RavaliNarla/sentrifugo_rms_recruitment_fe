@@ -69,7 +69,6 @@ const LOCKED_OFFER_STATUSES = ["ACCEPTED", "REJECTED", "L1_PENDING", "L2_PENDING
 const OfferPoolTab = ({ positionId, isActive }) => {
   const [candidates, setCandidates] = useState([]);
   const [offers, setOffers] = useState({});
-  const [templates, setTemplates] = useState([]);
   const [templateId, setTemplateId] = useState("");
   const [acceptBeforeDate, setAcceptBeforeDate] = useState("");
   const [joiningDate, setJoiningDate] = useState("");
@@ -104,8 +103,18 @@ const OfferPoolTab = ({ positionId, isActive }) => {
 
   const closeApprovalHistory = () => setHistoryModal({ show: false, candidate: null, rows: [], loading: false });
 
+  // Client uses a single Formal offer letter — auto-pick it (no template dropdown).
+  const pickDefaultTemplateId = (list) => {
+    if (!list || list.length === 0) return "";
+    const formal = list.find((t) => /formal/i.test(t.name || ""));
+    return (formal || list[0]).id;
+  };
+
   useEffect(() => {
-    masterApiService.getOfferTemplates().then((res) => setTemplates(res.data.data || []));
+    masterApiService.getOfferTemplates().then((res) => {
+      const list = res.data.data || [];
+      setTemplateId(pickDefaultTemplateId(list));
+    });
   }, []);
 
   const load = async (silent) => {
@@ -146,7 +155,6 @@ const OfferPoolTab = ({ positionId, isActive }) => {
   useEffect(() => {
     if (!isActive) {
       setSelected([]);
-      setTemplateId("");
       setAcceptBeforeDate("");
       setJoiningDate("");
       setErrors({});
@@ -191,7 +199,7 @@ const OfferPoolTab = ({ positionId, isActive }) => {
   // SCL_36: template-only preview with placeholders when no candidate is selected.
   const handlePreview = async () => {
     if (!templateId) {
-      setErrors((prev) => ({ ...prev, templateId: "Select an offer template" }));
+      toast.error("Offer template is not available");
       return;
     }
     try {
@@ -209,7 +217,7 @@ const OfferPoolTab = ({ positionId, isActive }) => {
 
   const validateGenerate = () => {
     const next = {};
-    if (!templateId) next.templateId = "Select an offer template";
+    if (!templateId) next.templateId = "Offer template is not available";
     if (!acceptBeforeDate) {
       next.acceptBeforeDate = "Accept Before Date is required";
     } else if (acceptBeforeDate <= new Date().toISOString().split("T")[0]) {
@@ -233,7 +241,6 @@ const OfferPoolTab = ({ positionId, isActive }) => {
       await recruiterApiService.generateOffers({ candidateIds: selected, templateId, acceptBeforeDate, joiningDate });
       setGeneratedInfo(count);
       setSelected([]);
-      setTemplateId("");
       setAcceptBeforeDate("");
       setJoiningDate("");
       setErrors({});
@@ -271,27 +278,6 @@ const OfferPoolTab = ({ positionId, isActive }) => {
   return (
     <div>
       <div className="row mb-3">
-        <div className="col-md-3">
-          <label className="form-label small">Offer Template</label>
-          <select
-            className={`form-select ${errors.templateId ? "is-invalid" : ""}`}
-            value={templateId}
-            onChange={(e) => { setTemplateId(e.target.value); setErrors((prev) => (prev.templateId ? { ...prev, templateId: undefined } : prev)); }}
-          >
-            <option value="">Select Template</option>
-            {templates.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
-          </select>
-          <div className="text-danger fs-13 mt-1" style={{ minHeight: "5px" }}>{errors.templateId || ""}</div>
-          {/* SCL_36: preview template with placeholders, or with selected candidate values. */}
-          <button
-            type="button"
-            className="btn btn-outline-secondary btn-sm mt-1"
-            style={{ padding: "2px 10px", fontSize: "0.8125rem" }}
-            onClick={handlePreview}
-          >
-            <i className="bi bi-eye me-1" /> Preview{selected.length === 0 ? " template" : ""}
-          </button>
-        </div>
         <div className="col-md-2">
           <label className="form-label small">Accept Before Date</label>
           <DateInput value={acceptBeforeDate} min={tomorrowStr()} onChange={(v) => { setAcceptBeforeDate(v); setErrors((prev) => (prev.acceptBeforeDate ? { ...prev, acceptBeforeDate: undefined } : prev)); }} />
@@ -306,13 +292,26 @@ const OfferPoolTab = ({ positionId, isActive }) => {
           />
           <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.joiningDate || ""}</div>
         </div>
-        <div className="col-md-5 d-flex flex-wrap align-items-start gap-2" style={{ marginTop: "1.85rem" }}>
+        <div className="col-md-8 d-flex flex-wrap align-items-start gap-2" style={{ marginTop: "1.85rem" }}>
           <button className="btn btn-primary" disabled={generating || selected.length === 0} onClick={handleGenerate}>
             {generating ? "Generating..." : `Generate${selected.length > 0 ? ` (${selected.length})` : ""}`}
           </button>
           <button className="btn btn-primary" disabled={submitting || !hasGeneratedSelected} onClick={handleSubmitForApproval}>
             {submitting ? "Submitting..." : "Submit for Approval"}
           </button>
+        </div>
+        <div className="col-12 mt-1">
+          <button
+            type="button"
+            className="btn btn-outline-secondary btn-sm"
+            style={{ padding: "2px 10px", fontSize: "0.8125rem" }}
+            onClick={handlePreview}
+          >
+            <i className="bi bi-eye me-1" /> Preview{selected.length === 0 ? " template" : ""}
+          </button>
+          {errors.templateId && (
+            <div className="text-danger fs-13 mt-1">{errors.templateId}</div>
+          )}
         </div>
       </div>
 

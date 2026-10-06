@@ -110,6 +110,10 @@ const Sidebar = () => {
           </>
         )}
       </nav>
+
+      <div className="sidebar-footer">
+        © 2021, Sagar Cement. All rights reserved. Powered by Sagarsoft
+      </div>
     </aside>
   );
 };

@@ -452,6 +452,18 @@ const JobPostings = () => {
                     <div className="req-dates">
                       <span><i className="bi bi-calendar-event" />Start: {formatDate(req.startDate)}</span>
                       <span><i className="bi bi-calendar-check" />Expected Fulfilment: {formatDate(req.expectedFulfilmentDate)}</span>
+                      {req.departmentName && (
+                        <span>
+                          <i className="bi bi-building" />
+                          Department: {req.departmentName}{req.departmentCode ? ` (${req.departmentCode})` : ""}
+                        </span>
+                      )}
+                      {req.locationName && (
+                        <span>
+                          <i className="bi bi-geo-alt" />
+                          Location: {req.locationName}{req.locationCode ? ` (${req.locationCode})` : ""}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>

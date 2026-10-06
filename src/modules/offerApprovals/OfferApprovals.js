@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import recruiterApiService from "../../core/recruiterApiService";
+import { refreshNotifications } from "../../core/notificationEvents";
 import Pagination from "../../shared/Pagination";
 import PdfViewerModal from "../../shared/PdfViewerModal";
 import { useFilePreview } from "../../shared/useFilePreview";
@@ -169,6 +170,7 @@ const OfferApprovals = () => {
       setSelected([]);
       setComments("");
       load();
+      refreshNotifications();
     } catch (e) {
       toast.error(e.response?.data?.message || (approve ? "Failed to approve offers" : "Failed to reject offers"));
     } finally {

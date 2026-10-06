@@ -73,6 +73,9 @@ const AddPosition = () => {
   const savingNewPositionRef = useRef(false);
   const fieldRefs = useRef({});
 
+  const departmentLocked = Boolean(requisition?.departmentId);
+  const locationLocked = Boolean(requisition?.locationId);
+
   const setField = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
     setErrors((prev) => (prev[field] ? { ...prev, [field]: undefined } : prev));
@@ -92,7 +95,20 @@ const AddPosition = () => {
     load("certifications", masterApiService.getCertifications(), setCertifications);
 
     recruiterApiService.getRequisition(requisitionId)
-      .then((res) => setRequisition(res.data.data))
+      .then((res) => {
+        const req = res.data.data;
+        setRequisition(req);
+        if (!editingPosition) {
+          setForm((prev) => ({
+            ...prev,
+            departmentId: req.departmentId || prev.departmentId,
+            locationId: req.locationId || prev.locationId,
+          }));
+          if (req.departmentId) {
+            loadPositionTitles(req.departmentId);
+          }
+        }
+      })
       .catch(() => toast.error("Failed to load requisition details"));
 
     if (editingPosition) {
@@ -381,10 +397,18 @@ const AddPosition = () => {
       <div className="row">
         <div className="col-md-6 mb-3" ref={(el) => (fieldRefs.current.departmentId = el)}>
           <label className="form-label">Department <span className="text-danger">*</span></label>
-          <select className={`form-select ${errors.departmentId ? "is-invalid" : ""}`} value={form.departmentId} onChange={(e) => { handleDepartmentChange(e.target.value); setErrors((prev) => (prev.departmentId ? { ...prev, departmentId: undefined } : prev)); }}>
+          <select
+            className={`form-select ${errors.departmentId ? "is-invalid" : ""}`}
+            value={form.departmentId}
+            disabled={departmentLocked}
+            onChange={(e) => { handleDepartmentChange(e.target.value); setErrors((prev) => (prev.departmentId ? { ...prev, departmentId: undefined } : prev)); }}
+          >
             <option value="">Select</option>
-            {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+            {departments.map((d) => <option key={d.id} value={d.id}>{d.name}{d.code ? ` (${d.code})` : ""}</option>)}
           </select>
+          {departmentLocked && (
+            <small className="text-muted">Fixed by this requisition.</small>
+          )}
           <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.departmentId || ""}</div>
         </div>
         <div className="col-md-6 mb-3" ref={(el) => (fieldRefs.current.positionTitleId = el)}>
@@ -407,10 +431,18 @@ const AddPosition = () => {
 
       <div className="mb-3" ref={(el) => (fieldRefs.current.locationId = el)}>
         <label className="form-label">Location <span className="text-danger">*</span></label>
-        <select className={`form-select ${errors.locationId ? "is-invalid" : ""}`} value={form.locationId} onChange={(e) => setField("locationId", e.target.value)}>
+        <select
+          className={`form-select ${errors.locationId ? "is-invalid" : ""}`}
+          value={form.locationId}
+          disabled={locationLocked}
+          onChange={(e) => setField("locationId", e.target.value)}
+        >
           <option value="">Select</option>
-          {locations.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
+          {locations.map((l) => <option key={l.id} value={l.id}>{l.name}{l.code ? ` (${l.code})` : ""}</option>)}
         </select>
+        {locationLocked && (
+          <small className="text-muted">Fixed by this requisition.</small>
+        )}
         <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.locationId || ""}</div>
       </div>
 

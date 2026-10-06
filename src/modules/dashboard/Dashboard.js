@@ -12,7 +12,7 @@ const QUICK_ACCESS = [
   { to: "/approvals", anyPrivilege: ["L1Approval", "L2Approval"], icon: "bi-check2-square", label: "Requisition Approvals", desc: "Requisition sign-off" },
   { to: "/offer-approvals", anyPrivilege: ["L1Approval", "L2Approval"], icon: "bi-envelope-check", label: "Offer Approvals", desc: "Offer letter sign-off" },
   { to: "/interviewer", privilege: "Interview", icon: "bi-person-video3", label: "My Interviews", desc: "Score candidates" },
-  { to: "/admin/users", privilege: "Admin", icon: "bi-people", label: "Users", desc: "Users & master data", tip: "Manage users" },
+  { to: "/admin/users", privilege: "Admin", icon: "bi-people", label: "Users", desc: "Manage users" },
 ];
 
 /** SCL_38: tip under Quick access, matched to what that login can actually do.
@@ -42,13 +42,14 @@ const roleTip = (privileges = {}) => {
 
 const METRICS = [
   { key: "TOTAL_REQUISITIONS", label: "Total Requisitions", field: "totalRequisitions", icon: "bi-file-earmark-text", colorClass: "stat-icon-neutral" },
-  { key: "PENDING_APPROVAL", label: "Pending Approval", field: "pendingApprovalRequisitions", icon: "bi-hourglass-split", colorClass: "stat-icon-warn" },
-  { key: "APPROVED", label: "Approved", field: "approvedRequisitions", icon: "bi-check-circle", colorClass: "stat-icon-completed" },
-  { key: "FULFILLED", label: "Fulfilled", field: "fulfilledRequisitions", icon: "bi-flag-fill", colorClass: "stat-icon-progress" },
+  { key: "REQUISITIONS_PENDING_APPROVAL", label: "Requisitions Pending Approval", field: "pendingApprovalRequisitions", icon: "bi-hourglass-split", colorClass: "stat-icon-warn" },
+  { key: "APPROVED", label: "Approved Requisitions", field: "approvedRequisitions", icon: "bi-check-circle", colorClass: "stat-icon-completed" },
+  { key: "FULFILLED", label: "Fulfilled Requisitions", field: "fulfilledRequisitions", icon: "bi-flag-fill", colorClass: "stat-icon-progress" },
   { key: "TOTAL_CANDIDATES", label: "Total Candidates", field: "totalCandidates", icon: "bi-people", colorClass: "stat-icon-neutral" },
   { key: "SHORTLISTED", label: "Shortlisted", field: "shortlistedCandidates", icon: "bi-star-fill", colorClass: "stat-icon-warn" },
   { key: "SCHEDULED", label: "Scheduled for Interview", field: "scheduledCandidates", icon: "bi-calendar-event", colorClass: "stat-icon-progress" },
   { key: "QUALIFIED", label: "Qualified", field: "qualifiedCandidates", icon: "bi-award-fill", colorClass: "stat-icon-completed" },
+  { key: "OFFERS_PENDING_APPROVAL", label: "Offers Pending Approval", field: "pendingApprovalOffers", icon: "bi-hourglass-split", colorClass: "stat-icon-warn" },
   { key: "OFFERS_SENT", label: "Offers Sent", field: "offersSent", icon: "bi-envelope-paper-fill", colorClass: "stat-icon-purple" },
 ];
 
@@ -158,7 +159,7 @@ const Dashboard = () => {
 
   const requisitionMetrics = METRICS.slice(0, 4);
   const candidateMetrics = METRICS.slice(4, 8);
-  const offerMetrics = METRICS.slice(8);
+  const offerMetrics = METRICS.slice(8); // Offers Pending Approval + Offers Sent
 
   return (
     <div>
@@ -212,7 +213,7 @@ const Dashboard = () => {
               />
             ))}
           </div>
-          <div className="stat-row-v2 mt-3" style={{ gridTemplateColumns: "repeat(1, 1fr)", maxWidth: 260 }}>
+          <div className="stat-row-v2 mt-3" style={{ gridTemplateColumns: "repeat(2, 1fr)", maxWidth: 520 }}>
             {offerMetrics.map((m) => (
               <StatTile
                 key={m.key}

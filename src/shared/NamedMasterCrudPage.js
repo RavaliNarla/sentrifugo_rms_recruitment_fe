@@ -8,7 +8,8 @@ import Pagination from "./Pagination";
  * (Departments, Education Qualifications) - paginated + searched server-side.
  */
 // withDescription: also capture an optional Description (Departments).
-const NamedMasterCrudPage = ({ title, getAll, add, update, remove, withDescription = false }) => {
+// withCode: required unique 3-char code (Departments).
+const NamedMasterCrudPage = ({ title, getAll, add, update, remove, withDescription = false, withCode = false }) => {
   const [items, setItems] = useState([]);
   const [page, setPage] = useState(0);
   const [size, setSize] = useState(10);
@@ -19,8 +20,10 @@ const NamedMasterCrudPage = ({ title, getAll, add, update, remove, withDescripti
   const [editing, setEditing] = useState(null);
   const [viewOnly, setViewOnly] = useState(false);
   const [name, setName] = useState("");
+  const [code, setCode] = useState("");
   const [description, setDescription] = useState("");
   const [nameError, setNameError] = useState("");
+  const [codeError, setCodeError] = useState("");
   const [saving, setSaving] = useState(false);
   const [searchText, setSearchText] = useState("");
   const submittingRef = useRef(false);
@@ -72,8 +75,10 @@ const NamedMasterCrudPage = ({ title, getAll, add, update, remove, withDescripti
     setViewOnly(false);
     setEditing(null);
     setName("");
+    setCode("");
     setDescription("");
     setNameError("");
+    setCodeError("");
     setShowModal(true);
   };
 
@@ -81,8 +86,10 @@ const NamedMasterCrudPage = ({ title, getAll, add, update, remove, withDescripti
     setViewOnly(false);
     setEditing(item);
     setName(item.name);
+    setCode(item.code || "");
     setDescription(item.description || "");
     setNameError("");
+    setCodeError("");
     setShowModal(true);
   };
 
@@ -94,14 +101,25 @@ const NamedMasterCrudPage = ({ title, getAll, add, update, remove, withDescripti
 
   const handleSave = async () => {
     if (submittingRef.current) return;
+    let hasError = false;
     if (!name.trim()) {
       setNameError("Name is required");
-      return;
+      hasError = true;
     }
+    if (withCode) {
+      const normalized = code.trim().toUpperCase();
+      if (!/^[A-Z0-9]{3}$/.test(normalized)) {
+        setCodeError("Code must be exactly 3 letters/digits");
+        hasError = true;
+      }
+    }
+    if (hasError) return;
     submittingRef.current = true;
     setSaving(true);
     try {
-      const payload = withDescription ? { name, description } : { name };
+      const payload = { name };
+      if (withDescription) payload.description = description;
+      if (withCode) payload.code = code.trim().toUpperCase();
       if (editing) {
         await update(editing.id, payload);
         toast.success(`${title} updated successfully`);
@@ -164,6 +182,7 @@ const NamedMasterCrudPage = ({ title, getAll, add, update, remove, withDescripti
             <tr className="text-muted fs-13">
               <th>#</th>
               <th>Name</th>
+              {withCode && <th>Code</th>}
               {withDescription && <th>Description</th>}
               <th style={{ width: 160 }}>Actions</th>
             </tr>
@@ -173,6 +192,7 @@ const NamedMasterCrudPage = ({ title, getAll, add, update, remove, withDescripti
               <tr key={item.id}>
                 <td>{page * size + idx + 1}</td>
                 <td>{item.name}</td>
+                {withCode && <td><code>{item.code || "-"}</code></td>}
                 {withDescription && <td className="text-muted">{item.description || "-"}</td>}
                 <td>
                   <button className="icon-btn-circle me-2" title="View" onClick={() => openView(item)}>
@@ -189,7 +209,7 @@ const NamedMasterCrudPage = ({ title, getAll, add, update, remove, withDescripti
             ))}
             {items.length === 0 && (
               <tr>
-                <td colSpan={withDescription ? 4 : 3} className="text-center text-muted py-4">
+                <td colSpan={(withDescription ? 1 : 0) + (withCode ? 1 : 0) + 3} className="text-center text-muted py-4">
                   No records found
                 </td>
               </tr>
@@ -218,6 +238,23 @@ const NamedMasterCrudPage = ({ title, getAll, add, update, remove, withDescripti
                   autoFocus
                 />
                 <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{nameError || ""}</div>
+                {withCode && (
+                  <div className="mt-2">
+                    <label className="form-label">Code <span className="text-danger">*</span></label>
+                    <input
+                      className={`form-control ${codeError ? "is-invalid" : ""}`}
+                      value={code}
+                      maxLength={3}
+                      placeholder="e.g. HR"
+                      onChange={(e) => {
+                        setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/gi, "").slice(0, 3));
+                        setCodeError("");
+                      }}
+                    />
+                    <small className="text-muted">Exactly 3 characters (A–Z, 0–9). Used in requisition codes.</small>
+                    <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{codeError || ""}</div>
+                  </div>
+                )}
                 {withDescription && (
                   <div className="mt-2">
                     <label className="form-label">Description</label>

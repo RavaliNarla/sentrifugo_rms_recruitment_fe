@@ -52,7 +52,7 @@ const CompetencyModal = ({ open, candidateName, draft, onChange, onClose }) => {
               <h5 className="modal-title mb-0" style={{ color: "#1b5e20" }}>
                 Competency Assessment (1=Poor, 5=Excellent)
               </h5>
-              <div className="text-muted fs-13">{candidateName} — optional</div>
+              <div className="text-muted fs-13">{candidateName} — required</div>
             </div>
             <button type="button" className="btn-close" aria-label="Close" onClick={onClose} />
           </div>
@@ -101,7 +101,7 @@ const CompetencyModal = ({ open, candidateName, draft, onChange, onClose }) => {
               onChange={(e) => onChange({ ...draft, keyObservations: e.target.value })}
             />
             <div className="form-text mt-2">
-              Competency assessment is optional. If you rate any competency, all five must be rated. Rating / Rationale / Decision outside become required for this candidate.
+              Competency assessment is required. Rate all five competencies (1–5) before submitting scores for this candidate. Key observations are optional.
             </div>
           </div>
           <div className="modal-footer">
@@ -223,16 +223,6 @@ const InterviewerSchedule = () => {
         continue;
       }
 
-      if (filledComp > 0 && filledComp < COMPETENCY_ROWS.length) {
-        toast.error(`In competency assessment for ${row.candidateName}: rate all five competencies (or clear them all).`);
-        return;
-      }
-
-      if (anyComp && filledComp === COMPETENCY_ROWS.length && !(hasScore && hasRationale && hasDecision)) {
-        toast.error(`Competency assessment for ${row.candidateName} requires Rating, Rationale, and Decision.`);
-        return;
-      }
-
       if (anyMain && !(hasScore && hasRationale && hasDecision)) {
         if (!hasScore) toast.error(`Enter Rating for ${row.candidateName}`);
         else if (!hasRationale) toast.error(`Enter Rationale for ${row.candidateName}`);
@@ -245,18 +235,21 @@ const InterviewerSchedule = () => {
         return;
       }
 
+      if (filledComp < COMPETENCY_ROWS.length) {
+        toast.error(`Complete competency assessment for ${row.candidateName} (all five ratings required).`);
+        return;
+      }
+
       const score = Number(scoreRaw);
       if (Number.isNaN(score) || score < 1 || score > 10) {
         toast.error("Ratings must be between 1 and 10 (decimals like 7.5 allowed)");
         return;
       }
 
-      const competencyRatings = filledComp === COMPETENCY_ROWS.length
-        ? COMPETENCY_ROWS.reduce((acc, rowDef) => {
-            acc[rowDef.key] = Number(ratings[rowDef.key]);
-            return acc;
-          }, {})
-        : undefined;
+      const competencyRatings = COMPETENCY_ROWS.reduce((acc, rowDef) => {
+        acc[rowDef.key] = Number(ratings[rowDef.key]);
+        return acc;
+      }, {});
 
       requests.push({
         candidateId: row.candidateId,
@@ -269,7 +262,7 @@ const InterviewerSchedule = () => {
     }
 
     if (requests.length === 0) {
-      toast.error("Fill Rating, Rationale, and Decision for at least one candidate before submitting.");
+      toast.error("Fill Rating, Rationale, Decision, and Competency assessment for at least one candidate before submitting.");
       return;
     }
     setSaving(true);
@@ -339,7 +332,7 @@ const InterviewerSchedule = () => {
                     <th style={{ width: 100 }}>Rating (1-10)</th>
                     <th>Rationale</th>
                     <th style={{ width: 140 }}>Decision</th>
-                    <th style={{ width: 150 }}>Competency</th>
+                    <th style={{ width: 150 }}>Competency <span className="text-danger">*</span></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -396,7 +389,7 @@ const InterviewerSchedule = () => {
                             title={lockedTitle(r)}
                             onClick={() => setCompetencyFor(r)}
                           >
-                            {filled > 0 ? `Assessment (${filled}/5)` : "Fill assessment"}
+                            {filled === COMPETENCY_ROWS.length ? "Assessment (5/5)" : filled > 0 ? `Assessment (${filled}/5)` : "Fill assessment *"}
                           </button>
                         </td>
                       </tr>
