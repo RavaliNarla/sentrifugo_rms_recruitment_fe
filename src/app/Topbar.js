@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { clearUser } from "../store/userSlice";
 import { clearAccessToken } from "../core/tokenStorage";
+import { redirectToLogin } from "../core/appBase";
 import authApiService from "../core/authApiService";
 import { getPageMeta } from "./pageMeta";
 import { formatIstNotifTime } from "../shared/dateFormat";
@@ -99,7 +100,7 @@ const Topbar = () => {
   const handleLogout = () => {
     clearAccessToken();
     dispatch(clearUser());
-    window.location.href = "/login";
+    redirectToLogin();
   };
 
   const meta = getPageMeta(location.pathname, user);

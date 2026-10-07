@@ -377,7 +377,7 @@ const ScheduleInterviewModal = ({ candidates, round = 1, mode = "schedule", onCl
           <div className="modal-body">
             {panels.length === 0 && (
               <div className="alert alert-warning py-2">
-                No panels yet. Create one under Committee Management → Manage Panels.
+                No panels yet. Create one under Panel Management → Manage Panels.
               </div>
             )}
 

@@ -1,5 +1,6 @@
 import axios from "axios";
 import { clearAccessToken, getAccessToken } from "./tokenStorage";
+import { redirectToLogin, withPublicUrl } from "./appBase";
 
 const attachAuthInterceptor = (instance) => {
   instance.interceptors.request.use((config) => {
@@ -15,8 +16,8 @@ const attachAuthInterceptor = (instance) => {
     (error) => {
       if (error.response?.status === 401) {
         clearAccessToken();
-        if (!window.location.pathname.startsWith("/login")) {
-          window.location.href = "/login";
+        if (window.location.pathname !== withPublicUrl("/login")) {
+          redirectToLogin();
         }
       }
       return Promise.reject(error);
