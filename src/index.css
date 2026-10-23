@@ -559,24 +559,21 @@ a {
 .topbar-user-pill .info .role { font-size: 0.72rem; font-weight: 600; color: var(--brand-primary); text-transform: capitalize; }
 .topbar-user-pill .chevron { color: var(--tb-sub); font-size: 0.7rem; }
 
-.topbar-dropdown-menu {
-  padding: 6px; border-radius: 10px; border: 1px solid var(--tb-border);
-  box-shadow: 0 8px 24px rgba(15, 60, 30, 0.14); min-width: 190px;
+.topbar-profile-menu {
+  padding: 6px 0; border-radius: 10px; border: 1px solid var(--tb-border);
+  box-shadow: 0 8px 24px rgba(15, 60, 30, 0.14); min-width: 260px; max-width: 340px;
   background: #fff;
 }
-.topbar-dropdown-menu .dropdown-item {
-  display: flex; align-items: center; gap: 10px;
-  padding: 9px 12px; border-radius: 8px; font-size: 0.88rem; color: var(--tb-title);
-  cursor: pointer;
+.topbar-profile-row { padding: 8px 14px; }
+.topbar-profile-row + .topbar-profile-row { border-top: 1px solid #eef3ef; }
+.topbar-profile-label {
+  display: block; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.04em;
+  text-transform: uppercase; color: var(--tb-sub);
 }
-.topbar-dropdown-menu .dropdown-item i { width: 16px; text-align: center; color: var(--tb-sub); font-size: 0.95rem; }
-.topbar-dropdown-menu .dropdown-item:hover {
-  background: var(--tb-btn-bg); color: var(--brand-primary);
+.topbar-profile-value {
+  display: block; margin-top: 2px; font-size: 0.86rem; font-weight: 600;
+  color: var(--tb-title); word-break: break-word;
 }
-.topbar-dropdown-menu .dropdown-item:hover i { color: var(--brand-primary); }
-.topbar-dropdown-menu .dropdown-item.danger { color: var(--badge-admin); }
-.topbar-dropdown-menu .dropdown-item.danger i { color: var(--badge-admin); }
-.topbar-dropdown-menu .dropdown-item.danger:hover { background: rgba(179,38,30,0.08); }
 
 /* ===================== Quick-access tiles (Dashboard) ===================== */
 .qa-icon {

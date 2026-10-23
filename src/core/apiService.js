@@ -16,7 +16,8 @@ const attachAuthInterceptor = (instance) => {
     (error) => {
       if (error.response?.status === 401) {
         clearAccessToken();
-        if (window.location.pathname !== withPublicUrl("/login")) {
+        if (window.location.pathname !== withPublicUrl("/unauthorized")
+            && window.location.pathname !== withPublicUrl("/hrms-entry")) {
           redirectToLogin();
         }
       }

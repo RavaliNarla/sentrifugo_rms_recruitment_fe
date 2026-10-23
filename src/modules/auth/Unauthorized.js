@@ -1,12 +1,17 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
-const Unauthorized = () => (
-  <div className="text-center mt-5">
-    <h3>Access Denied</h3>
-    <p className="text-muted">You do not have permission to view this page, or your account is not set up in the system.</p>
-    <Link to="/login" className="btn btn-outline-secondary">Back to Login</Link>
-  </div>
-);
+const Unauthorized = () => {
+  const location = useLocation();
+  const detail = location.state?.message;
+  return (
+    <div className="text-center mt-5">
+      <h3>Not authorized</h3>
+      <p className="text-muted">
+        {detail || "Open Recruitment from the HRMS portal while you are signed in there."}
+      </p>
+    </div>
+  );
+};
 
 export default Unauthorized;

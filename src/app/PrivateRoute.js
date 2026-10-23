@@ -8,7 +8,7 @@ const PrivateRoute = ({ children }) => {
   const hasToken = !!getAccessToken();
 
   if (!hasToken || !user.isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/unauthorized" replace />;
   }
 
   return children;

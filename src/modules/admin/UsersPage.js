@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import masterApiService from "../../core/masterApiService";
+import authApiService from "../../core/authApiService";
 import ConfirmModal from "../../shared/ConfirmModal";
 import Pagination from "../../shared/Pagination";
 
@@ -22,7 +23,13 @@ const UsersPage = () => {
   const [searchText, setSearchText] = useState("");
   const [viewOnly, setViewOnly] = useState(false);
   const submittingRef = useRef(false);
+  const skipDirectorySearchRef = useRef(false);
   const [confirmState, setConfirmState] = useState({ show: false, message: "", onConfirm: null });
+  const [directoryQuery, setDirectoryQuery] = useState("");
+  const [directoryHits, setDirectoryHits] = useState([]);
+  const [directoryOpen, setDirectoryOpen] = useState(false);
+  const [searchingDir, setSearchingDir] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
 
   const setField = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -75,8 +82,56 @@ const UsersPage = () => {
     setEditing(null);
     setForm(EMPTY_FORM);
     setErrors({});
+    setDirectoryQuery("");
+    setDirectoryHits([]);
+    setDirectoryOpen(false);
+    setSelectedEmployee(null);
     setShowModal(true);
   };
+
+  useEffect(() => {
+    if (!showModal || editing || viewOnly) return undefined;
+    if (skipDirectorySearchRef.current) {
+      skipDirectorySearchRef.current = false;
+      setDirectoryHits([]);
+      setDirectoryOpen(false);
+      return undefined;
+    }
+    const query = directoryQuery.trim();
+    if (query.length < 3) {
+      setDirectoryHits([]);
+      setDirectoryOpen(false);
+      return undefined;
+    }
+    const hrmsToken = sessionStorage.getItem("hrms_access_token");
+    if (!hrmsToken) {
+      setDirectoryHits([]);
+      setDirectoryOpen(false);
+      return undefined;
+    }
+    let cancelled = false;
+    const timeout = setTimeout(async () => {
+      setSearchingDir(true);
+      try {
+        const res = await authApiService.searchHrmsEmployees(query, hrmsToken);
+        if (cancelled) return;
+        const items = res.data?.data?.items || [];
+        setDirectoryHits(items);
+        setDirectoryOpen(true);
+      } catch (e) {
+        if (!cancelled) {
+          setDirectoryHits([]);
+          toast.error(e.response?.data?.message || "Employee search failed");
+        }
+      } finally {
+        if (!cancelled) setSearchingDir(false);
+      }
+    }, 300);
+    return () => {
+      cancelled = true;
+      clearTimeout(timeout);
+    };
+  }, [directoryQuery, showModal, editing, viewOnly]);
 
   const openEdit = (user) => {
     setViewOnly(false);
@@ -94,18 +149,12 @@ const UsersPage = () => {
 
   const validate = () => {
     const next = {};
-    if (!form.name.trim()) next.name = "Full Name is required";
-    if (!form.role) next.role = "Role is required";
-    if (!form.email.trim()) {
-      next.email = "Email is required";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
-      next.email = "Please enter a valid email address";
-    }
     if (!editing) {
-      if (!form.password) next.password = "Password is required";
-      else if (form.password.length < 8) next.password = "Password must be at least 8 characters";
-    } else if (form.password && form.password.length < 8) {
-      next.password = "Password must be at least 8 characters";
+      if (!selectedEmployee) next.name = "Select an employee from HRMS";
+      if (!form.role) next.role = "Role is required";
+    } else {
+      if (!form.name.trim()) next.name = "Full Name is required";
+      if (!form.role) next.role = "Role is required";
     }
     setErrors(next);
     return Object.keys(next).length === 0;
@@ -119,11 +168,15 @@ const UsersPage = () => {
     try {
       if (editing) {
         const payload = { name: form.name, role: form.role, email: form.email };
-        if (form.password) payload.password = form.password;
         await masterApiService.updateUser(editing.id, payload);
         toast.success("User updated successfully");
       } else {
-        const res = await masterApiService.addUser(form);
+        const res = await masterApiService.addUser({
+          name: selectedEmployee.name,
+          role: form.role,
+          email: selectedEmployee.email,
+          employeeId: selectedEmployee.employeeId,
+        });
         const created = res.data?.data;
         toast.success(
           created?.employeeId
@@ -235,6 +288,84 @@ const UsersPage = () => {
                 <button className="btn-close" onClick={() => setShowModal(false)} />
               </div>
               <div className="modal-body">
+                {!editing && !viewOnly ? (
+                  <div>
+                    <label className="form-label">Find employee <span className="text-danger">*</span></label>
+                    <input
+                      className="form-control"
+                      placeholder="Name, employee id, or email (3+ characters)"
+                      value={directoryQuery}
+                      onChange={(e) => {
+                        setDirectoryQuery(e.target.value);
+                        setSelectedEmployee(null);
+                      }}
+                    />
+                    {directoryQuery.trim().length >= 3 && !sessionStorage.getItem("hrms_access_token") && (
+                      <div className="text-danger fs-13 mt-1">Open RMS from the HRMS Recruitment link before searching employees.</div>
+                    )}
+                    {searchingDir && <div className="text-muted fs-13 mt-1">Searching…</div>}
+                    {directoryOpen && (
+                      <div style={{ maxHeight: 320, overflowY: "auto", border: "1px solid #e5e7eb", borderRadius: 8, marginTop: 8 }}>
+                        {directoryHits.length === 0 && !selectedEmployee && (
+                          <div className="text-muted px-3 py-2">No employees found</div>
+                        )}
+                        {directoryHits.map((hit) => {
+                          const name = hit.fullName || hit.full_name || [hit.firstName, hit.lastName].filter(Boolean).join(" ");
+                          const employeeId = hit.empCode || hit.emp_code || "";
+                          const email = hit.email || "";
+                          const designation = hit.designation || hit.designation_name || "";
+                          return (
+                            <button
+                              type="button"
+                              key={hit.id || `${employeeId}-${email}`}
+                              onClick={() => {
+                                skipDirectorySearchRef.current = true;
+                                setSelectedEmployee({ name, employeeId, email, designation });
+                                setDirectoryHits([]);
+                                setDirectoryOpen(false);
+                                setDirectoryQuery(name);
+                                setErrors((prev) => ({ ...prev, name: undefined }));
+                              }}
+                              style={{
+                                display: "block",
+                                width: "100%",
+                                textAlign: "left",
+                                border: 0,
+                                borderBottom: "1px solid #eef0f3",
+                                background: "#fff",
+                                padding: "10px 12px",
+                              }}
+                            >
+                              <div>{name || "—"}</div>
+                              <div style={{ color: "#6b7280", fontSize: 13 }}>
+                                {[employeeId, email, designation].filter(Boolean).join(" · ")}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                    {selectedEmployee && (
+                      <div className="mt-2" style={{ color: "#6b7280", fontSize: 13 }}>
+                        {selectedEmployee.employeeId} · {selectedEmployee.email}
+                        {selectedEmployee.designation ? ` · ${selectedEmployee.designation}` : ""}
+                      </div>
+                    )}
+                    <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.name || ""}</div>
+                    <div className="mb-1 mt-2">
+                      <label className="form-label">Role <span className="text-danger">*</span></label>
+                      <select
+                        className={`form-select ${errors.role ? "is-invalid" : ""}`}
+                        value={form.role}
+                        onChange={(e) => setField("role", e.target.value)}
+                      >
+                        <option value="">Select Role</option>
+                        {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
+                      </select>
+                      <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.role || ""}</div>
+                    </div>
+                  </div>
+                ) : (
                 <fieldset disabled={viewOnly} style={{ border: 0, padding: 0, margin: 0 }}>
                 <div className="mb-3">
                   <label className="form-label">Full Name <span className="text-danger">*</span></label>
@@ -268,22 +399,6 @@ const UsersPage = () => {
                   />
                   <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.email || ""}</div>
                 </div>
-                {!viewOnly && (
-                <div className="mb-3">
-                  <label className="form-label">
-                    Password {!editing && <span className="text-danger">*</span>}
-                    {editing && <span className="text-muted fs-13"> (leave blank to keep current)</span>}
-                  </label>
-                  <input
-                    type="password"
-                    className={`form-control ${errors.password ? "is-invalid" : ""}`}
-                    value={form.password}
-                    autoComplete="new-password"
-                    onChange={(e) => setField("password", e.target.value)}
-                  />
-                  <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.password || ""}</div>
-                </div>
-                )}
                 {editing?.employeeId && (
                   <div className="mb-1">
                     <label className="form-label">Employee Code</label>
@@ -291,6 +406,7 @@ const UsersPage = () => {
                   </div>
                 )}
                 </fieldset>
+                )}
               </div>
               <div className="modal-footer">
                 {viewOnly ? (

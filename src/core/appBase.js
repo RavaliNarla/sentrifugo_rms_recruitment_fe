@@ -9,10 +9,10 @@ export function withPublicUrl(path) {
   return `${publicUrl()}${normalized}`;
 }
 
-/** Hard navigation to login (bypasses React Router; must include PUBLIC_URL). */
+/** Hard navigation when the RMS session is missing. Password login is not a route. */
 export function redirectToLogin() {
-  const loginPath = withPublicUrl("/login");
-  if (window.location.pathname !== loginPath) {
-    window.location.href = loginPath;
+  const path = withPublicUrl("/unauthorized");
+  if (window.location.pathname !== path) {
+    window.location.href = path;
   }
 }

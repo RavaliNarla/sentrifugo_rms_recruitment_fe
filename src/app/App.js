@@ -4,8 +4,8 @@ import { ToastContainer } from "react-toastify";
 import PrivateRoute from "./PrivateRoute";
 import PrivilegeRoute from "./PrivilegeRoute";
 import Layout from "./Layout";
-import Login from "../modules/auth/Login";
 import Unauthorized from "../modules/auth/Unauthorized";
+import HrmsEntry from "../modules/auth/HrmsEntry";
 import Dashboard from "../modules/dashboard/Dashboard";
 import JobPostings from "../modules/jobPosting/JobPostings";
 import CreateRequisition from "../modules/jobPosting/CreateRequisition";
@@ -33,10 +33,11 @@ function App() {
     <>
       <ToastContainer position="top-right" autoClose={3000} />
       <Routes>
-        <Route path="/login" element={<Login />} />
-        {/* Old BOB FE used /sagarsoft/login — keep bookmark/Azure redirect from looping there */}
-        <Route path="/sagarsoft/login" element={<Navigate to="/login" replace />} />
-        <Route path="/sagarsoft/*" element={<Navigate to="/login" replace />} />
+        {/* Login.js stays in the repo. Direct password sign-in is not a route anymore. */}
+        <Route path="/login" element={<Navigate to="/unauthorized" replace />} />
+        <Route path="/hrms-entry" element={<HrmsEntry />} />
+        <Route path="/sagarsoft/login" element={<Navigate to="/unauthorized" replace />} />
+        <Route path="/sagarsoft/*" element={<Navigate to="/unauthorized" replace />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
 
         <Route path="/dashboard" element={<PrivateRoute>{withLayout(<Dashboard />)}</PrivateRoute>} />

@@ -1,9 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { useSelector, useDispatch } from "react-redux";
-import { clearUser } from "../store/userSlice";
-import { clearAccessToken } from "../core/tokenStorage";
-import { redirectToLogin } from "../core/appBase";
+import { useSelector } from "react-redux";
 import authApiService from "../core/authApiService";
 import { getPageMeta } from "./pageMeta";
 import { formatIstNotifTime } from "../shared/dateFormat";
@@ -21,10 +18,9 @@ const formatRole = (role = "") =>
 
 /**
  * Horizontal bar to the right of the sidebar: page title/subtitle on the left,
- * notifications bell + user avatar pill with Sign out on the right.
+ * notifications bell + user avatar pill. The menu shows employee code and email.
  */
 const Topbar = () => {
-  const dispatch = useDispatch();
   const user = useSelector((state) => state.user);
   const location = useLocation();
 
@@ -97,12 +93,6 @@ const Topbar = () => {
     }
   };
 
-  const handleLogout = () => {
-    clearAccessToken();
-    dispatch(clearUser());
-    redirectToLogin();
-  };
-
   const meta = getPageMeta(location.pathname, user);
   const badgeLabel = unreadCount > 99 ? "99+" : String(unreadCount);
 
@@ -162,12 +152,16 @@ const Topbar = () => {
 
           {showUserMenu && (
             <div
-              className="position-absolute end-0 mt-2 topbar-dropdown-menu"
+              className="position-absolute end-0 mt-2 topbar-profile-menu"
               style={{ top: "100%", zIndex: 1050 }}
             >
-              <div className="dropdown-item danger" onClick={handleLogout}>
-                <i className="bi bi-box-arrow-right" />
-                Sign out
+              <div className="topbar-profile-row">
+                <span className="topbar-profile-label">Employee code</span>
+                <span className="topbar-profile-value">{user.employeeId || "—"}</span>
+              </div>
+              <div className="topbar-profile-row">
+                <span className="topbar-profile-label">Email</span>
+                <span className="topbar-profile-value">{user.email || "—"}</span>
               </div>
             </div>
           )}
