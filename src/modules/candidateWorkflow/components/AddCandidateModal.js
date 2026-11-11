@@ -2,10 +2,20 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import recruiterApiService from "../../../core/recruiterApiService";
 import ConfirmModal from "../../../shared/ConfirmModal";
+import DateInput from "../../../shared/DateInput";
+import { istTodayStr } from "../../../shared/dateFormat";
 
-const EMPTY_FORM = { name: "", phone: "", email: "" };
+const EMPTY_FORM = {
+  firstName: "",
+  middleName: "",
+  lastName: "",
+  genderHrmsId: "",
+  genderName: "",
+  dateOfBirth: "",
+  phone: "",
+  email: "",
+};
 
-// SCL_24: Email/Phone fields were allowing invalid text formats.
 const EMAIL_REGEX = /^[\w.+-]+@[\w-]+\.[a-zA-Z]{2,}$/;
 const PHONE_REGEX = /^[0-9]{10}$/;
 
@@ -33,6 +43,20 @@ const DOC_LABELS = {
   "id-proof": "ID proof",
 };
 
+const formFromCandidate = (c) => ({
+  firstName: c?.firstName || "",
+  middleName: c?.middleName || "",
+  lastName: c?.lastName || "",
+  genderHrmsId: c?.genderHrmsId || "",
+  genderName: c?.genderName || "",
+  dateOfBirth: c?.dateOfBirth || "",
+  phone: c?.phone || "",
+  email: c?.email || "",
+});
+
+const buildFullName = (first, middle, last) =>
+  [first, middle, last].map((p) => (p || "").trim()).filter(Boolean).join(" ");
+
 const AddCandidateModal = ({
   requisitionId,
   positionId,
@@ -43,10 +67,9 @@ const AddCandidateModal = ({
   onDocumentsChanged,
 }) => {
   const [form, setForm] = useState(
-    editingCandidate
-      ? { name: editingCandidate.name, phone: editingCandidate.phone, email: editingCandidate.email }
-      : EMPTY_FORM
+    editingCandidate ? formFromCandidate(editingCandidate) : EMPTY_FORM
   );
+  const [genders, setGenders] = useState([]);
   const [resume, setResume] = useState(null);
   const [idProof, setIdProof] = useState(null);
   const [photo, setPhoto] = useState(null);
@@ -62,11 +85,15 @@ const AddCandidateModal = ({
     setErrors((prev) => (prev[field] ? { ...prev, [field]: undefined } : prev));
   };
 
-  // Local preview URL for the selected photo file - revoked on change/unmount to avoid leaks.
+  useEffect(() => {
+    recruiterApiService.getGenders()
+      .then((res) => setGenders(res.data?.data || []))
+      .catch(() => toast.error("Failed to load genders from HRMS"));
+  }, []);
+
   const photoPreviewUrl = useMemo(() => (photo ? URL.createObjectURL(photo) : null), [photo]);
   useEffect(() => () => { if (photoPreviewUrl) URL.revokeObjectURL(photoPreviewUrl); }, [photoPreviewUrl]);
 
-  // Load existing uploaded photo into the avatar when editing (until a new file is chosen).
   useEffect(() => {
     let blobUrl;
     let cancelled = false;
@@ -134,9 +161,23 @@ const AddCandidateModal = ({
     setIdProof(file || null);
   };
 
+  const handleGenderChange = (e) => {
+    const id = e.target.value;
+    const selected = genders.find((g) => g.id === id);
+    setForm((prev) => ({
+      ...prev,
+      genderHrmsId: id,
+      genderName: selected?.name || "",
+    }));
+    setErrors((prev) => (prev.genderHrmsId ? { ...prev, genderHrmsId: undefined } : prev));
+  };
+
   const validate = () => {
     const next = {};
-    if (!form.name.trim()) next.name = "Name is required";
+    if (!form.firstName.trim()) next.firstName = "First name is required";
+    if (!form.lastName.trim()) next.lastName = "Last name is required";
+    if (!form.genderHrmsId) next.genderHrmsId = "Gender is required";
+    if (!form.dateOfBirth) next.dateOfBirth = "Date of birth is required";
     if (!form.phone.trim()) {
       next.phone = "Phone is required";
     } else if (!PHONE_REGEX.test(form.phone)) {
@@ -150,8 +191,18 @@ const AddCandidateModal = ({
     if (!resume && !existingDocs.hasResume) {
       next.resume = "Resume is required";
     }
-    setErrors((prev) => ({ ...prev, name: next.name, phone: next.phone, email: next.email, resume: next.resume }));
-    return !next.name && !next.phone && !next.email && !next.resume;
+    setErrors((prev) => ({
+      ...prev,
+      firstName: next.firstName,
+      lastName: next.lastName,
+      genderHrmsId: next.genderHrmsId,
+      dateOfBirth: next.dateOfBirth,
+      phone: next.phone,
+      email: next.email,
+      resume: next.resume,
+    }));
+    return !next.firstName && !next.lastName && !next.genderHrmsId && !next.dateOfBirth
+      && !next.phone && !next.email && !next.resume;
   };
 
   const handleSave = async () => {
@@ -160,8 +211,24 @@ const AddCandidateModal = ({
     submittingRef.current = true;
     setSaving(true);
     try {
+      const firstName = form.firstName.trim();
+      const middleName = form.middleName.trim();
+      const lastName = form.lastName.trim();
+      const payload = {
+        requisitionId,
+        positionId,
+        firstName,
+        middleName: middleName || null,
+        lastName,
+        name: buildFullName(firstName, middleName, lastName),
+        genderHrmsId: form.genderHrmsId,
+        genderName: form.genderName,
+        dateOfBirth: form.dateOfBirth || null,
+        phone: form.phone,
+        email: form.email,
+      };
       const formData = new FormData();
-      formData.append("candidate", JSON.stringify({ requisitionId, positionId, ...form }));
+      formData.append("candidate", JSON.stringify(payload));
       if (resume) formData.append("resume", resume);
       if (idProof) formData.append("idProof", idProof);
       if (photo) formData.append("photo", photo);
@@ -175,9 +242,6 @@ const AddCandidateModal = ({
       onSaved();
     } catch (e) {
       const message = e.response?.data?.message || "Failed to save candidate";
-      // The backend can report email and phone conflicts together in one message
-      // (e.g. "...email already exists. ...phone number already exists.") - route each
-      // sentence to its own field so both show at once instead of one-at-a-time.
       const sentences = message.split(/(?<=\.)\s+/).filter(Boolean);
       const fieldErrors = {};
       const unmatched = [];
@@ -185,6 +249,9 @@ const AddCandidateModal = ({
         const lower = sentence.toLowerCase();
         if (lower.includes("email")) fieldErrors.email = sentence;
         else if (lower.includes("phone")) fieldErrors.phone = sentence;
+        else if (lower.includes("first name")) fieldErrors.firstName = sentence;
+        else if (lower.includes("last name")) fieldErrors.lastName = sentence;
+        else if (lower.includes("gender")) fieldErrors.genderHrmsId = sentence;
         else unmatched.push(sentence);
       });
       if (Object.keys(fieldErrors).length > 0) {
@@ -253,7 +320,7 @@ const AddCandidateModal = ({
 
   return (
     <div className="modal show d-block" style={{ background: "rgba(0, 0, 0, 0.45)" }}>
-      <div className="modal-dialog modal-dialog-centered modal-lg">
+      <div className="modal-dialog modal-dialog-centered modal-lg" style={{ maxWidth: 920 }}>
         <div className="modal-content">
           <div className="modal-header">
             <h5 className="modal-title">{editingCandidate ? "Edit Candidate" : "Add Candidate"}</h5>
@@ -262,14 +329,60 @@ const AddCandidateModal = ({
           <div className="modal-body">
             <div className="row">
               <div className="col-md-8">
-                <div className="mb-3">
-                  <label className="form-label">Name <span className="text-danger">*</span></label>
-                  <input
-                    className={`form-control ${errors.name ? "is-invalid" : ""}`}
-                    value={form.name}
-                    onChange={(e) => setField("name", e.target.value)}
-                  />
-                  <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.name || ""}</div>
+                <div className="row">
+                  <div className="col-md-4 mb-3">
+                    <label className="form-label">First Name <span className="text-danger">*</span></label>
+                    <input
+                      className={`form-control ${errors.firstName ? "is-invalid" : ""}`}
+                      value={form.firstName}
+                      onChange={(e) => setField("firstName", e.target.value)}
+                      autoFocus
+                    />
+                    <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.firstName || ""}</div>
+                  </div>
+                  <div className="col-md-4 mb-3">
+                    <label className="form-label">Middle Name</label>
+                    <input
+                      className="form-control"
+                      value={form.middleName}
+                      onChange={(e) => setField("middleName", e.target.value)}
+                    />
+                    <div className="fs-13 mt-1" style={{ minHeight: "18px" }} />
+                  </div>
+                  <div className="col-md-4 mb-3">
+                    <label className="form-label">Last Name <span className="text-danger">*</span></label>
+                    <input
+                      className={`form-control ${errors.lastName ? "is-invalid" : ""}`}
+                      value={form.lastName}
+                      onChange={(e) => setField("lastName", e.target.value)}
+                    />
+                    <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.lastName || ""}</div>
+                  </div>
+                </div>
+                <div className="row">
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Gender <span className="text-danger">*</span></label>
+                    <select
+                      className={`form-select ${errors.genderHrmsId ? "is-invalid" : ""}`}
+                      value={form.genderHrmsId}
+                      onChange={handleGenderChange}
+                    >
+                      <option value="">Select</option>
+                      {genders.map((g) => (
+                        <option key={g.id} value={g.id}>{g.name}</option>
+                      ))}
+                    </select>
+                    <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.genderHrmsId || ""}</div>
+                  </div>
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Date of Birth <span className="text-danger">*</span></label>
+                    <DateInput
+                      value={form.dateOfBirth}
+                      max={istTodayStr()}
+                      onChange={(v) => setField("dateOfBirth", v)}
+                    />
+                    <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.dateOfBirth || ""}</div>
+                  </div>
                 </div>
                 <div className="mb-3">
                   <label className="form-label">Phone <span className="text-danger">*</span></label>

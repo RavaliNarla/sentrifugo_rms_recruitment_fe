@@ -79,6 +79,7 @@ const OfferPoolTab = ({ positionId, isActive }) => {
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [sendingOnboarding, setSendingOnboarding] = useState(false);
   const [previewHtml, setPreviewHtml] = useState(null);
   const [errors, setErrors] = useState({});
   const [generatedInfo, setGeneratedInfo] = useState(null);
@@ -181,10 +182,17 @@ const OfferPoolTab = ({ positionId, isActive }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchText]);
 
-  const canSelect = (c) => {
+  const isAcceptedForOnboarding = (offer) =>
+    !!offer && offer.status === "ACCEPTED" && !offer.sentToOnboarding && !offer.hrmsOnboardingId;
+
+  /** Eligible for Generate / regenerate (ACCEPTED stays locked for that path). */
+  const canSelectForGenerate = (c) => {
     const offer = offers[c.id];
     return !offer || !LOCKED_OFFER_STATUSES.includes(offer.status);
   };
+
+  /** Checkbox: generate-eligible rows, plus ACCEPTED not yet sent to HRMS onboarding. */
+  const canSelect = (c) => canSelectForGenerate(c) || isAcceptedForOnboarding(offers[c.id]);
 
   const clearFilters = () => {
     setSearchText("");
@@ -234,11 +242,18 @@ const OfferPoolTab = ({ positionId, isActive }) => {
 
   const handleGenerate = async () => {
     if (!validateGenerate()) return;
-    if (selected.length === 0) return;
+    const generateIds = selected.filter((id) => {
+      const offer = offers[id];
+      return !offer || !LOCKED_OFFER_STATUSES.includes(offer.status);
+    });
+    if (generateIds.length === 0) {
+      toast.error("Select candidate(s) eligible for offer generation");
+      return;
+    }
     setGenerating(true);
     try {
-      const count = selected.length;
-      await recruiterApiService.generateOffers({ candidateIds: selected, templateId, acceptBeforeDate, joiningDate });
+      const count = generateIds.length;
+      await recruiterApiService.generateOffers({ candidateIds: generateIds, templateId, acceptBeforeDate, joiningDate });
       setGeneratedInfo(count);
       setSelected([]);
       setAcceptBeforeDate("");
@@ -249,6 +264,30 @@ const OfferPoolTab = ({ positionId, isActive }) => {
       toast.error(e.response?.data?.message || "Failed to generate offers");
     } finally {
       setGenerating(false);
+    }
+  };
+
+  const handleSendToOnboarding = async () => {
+    const ids = selected.filter((id) => isAcceptedForOnboarding(offers[id]));
+    if (ids.length === 0) {
+      toast.error("Select offer-accepted candidate(s) to send to onboarding");
+      return;
+    }
+    if (!sessionStorage.getItem("hrms_access_token")) {
+      toast.error("HRMS session is required. Re-enter Recruitment from HRMS and try again.");
+      return;
+    }
+    setSendingOnboarding(true);
+    try {
+      const res = await recruiterApiService.sendOffersToOnboarding(ids);
+      const sent = res.data?.data ?? ids.length;
+      toast.success(sent === 1 ? "Candidate sent to onboarding successfully" : `${sent} candidates sent to onboarding successfully`);
+      setSelected([]);
+      load();
+    } catch (e) {
+      toast.error(e.response?.data?.message || "Failed to send to onboarding");
+    } finally {
+      setSendingOnboarding(false);
     }
   };
 
@@ -274,6 +313,12 @@ const OfferPoolTab = ({ positionId, isActive }) => {
   };
 
   const hasGeneratedSelected = selected.some((id) => offers[id]?.status === "GENERATED");
+  const acceptedSelectedIds = selected.filter((id) => isAcceptedForOnboarding(offers[id]));
+  const hasAcceptedSelected = acceptedSelectedIds.length > 0;
+  const generateEligibleCount = selected.filter((id) => {
+    const offer = offers[id];
+    return !offer || !LOCKED_OFFER_STATUSES.includes(offer.status);
+  }).length;
 
   return (
     <div>
@@ -293,8 +338,8 @@ const OfferPoolTab = ({ positionId, isActive }) => {
           <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.joiningDate || ""}</div>
         </div>
         <div className="col-md-8 d-flex flex-wrap align-items-start gap-2" style={{ marginTop: "1.85rem" }}>
-          <button className="btn btn-primary" disabled={generating || selected.length === 0} onClick={handleGenerate}>
-            {generating ? "Generating..." : `Generate${selected.length > 0 ? ` (${selected.length})` : ""}`}
+          <button className="btn btn-primary" disabled={generating || generateEligibleCount === 0} onClick={handleGenerate}>
+            {generating ? "Generating..." : `Generate${generateEligibleCount > 0 ? ` (${generateEligibleCount})` : ""}`}
           </button>
           <button className="btn btn-primary" disabled={submitting || !hasGeneratedSelected} onClick={handleSubmitForApproval}>
             {submitting ? "Submitting..." : "Submit for Approval"}
@@ -337,6 +382,18 @@ const OfferPoolTab = ({ positionId, isActive }) => {
             <span className="badge rounded-pill text-bg-light border text-app-primary fs-13">{selected.length} Candidates Selected</span>
           )}
         </div>
+        {hasAcceptedSelected && (
+          <button
+            type="button"
+            className="btn btn-primary"
+            disabled={sendingOnboarding}
+            onClick={handleSendToOnboarding}
+          >
+            {sendingOnboarding
+              ? "Sending..."
+              : `Send to Onboarding${acceptedSelectedIds.length > 0 ? ` (${acceptedSelectedIds.length})` : ""}`}
+          </button>
+        )}
       </div>
 
       {loading ? <div>Loading...</div> : (

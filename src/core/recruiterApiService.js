@@ -40,6 +40,12 @@ const recruiterApiService = {
   shortlistCandidate: (id) => recruiterApi.post(`/candidates/${id}/shortlist`),
   /** decision: "SHORTLIST" | "REJECT" | "HOLD" → SHORTLISTED / REJECTED / ON_HOLD. */
   decideCandidate: (id, decision) => recruiterApi.post(`/candidates/${id}/decision`, { decision }),
+  /** HRMS GENDERS via recruiter B2B (forwards sessionStorage hrms_access_token). */
+  getGenders: () => {
+    const token = sessionStorage.getItem("hrms_access_token");
+    const headers = token ? { "X-Hrms-Authorization": `Bearer ${token}` } : {};
+    return recruiterApi.get("/candidates/genders", { headers });
+  },
   downloadCandidateBulkTemplate: () =>
     recruiterApi.get("/candidates/bulk-template", { responseType: "blob" }),
   bulkImportCandidates: (positionId, file) => {
@@ -108,6 +114,12 @@ const recruiterApiService = {
   getPendingOfferApprovals: (params) => recruiterApi.get("/offers/pending-approval", { params }),
   getOfferByCandidate: (candidateId) => recruiterApi.get(`/offers/by-candidate/${candidateId}`),
   getOfferApprovalHistory: (id) => recruiterApi.get(`/offers/${id}/approval-history`),
+  /** ACCEPTED offers → HRMS onboarding; forwards sessionStorage hrms_access_token. */
+  sendOffersToOnboarding: (candidateIds) => {
+    const token = sessionStorage.getItem("hrms_access_token");
+    const headers = token ? { "X-Hrms-Authorization": `Bearer ${token}` } : {};
+    return recruiterApi.post("/offers/send-to-onboarding", candidateIds, { headers });
+  },
 
   // Dashboard
   getDashboardSummary: () => recruiterApi.get("/dashboard/summary"),

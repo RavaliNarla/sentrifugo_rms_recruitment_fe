@@ -1,36 +1,20 @@
 import React, { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import masterApiService from "../../core/masterApiService";
-import ConfirmModal from "../../shared/ConfirmModal";
 import Pagination from "../../shared/Pagination";
 
-const EMPTY_FORM = { name: "", code: "", stateId: "", address: "" };
+const EMPTY_FORM = { name: "", code: "", address: "" };
 
 const LocationsPage = () => {
   const [locations, setLocations] = useState([]);
-  const [states, setStates] = useState([]);
   const [page, setPage] = useState(0);
   const [size, setSize] = useState(10);
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const [editing, setEditing] = useState(null);
-  const [viewOnly, setViewOnly] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
-  const [errors, setErrors] = useState({});
-  const [saving, setSaving] = useState(false);
   const [searchText, setSearchText] = useState("");
-  const submittingRef = useRef(false);
-  const [confirmState, setConfirmState] = useState({ show: false, message: "", onConfirm: null });
-
-  const setField = (field, value) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
-    setErrors((prev) => (prev[field] ? { ...prev, [field]: undefined } : prev));
-  };
-
-  const askConfirm = (message, action) => setConfirmState({ show: true, message, onConfirm: action });
-  const closeConfirm = () => setConfirmState({ show: false, message: "", onConfirm: null });
 
   // Guards against overlapping fetches (e.g. React StrictMode's dev-only double-invoke on mount).
   const loadInFlightRef = useRef(false);
@@ -54,14 +38,9 @@ const LocationsPage = () => {
 
   useEffect(() => {
     loadData(searchText, page, size);
-    masterApiService.getStates()
-      .then((res) => setStates(res.data.data || []))
-      .catch(() => toast.error("Failed to load states"));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, size]);
 
-  // Search is performed server-side - only reload (and jump back to page 1) on a genuine
-  // searchText change, not on mount.
   const prevSearchTextRef = useRef(searchText);
   useEffect(() => {
     if (prevSearchTextRef.current === searchText) return;
@@ -74,79 +53,9 @@ const LocationsPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchText]);
 
-  const openAdd = () => {
-    setViewOnly(false);
-    setEditing(null);
-    setForm(EMPTY_FORM);
-    setErrors({});
-    setShowModal(true);
-  };
-
-  const openEdit = (loc) => {
-    setViewOnly(false);
-    setEditing(loc);
-    setForm({ name: loc.name, code: loc.code || "", stateId: loc.stateId, address: loc.address || "" });
-    setErrors({});
-    setShowModal(true);
-  };
-
-  // View reuses the Edit popup with every field disabled and only a Close button.
   const openView = (loc) => {
-    openEdit(loc);
-    setViewOnly(true);
-  };
-
-  const validate = () => {
-    const next = {};
-    if (!form.name.trim()) next.name = "Location Name is required";
-    if (!/^[A-Z0-9]{3}$/.test((form.code || "").trim().toUpperCase())) {
-      next.code = "Code must be exactly 3 letters/digits";
-    }
-    if (!form.stateId) next.stateId = "State is required";
-    setErrors(next);
-    return Object.keys(next).length === 0;
-  };
-
-  const handleSave = async () => {
-    if (submittingRef.current) return;
-    if (!validate()) return;
-    submittingRef.current = true;
-    setSaving(true);
-    try {
-      if (editing) {
-        await masterApiService.updateLocation(editing.id, {
-          ...form,
-          code: form.code.trim().toUpperCase(),
-        });
-        toast.success("Location updated successfully");
-      } else {
-        await masterApiService.addLocation({
-          ...form,
-          code: form.code.trim().toUpperCase(),
-        });
-        toast.success("Location added successfully");
-      }
-      setShowModal(false);
-      loadData(searchText, page, size);
-    } catch (e) {
-      toast.error(e.response?.data?.message || "Failed to save location");
-    } finally {
-      submittingRef.current = false;
-      setSaving(false);
-    }
-  };
-
-  const handleDelete = (loc) => {
-    askConfirm(`Are you sure you want to delete the location "${loc.name}"?`, async () => {
-      closeConfirm();
-      try {
-        await masterApiService.deleteLocation(loc.id);
-        toast.success("Location deleted successfully");
-        loadData(searchText, page, size);
-      } catch (e) {
-        toast.error(e.response?.data?.message || "Failed to delete location");
-      }
-    });
+    setForm({ name: loc.name, code: loc.code || "", address: loc.address || "" });
+    setShowModal(true);
   };
 
   return (
@@ -167,9 +76,6 @@ const LocationsPage = () => {
               onChange={(e) => setSearchText(e.target.value)}
             />
           </div>
-          <button className="btn btn-primary" onClick={openAdd}>
-            <i className="bi bi-plus-lg" /> Add
-          </button>
         </div>
       </div>
 
@@ -182,9 +88,8 @@ const LocationsPage = () => {
               <th>#</th>
               <th>Location Name</th>
               <th>Code</th>
-              <th>State</th>
               <th>Address</th>
-              <th style={{ width: 160 }}>Actions</th>
+              <th style={{ width: 100 }}>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -193,24 +98,17 @@ const LocationsPage = () => {
                 <td>{page * size + idx + 1}</td>
                 <td>{loc.name}</td>
                 <td><code>{loc.code || "-"}</code></td>
-                <td>{loc.stateName}</td>
-                <td>{loc.address}</td>
+                <td>{loc.address || "-"}</td>
                 <td>
                   <button className="icon-btn-circle me-2" title="View" onClick={() => openView(loc)}>
                     <i className="bi bi-eye" />
-                  </button>
-                  <button className="icon-btn-circle me-2" title="Edit" onClick={() => openEdit(loc)}>
-                    <i className="bi bi-pencil" />
-                  </button>
-                  <button className="icon-btn-circle danger" title="Delete" onClick={() => handleDelete(loc)}>
-                    <i className="bi bi-trash" />
                   </button>
                 </td>
               </tr>
             ))}
             {locations.length === 0 && (
               <tr>
-                <td colSpan={6} className="text-center text-muted py-4">No locations found</td>
+                <td colSpan={5} className="text-center text-muted py-4">No locations found</td>
               </tr>
             )}
           </tbody>
@@ -224,76 +122,38 @@ const LocationsPage = () => {
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">{viewOnly ? "View" : editing ? "Edit" : "Add"} Location</h5>
+                <h5 className="modal-title">View Location</h5>
                 <button className="btn-close" onClick={() => setShowModal(false)} />
               </div>
-              <fieldset disabled={viewOnly} style={{ border: 0, padding: 0, margin: 0 }}>
+              <fieldset disabled style={{ border: 0, padding: 0, margin: 0 }}>
               <div className="modal-body">
                 <div className="mb-3">
-                  <label className="form-label">Location Name <span className="text-danger">*</span></label>
-                  <input
-                    className={`form-control ${errors.name ? "is-invalid" : ""}`}
-                    value={form.name}
-                    onChange={(e) => setField("name", e.target.value)}
-                  />
-                  <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.name || ""}</div>
+                  <label className="form-label">Location Name</label>
+                  <input className="form-control" value={form.name} readOnly />
+                  <small className="text-muted">Name is synced from HRMS business units.</small>
                 </div>
                 <div className="mb-3">
-                  <label className="form-label">Code <span className="text-danger">*</span></label>
-                  <input
-                    className={`form-control ${errors.code ? "is-invalid" : ""}`}
-                    value={form.code}
-                    maxLength={3}
-                    placeholder="e.g. HYD"
-                    onChange={(e) => setField("code", e.target.value.toUpperCase().replace(/[^A-Z0-9]/gi, "").slice(0, 3))}
-                  />
-                  <small className="text-muted">Exactly 3 characters (A–Z, 0–9). Used in requisition codes.</small>
-                  <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.code || ""}</div>
-                </div>
-                <div className="mb-3">
-                  <label className="form-label">State <span className="text-danger">*</span></label>
-                  <select
-                    className={`form-select ${errors.stateId ? "is-invalid" : ""}`}
-                    value={form.stateId}
-                    onChange={(e) => setField("stateId", e.target.value)}
-                  >
-                    <option value="">Select State</option>
-                    {states.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-                  </select>
-                  <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.stateId || ""}</div>
+                  <label className="form-label">Code</label>
+                  <input className="form-control" value={form.code} readOnly />
+                  <small className="text-muted">Code is synced from HRMS (emp code prefix) and used in requisition codes.</small>
                 </div>
                 <div className="mb-3">
                   <label className="form-label">Address</label>
-                  <textarea
-                    className="form-control"
-                    rows={3}
-                    value={form.address}
-                    onChange={(e) => setForm({ ...form, address: e.target.value })}
-                  />
+                  <textarea className="form-control" rows={3} value={form.address} readOnly />
+                  <small className="text-muted">Address is synced from HRMS.</small>
                 </div>
               </div>
               </fieldset>
               <div className="modal-footer">
                 <button className="btn btn-secondary" onClick={() => setShowModal(false)}>
-                  {viewOnly ? "Close" : "Cancel"}
+                  Close
                 </button>
-                {!viewOnly && (
-                  <button className="btn btn-primary" disabled={saving} onClick={handleSave}>
-                    {saving ? "Saving..." : editing ? "Update" : "Save"}
-                  </button>
-                )}
               </div>
             </div>
           </div>
         </div>
       )}
 
-      <ConfirmModal
-        show={confirmState.show}
-        message={confirmState.message}
-        onConfirm={confirmState.onConfirm}
-        onCancel={closeConfirm}
-      />
     </div>
   );
 };

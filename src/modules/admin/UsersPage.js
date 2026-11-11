@@ -6,7 +6,19 @@ import ConfirmModal from "../../shared/ConfirmModal";
 import Pagination from "../../shared/Pagination";
 
 const ROLES = ["Admin", "Recruiter", "Committee_Member"];
-const EMPTY_FORM = { name: "", role: "", email: "", password: "" };
+const APPROVER_OPTIONS = [
+  { value: "NONE", label: "None" },
+  { value: "L1", label: "L1 Approver" },
+  { value: "L2", label: "L2 Approver" },
+];
+const EMPTY_FORM = { name: "", role: "", email: "", password: "", approverAccess: "NONE" };
+
+const formatRoleLabel = (user) => {
+  const role = user?.role || "";
+  if (user?.approverAccess === "L1") return `${role} + L1 Approver`;
+  if (user?.approverAccess === "L2") return `${role} + L2 Approver`;
+  return role;
+};
 
 const UsersPage = () => {
   const [users, setUsers] = useState([]);
@@ -30,6 +42,15 @@ const UsersPage = () => {
   const [directoryOpen, setDirectoryOpen] = useState(false);
   const [searchingDir, setSearchingDir] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [replaceState, setReplaceState] = useState({
+    show: false,
+    level: "",
+    excludeId: null,
+    pendingAction: null,
+    selectedId: "",
+    candidates: [],
+    loadingCandidates: false,
+  });
 
   const setField = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -38,6 +59,47 @@ const UsersPage = () => {
 
   const askConfirm = (message, action) => setConfirmState({ show: true, message, onConfirm: action });
   const closeConfirm = () => setConfirmState({ show: false, message: "", onConfirm: null });
+
+  const closeReplace = () =>
+    setReplaceState({
+      show: false,
+      level: "",
+      excludeId: null,
+      pendingAction: null,
+      selectedId: "",
+      candidates: [],
+      loadingCandidates: false,
+    });
+
+  const askReplacement = async (level, excludeId, pendingAction) => {
+    setReplaceState({
+      show: true,
+      level,
+      excludeId,
+      pendingAction,
+      selectedId: "",
+      candidates: [],
+      loadingCandidates: true,
+    });
+    try {
+      const res = await masterApiService.getUsers("", 0, 500);
+      const all = res.data?.data?.content || [];
+      const candidates = all.filter(
+        (u) =>
+          u.id !== excludeId &&
+          u.approverAccess !== "L1" &&
+          u.approverAccess !== "L2"
+      );
+      setReplaceState((prev) => ({
+        ...prev,
+        candidates,
+        loadingCandidates: false,
+      }));
+    } catch (e) {
+      setReplaceState((prev) => ({ ...prev, loadingCandidates: false }));
+      toast.error(e.response?.data?.message || "Failed to load replacement users");
+    }
+  };
 
   const loadInFlightRef = useRef(false);
   const loadUsers = async (search, pageArg, sizeArg) => {
@@ -63,8 +125,6 @@ const UsersPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, size]);
 
-  // Search is performed server-side - only reload (and jump back to page 1) on a genuine
-  // searchText change, not on mount.
   const prevSearchTextRef = useRef(searchText);
   useEffect(() => {
     if (prevSearchTextRef.current === searchText) return;
@@ -136,12 +196,17 @@ const UsersPage = () => {
   const openEdit = (user) => {
     setViewOnly(false);
     setEditing(user);
-    setForm({ name: user.name, role: user.role, email: user.email, password: "" });
+    setForm({
+      name: user.name,
+      role: user.role,
+      email: user.email,
+      password: "",
+      approverAccess: user.approverAccess || "NONE",
+    });
     setErrors({});
     setShowModal(true);
   };
 
-  // View reuses the Edit popup with every field disabled and only a Close button.
   const openView = (user) => {
     openEdit(user);
     setViewOnly(true);
@@ -160,14 +225,19 @@ const UsersPage = () => {
     return Object.keys(next).length === 0;
   };
 
-  const handleSave = async () => {
+  const saveWithPayload = async (replacementUserId) => {
     if (submittingRef.current) return;
-    if (!validate()) return;
     submittingRef.current = true;
     setSaving(true);
     try {
       if (editing) {
-        const payload = { name: form.name, role: form.role, email: form.email };
+        const payload = {
+          name: form.name,
+          role: form.role,
+          email: form.email,
+          approverAccess: form.approverAccess || "NONE",
+        };
+        if (replacementUserId) payload.replacementUserId = replacementUserId;
         await masterApiService.updateUser(editing.id, payload);
         toast.success("User updated successfully");
       } else {
@@ -176,6 +246,7 @@ const UsersPage = () => {
           role: form.role,
           email: selectedEmployee.email,
           employeeId: selectedEmployee.employeeId,
+          approverAccess: form.approverAccess || "NONE",
         });
         const created = res.data?.data;
         toast.success(
@@ -185,6 +256,7 @@ const UsersPage = () => {
         );
       }
       setShowModal(false);
+      closeReplace();
       loadUsers(searchText, page, size);
     } catch (e) {
       toast.error(e.response?.data?.message || "Failed to save user");
@@ -194,7 +266,42 @@ const UsersPage = () => {
     }
   };
 
+  const handleSave = async () => {
+    if (!validate()) return;
+    const previous = editing?.approverAccess || "NONE";
+    const next = form.approverAccess || "NONE";
+
+    if (editing && previous !== "NONE" && next !== "NONE" && previous !== next) {
+      toast.error("Clear Approver access to None first, then assign the other level.");
+      return;
+    }
+
+    if (editing && previous !== "NONE" && next === "NONE") {
+      askReplacement(previous, editing.id, async (replacementId) => {
+        await saveWithPayload(replacementId);
+      });
+      return;
+    }
+
+    await saveWithPayload(null);
+  };
+
   const handleDelete = (user) => {
+    const level = user.approverAccess;
+    if (level === "L1" || level === "L2") {
+      askReplacement(level, user.id, async (replacementId) => {
+        try {
+          await masterApiService.deleteUser(user.id, replacementId);
+          toast.success("User deleted successfully");
+          closeReplace();
+          loadUsers(searchText, page, size);
+        } catch (e) {
+          toast.error(e.response?.data?.message || "Failed to delete user");
+        }
+      });
+      return;
+    }
+
     askConfirm(`Are you sure you want to delete the user "${user.name}"?`, async () => {
       closeConfirm();
       try {
@@ -206,6 +313,36 @@ const UsersPage = () => {
       }
     });
   };
+
+  const confirmReplacement = async () => {
+    if (!replaceState.selectedId) {
+      toast.error("Select a replacement Approver.");
+      return;
+    }
+    const action = replaceState.pendingAction;
+    if (action) await action(replaceState.selectedId);
+  };
+
+  const renderApproverSelect = (disabled = false) => (
+    <div className="mb-1 mt-2">
+      <label className="form-label">Approver access</label>
+      <select
+        className="form-select"
+        value={form.approverAccess || "NONE"}
+        disabled={disabled}
+        onChange={(e) => setField("approverAccess", e.target.value)}
+      >
+        {APPROVER_OPTIONS.map((opt) => (
+          <option key={opt.value} value={opt.value}>
+            {opt.label}
+          </option>
+        ))}
+      </select>
+      <div className="text-muted fs-13 mt-1">
+        Only one L1 Approver and one L2 Approver can be active at a time.
+      </div>
+    </div>
+  );
 
   return (
     <div className="app-card">
@@ -252,7 +389,7 @@ const UsersPage = () => {
                 <td><code>{user.employeeId || "-"}</code></td>
                 <td>{user.name}</td>
                 <td>
-                  <span className="status-pill status-pill-secondary">{user.role}</span>
+                  <span className="status-pill status-pill-secondary">{formatRoleLabel(user)}</span>
                 </td>
                 <td>{user.email}</td>
                 <td>
@@ -364,6 +501,7 @@ const UsersPage = () => {
                       </select>
                       <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.role || ""}</div>
                     </div>
+                    {renderApproverSelect()}
                   </div>
                 ) : (
                 <fieldset disabled={viewOnly} style={{ border: 0, padding: 0, margin: 0 }}>
@@ -388,6 +526,7 @@ const UsersPage = () => {
                   </select>
                   <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.role || ""}</div>
                 </div>
+                {renderApproverSelect(viewOnly)}
                 <div className="mb-3">
                   <label className="form-label">Email <span className="text-danger">*</span></label>
                   <input
@@ -431,6 +570,60 @@ const UsersPage = () => {
         onConfirm={confirmState.onConfirm}
         onCancel={closeConfirm}
       />
+
+      {replaceState.show && (
+        <div className="modal show d-block" style={{ background: "rgba(10, 35, 18, 0.72)", zIndex: 2000 }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content shadow-lg border border-2" style={{ borderColor: "#dc3545" }}>
+              <div className="modal-header">
+                <h5 className="modal-title">Assign replacement {replaceState.level} Approver</h5>
+                <button className="btn-close" onClick={closeReplace} />
+              </div>
+              <div className="modal-body">
+                <p className="mb-3">
+                  This user is currently an {replaceState.level} Approver. Choose another active user to take
+                  that Approver access before continuing.
+                </p>
+                {replaceState.loadingCandidates ? (
+                  <div className="text-muted">Loading eligible users…</div>
+                ) : replaceState.candidates.length === 0 ? (
+                  <div className="text-danger">
+                    No other eligible users are available. Add another user first, then try again.
+                  </div>
+                ) : (
+                  <div>
+                    <label className="form-label">Replacement user <span className="text-danger">*</span></label>
+                    <select
+                      className="form-select"
+                      value={replaceState.selectedId}
+                      onChange={(e) =>
+                        setReplaceState((prev) => ({ ...prev, selectedId: e.target.value }))
+                      }
+                    >
+                      <option value="">Select user</option>
+                      {replaceState.candidates.map((u) => (
+                        <option key={u.id} value={u.id}>
+                          {u.name} ({u.role}) — {u.email}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </div>
+              <div className="modal-footer">
+                <button className="btn btn-secondary" onClick={closeReplace}>Cancel</button>
+                <button
+                  className="btn btn-danger"
+                  disabled={!replaceState.selectedId || saving}
+                  onClick={confirmReplacement}
+                >
+                  Continue
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

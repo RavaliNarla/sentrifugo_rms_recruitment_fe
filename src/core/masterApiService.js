@@ -12,30 +12,46 @@ const pagedQuery = (search, page, size) => {
   return `?${params.toString()}`;
 };
 
+/** Forward HRMS session so master-portal can sync copy tables from IAM. */
+const hrmsAuthConfig = () => {
+  const token = sessionStorage.getItem("hrms_access_token");
+  if (!token) return undefined;
+  return { headers: { "X-Hrms-Authorization": `Bearer ${token}` } };
+};
+
 const masterApiService = {
   // Users (admin list is paginated - no dropdown elsewhere depends on the flat list)
   getUsers: (search, page, size) => masterApi.get(`/user/all${pagedQuery(search, page, size)}`),
   addUser: (payload) => masterApi.post("/user/add", payload),
   updateUser: (id, payload) => masterApi.put(`/user/update/${id}`, payload),
-  deleteUser: (id) => masterApi.delete(`/user/delete/${id}`),
+  deleteUser: (id, replacementUserId) => {
+    const q = replacementUserId
+      ? `?replacementUserId=${encodeURIComponent(replacementUserId)}`
+      : "";
+    return masterApi.delete(`/user/delete/${id}${q}`);
+  },
 
-  // Departments
-  getDepartments: (search) => masterApi.get(withSearch("/departments/all", search)),
-  searchDepartments: (search, page, size) => masterApi.get(`/departments/search${pagedQuery(search, page, size)}`),
+  // Departments (HRMS-synced)
+  getDepartments: (search) => masterApi.get(withSearch("/departments/all", search), hrmsAuthConfig()),
+  searchDepartments: (search, page, size) =>
+    masterApi.get(`/departments/search${pagedQuery(search, page, size)}`, hrmsAuthConfig()),
   addDepartment: (payload) => masterApi.post("/departments/add", payload),
   updateDepartment: (id, payload) => masterApi.put(`/departments/update/${id}`, payload),
   deleteDepartment: (id) => masterApi.delete(`/departments/delete/${id}`),
 
-  // Locations
-  getLocations: (search) => masterApi.get(withSearch("/locations/all", search)),
-  searchLocations: (search, page, size) => masterApi.get(`/locations/search${pagedQuery(search, page, size)}`),
+  // Locations = HRMS business units
+  getLocations: (search) => masterApi.get(withSearch("/locations/all", search), hrmsAuthConfig()),
+  searchLocations: (search, page, size) =>
+    masterApi.get(`/locations/search${pagedQuery(search, page, size)}`, hrmsAuthConfig()),
   addLocation: (payload) => masterApi.post("/locations/add", payload),
   updateLocation: (id, payload) => masterApi.put(`/locations/update/${id}`, payload),
   deleteLocation: (id) => masterApi.delete(`/locations/delete/${id}`),
 
-  // Position titles (admin list is paginated - no dropdown elsewhere depends on the flat list)
-  getPositionTitles: (search, page, size) => masterApi.get(`/position-titles/all${pagedQuery(search, page, size)}`),
-  getPositionTitlesByDepartment: (departmentId) => masterApi.get(`/position-titles/by-department/${departmentId}`),
+  // Position titles = HRMS designations (admin list is paginated)
+  getPositionTitles: (search, page, size) =>
+    masterApi.get(`/position-titles/all${pagedQuery(search, page, size)}`, hrmsAuthConfig()),
+  getPositionTitlesByDepartment: (departmentId) =>
+    masterApi.get(`/position-titles/by-department/${departmentId}`, hrmsAuthConfig()),
   addPositionTitle: (payload) => masterApi.post("/position-titles/add", payload),
   updatePositionTitle: (id, payload) => masterApi.put(`/position-titles/update/${id}`, payload),
   deletePositionTitle: (id) => masterApi.delete(`/position-titles/delete/${id}`),

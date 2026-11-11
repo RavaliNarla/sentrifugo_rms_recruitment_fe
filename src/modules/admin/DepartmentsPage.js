@@ -11,6 +11,7 @@ const DepartmentsPage = () => (
     remove={masterApiService.deleteDepartment}
     withDescription
     withCode
+    hrmsSynced
   />
 );
 

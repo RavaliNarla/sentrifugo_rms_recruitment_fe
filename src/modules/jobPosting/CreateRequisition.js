@@ -56,8 +56,42 @@ const CreateRequisition = () => {
       .catch(() => toast.error("Failed to load locations"));
   }, []);
 
+  const deptLinkedToLocation = (dept, loc) => {
+    if (!dept || !loc) return true;
+    const buIds = dept.businessUnitHrmsIds || [];
+    if (!buIds.length || !loc.hrmsId) return true;
+    return buIds.includes(loc.hrmsId);
+  };
+
+  const filteredDepartments = form.locationId
+    ? departments.filter((d) => {
+        const loc = locations.find((l) => l.id === form.locationId);
+        return deptLinkedToLocation(d, loc);
+      })
+    : departments;
+
+  const filteredLocations = form.departmentId
+    ? locations.filter((l) => {
+        const dept = departments.find((d) => d.id === form.departmentId);
+        return deptLinkedToLocation(dept, l);
+      })
+    : locations;
+
   const setField = (field, value) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
+    setForm((prev) => {
+      const next = { ...prev, [field]: value };
+      if (field === "locationId" && value && next.departmentId) {
+        const loc = locations.find((l) => l.id === value);
+        const dept = departments.find((d) => d.id === next.departmentId);
+        if (!deptLinkedToLocation(dept, loc)) next.departmentId = "";
+      }
+      if (field === "departmentId" && value && next.locationId) {
+        const dept = departments.find((d) => d.id === value);
+        const loc = locations.find((l) => l.id === next.locationId);
+        if (!deptLinkedToLocation(dept, loc)) next.locationId = "";
+      }
+      return next;
+    });
     setErrors((prev) => (prev[field] ? { ...prev, [field]: undefined } : prev));
   };
 
@@ -177,7 +211,7 @@ const CreateRequisition = () => {
             onChange={(e) => setField("departmentId", e.target.value)}
           >
             <option value="">Any / Not Fixed</option>
-            {departments.map((d) => (
+            {filteredDepartments.map((d) => (
               <option key={d.id} value={d.id}>{deptLabel(d)}</option>
             ))}
           </select>
@@ -191,7 +225,7 @@ const CreateRequisition = () => {
             onChange={(e) => setField("locationId", e.target.value)}
           >
             <option value="">Any / Not Fixed</option>
-            {locations.map((l) => (
+            {filteredLocations.map((l) => (
               <option key={l.id} value={l.id}>{locLabel(l)}</option>
             ))}
           </select>
@@ -199,7 +233,7 @@ const CreateRequisition = () => {
       </div>
       {!scopeLocked && (
         <small className="text-muted d-block mb-3" style={{ marginTop: "-0.5rem" }}>
-          If Department or Location is selected, positions under this requisition use those values (and the requisition code includes their 3-letter codes).
+          Department and Location options follow HRMS links. If either is selected, positions under this requisition use those values (and the requisition code includes their codes).
         </small>
       )}
       {scopeLocked && (

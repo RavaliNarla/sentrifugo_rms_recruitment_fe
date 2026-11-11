@@ -8,8 +8,18 @@ import Pagination from "./Pagination";
  * (Departments, Education Qualifications) - paginated + searched server-side.
  */
 // withDescription: also capture an optional Description (Departments).
-// withCode: required unique 3-char code (Departments).
-const NamedMasterCrudPage = ({ title, getAll, add, update, remove, withDescription = false, withCode = false }) => {
+// withCode: show code column/field (Departments). When hrmsSynced, code is read-only.
+const NamedMasterCrudPage = ({
+  title,
+  getAll,
+  add,
+  update,
+  remove,
+  withDescription = false,
+  withCode = false,
+  /** When true: hide Add/Delete; name+code read-only (HRMS-synced masters). */
+  hrmsSynced = false,
+}) => {
   const [items, setItems] = useState([]);
   const [page, setPage] = useState(0);
   const [size, setSize] = useState(10);
@@ -102,14 +112,14 @@ const NamedMasterCrudPage = ({ title, getAll, add, update, remove, withDescripti
   const handleSave = async () => {
     if (submittingRef.current) return;
     let hasError = false;
-    if (!name.trim()) {
+    if (!hrmsSynced && !name.trim()) {
       setNameError("Name is required");
       hasError = true;
     }
-    if (withCode) {
-      const normalized = code.trim().toUpperCase();
-      if (!/^[A-Z0-9]{3}$/.test(normalized)) {
-        setCodeError("Code must be exactly 3 letters/digits");
+    if (withCode && !hrmsSynced) {
+      const normalized = (code || "").trim();
+      if (!normalized) {
+        setCodeError("Code is required");
         hasError = true;
       }
     }
@@ -117,9 +127,12 @@ const NamedMasterCrudPage = ({ title, getAll, add, update, remove, withDescripti
     submittingRef.current = true;
     setSaving(true);
     try {
-      const payload = { name };
-      if (withDescription) payload.description = description;
-      if (withCode) payload.code = code.trim().toUpperCase();
+      const payload = hrmsSynced
+        ? { name: editing?.name || name, code: editing?.code || code, description }
+        : { name };
+      if (!hrmsSynced && withDescription) payload.description = description;
+      if (!hrmsSynced && withCode) payload.code = code.trim();
+      if (hrmsSynced) payload.description = description;
       if (editing) {
         await update(editing.id, payload);
         toast.success(`${title} updated successfully`);
@@ -168,9 +181,11 @@ const NamedMasterCrudPage = ({ title, getAll, add, update, remove, withDescripti
               onChange={(e) => setSearchText(e.target.value)}
             />
           </div>
-          <button className="btn btn-primary" onClick={openAdd}>
-            <i className="bi bi-plus-lg" /> Add
-          </button>
+          {!hrmsSynced && (
+            <button className="btn btn-primary" onClick={openAdd}>
+              <i className="bi bi-plus-lg" /> Add
+            </button>
+          )}
         </div>
       </div>
 
@@ -201,9 +216,11 @@ const NamedMasterCrudPage = ({ title, getAll, add, update, remove, withDescripti
                   <button className="icon-btn-circle me-2" title="Edit" onClick={() => openEdit(item)}>
                     <i className="bi bi-pencil" />
                   </button>
-                  <button className="icon-btn-circle danger" title="Delete" onClick={() => handleDelete(item)}>
-                    <i className="bi bi-trash" />
-                  </button>
+                  {!hrmsSynced && (
+                    <button className="icon-btn-circle danger" title="Delete" onClick={() => handleDelete(item)}>
+                      <i className="bi bi-trash" />
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}
@@ -234,9 +251,11 @@ const NamedMasterCrudPage = ({ title, getAll, add, update, remove, withDescripti
                 <input
                   className={`form-control ${nameError ? "is-invalid" : ""}`}
                   value={name}
+                  disabled={hrmsSynced}
                   onChange={(e) => { setName(e.target.value); setNameError(""); }}
-                  autoFocus
+                  autoFocus={!hrmsSynced}
                 />
+                {hrmsSynced && <small className="text-muted">Name is synced from HRMS.</small>}
                 <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{nameError || ""}</div>
                 {withCode && (
                   <div className="mt-2">
@@ -244,14 +263,19 @@ const NamedMasterCrudPage = ({ title, getAll, add, update, remove, withDescripti
                     <input
                       className={`form-control ${codeError ? "is-invalid" : ""}`}
                       value={code}
-                      maxLength={3}
+                      maxLength={64}
+                      disabled={hrmsSynced}
                       placeholder="e.g. HR"
                       onChange={(e) => {
-                        setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/gi, "").slice(0, 3));
+                        setCode(e.target.value);
                         setCodeError("");
                       }}
                     />
-                    <small className="text-muted">Exactly 3 characters (A–Z, 0–9). Used in requisition codes.</small>
+                    <small className="text-muted">
+                      {hrmsSynced
+                        ? "Code is synced from HRMS and used in requisition codes."
+                        : "Used in requisition codes."}
+                    </small>
                     <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{codeError || ""}</div>
                   </div>
                 )}
@@ -264,6 +288,7 @@ const NamedMasterCrudPage = ({ title, getAll, add, update, remove, withDescripti
                       maxLength={1000}
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
+                      autoFocus={hrmsSynced}
                     />
                   </div>
                 )}

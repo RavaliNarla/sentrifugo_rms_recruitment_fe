@@ -27,14 +27,7 @@ const EMPTY_FORM = {
 };
 
 const EXPERIENCE_YEARS = Array.from({ length: 31 }, (_, i) => i);
-const ADD_NEW_POSITION_VALUE = "__ADD_NEW__";
 const todayStr = () => new Date().toISOString().split("T")[0];
-
-const EMPTY_NEW_POSITION_FORM = {
-  name: "",
-  jobDescription: "",
-  minimumExperienceYears: "0",
-};
 
 const APPROVAL_DOC_EXTENSIONS = [".png", ".jpg", ".jpeg", ".docx", ".pdf"];
 
@@ -64,20 +57,44 @@ const AddPosition = () => {
   const [approvalDoc, setApprovalDoc] = useState(null);
   const [saving, setSaving] = useState(false);
   const [autofillPrompt, setAutofillPrompt] = useState(null);
-  const [showAddPositionModal, setShowAddPositionModal] = useState(false);
-  const [newPositionForm, setNewPositionForm] = useState(EMPTY_NEW_POSITION_FORM);
-  const [newPositionErrors, setNewPositionErrors] = useState({});
-  const [savingNewPosition, setSavingNewPosition] = useState(false);
   const [errors, setErrors] = useState({});
   const submittingRef = useRef(false);
-  const savingNewPositionRef = useRef(false);
   const fieldRefs = useRef({});
 
   const departmentLocked = Boolean(requisition?.departmentId);
   const locationLocked = Boolean(requisition?.locationId);
 
+  const deptLinkedToLocation = (dept, loc) => {
+    if (!dept || !loc) return true;
+    const buIds = dept.businessUnitHrmsIds || [];
+    if (!buIds.length || !loc.hrmsId) return true;
+    return buIds.includes(loc.hrmsId);
+  };
+
+  const filteredDepartments = form.locationId
+    ? departments.filter((d) => {
+        const loc = locations.find((l) => l.id === form.locationId);
+        return deptLinkedToLocation(d, loc);
+      })
+    : departments;
+
+  const filteredLocations = form.departmentId
+    ? locations.filter((l) => {
+        const dept = departments.find((d) => d.id === form.departmentId);
+        return deptLinkedToLocation(dept, l);
+      })
+    : locations;
+
   const setField = (field, value) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
+    setForm((prev) => {
+      const next = { ...prev, [field]: value };
+      if (field === "locationId" && value && next.departmentId && !departmentLocked) {
+        const loc = locations.find((l) => l.id === value);
+        const dept = departments.find((d) => d.id === next.departmentId);
+        if (!deptLinkedToLocation(dept, loc)) next.departmentId = "";
+      }
+      return next;
+    });
     setErrors((prev) => (prev[field] ? { ...prev, [field]: undefined } : prev));
   };
 
@@ -159,98 +176,28 @@ const AddPosition = () => {
   };
 
   const handleDepartmentChange = (departmentId) => {
-    setForm((prev) => ({ ...prev, departmentId, positionTitleId: "" }));
+    setForm((prev) => {
+      const next = { ...prev, departmentId, positionTitleId: "" };
+      if (departmentId && next.locationId && !locationLocked) {
+        const dept = departments.find((d) => d.id === departmentId);
+        const loc = locations.find((l) => l.id === next.locationId);
+        if (!deptLinkedToLocation(dept, loc)) next.locationId = "";
+      }
+      return next;
+    });
     loadPositionTitles(departmentId);
   };
 
-  const openAddPositionModal = () => {
-    if (!form.departmentId) {
-      toast.error("Select a Department first");
-      return;
-    }
-    setNewPositionForm(EMPTY_NEW_POSITION_FORM);
-    setNewPositionErrors({});
-    setShowAddPositionModal(true);
-  };
-
-  const closeAddPositionModal = () => {
-    if (savingNewPositionRef.current) return;
-    setShowAddPositionModal(false);
-    setNewPositionForm(EMPTY_NEW_POSITION_FORM);
-    setNewPositionErrors({});
-  };
-
-  const setNewPositionField = (field, value) => {
-    setNewPositionForm((prev) => ({ ...prev, [field]: value }));
-    setNewPositionErrors((prev) => (prev[field] ? { ...prev, [field]: undefined } : prev));
-  };
-
-  // SCL_07: existing Position Master rows can carry default Roles & Responsibilities + Minimum Experience —
-  // ask before overwriting. Newly created titles (via "Add new position") apply without the prompt.
+  // Ask before applying Position Master defaults (Roles & Responsibilities / Min Experience).
   const handlePositionTitleChange = (positionTitleId) => {
-    if (positionTitleId === ADD_NEW_POSITION_VALUE) {
-      openAddPositionModal();
-      return;
-    }
     setForm((prev) => ({ ...prev, positionTitleId }));
     const master = positionTitles.find((p) => p.id === positionTitleId);
-    if (master && (master.jobDescription || master.minimumExperienceYears != null)) {
+    const hasJobDesc = master?.jobDescription && String(master.jobDescription).trim();
+    const hasExp = master?.minimumExperienceYears != null;
+    if (master && (hasJobDesc || hasExp)) {
       setAutofillPrompt(master);
-    }
-  };
-
-  const handleSaveNewPosition = async () => {
-    if (savingNewPositionRef.current) return;
-    const next = {};
-    if (!form.departmentId) next.departmentId = "Department is required";
-    if (!newPositionForm.name.trim()) next.name = "Position Title is required";
-    setNewPositionErrors(next);
-    if (Object.keys(next).length > 0) return;
-
-    const payload = {
-      name: newPositionForm.name.trim(),
-      departmentId: form.departmentId,
-      jobDescription: newPositionForm.jobDescription || null,
-      minimumExperienceYears: Number(newPositionForm.minimumExperienceYears),
-    };
-
-    savingNewPositionRef.current = true;
-    setSavingNewPosition(true);
-    try {
-      const res = await masterApiService.addPositionTitle(payload);
-      const created = res.data?.data;
-      if (!created?.id) {
-        throw new Error("Position title was saved but no id was returned");
-      }
-
-      setPositionTitles((prev) => {
-        const withoutDup = prev.filter((p) => p.id !== created.id);
-        return [...withoutDup, created].sort((a, b) => (a.name || "").localeCompare(b.name || ""));
-      });
-
-      // Apply the values just entered — no "Use Defaults?" prompt for brand-new masters.
-      setForm((prev) => ({
-        ...prev,
-        positionTitleId: created.id,
-        jobDescription: payload.jobDescription || "",
-        experienceYears: String(payload.minimumExperienceYears ?? 0),
-      }));
-      setErrors((prev) => ({
-        ...prev,
-        positionTitleId: undefined,
-        jobDescription: undefined,
-        experienceYears: undefined,
-      }));
+    } else {
       setAutofillPrompt(null);
-      setShowAddPositionModal(false);
-      setNewPositionForm(EMPTY_NEW_POSITION_FORM);
-      setNewPositionErrors({});
-      toast.success("Position title added successfully");
-    } catch (e) {
-      toast.error(e.response?.data?.message || e.message || "Failed to add position title");
-    } finally {
-      savingNewPositionRef.current = false;
-      setSavingNewPosition(false);
     }
   };
 
@@ -404,7 +351,7 @@ const AddPosition = () => {
             onChange={(e) => { handleDepartmentChange(e.target.value); setErrors((prev) => (prev.departmentId ? { ...prev, departmentId: undefined } : prev)); }}
           >
             <option value="">Select</option>
-            {departments.map((d) => <option key={d.id} value={d.id}>{d.name}{d.code ? ` (${d.code})` : ""}</option>)}
+            {filteredDepartments.map((d) => <option key={d.id} value={d.id}>{d.name}{d.code ? ` (${d.code})` : ""}</option>)}
           </select>
           {departmentLocked && (
             <small className="text-muted">Fixed by this requisition.</small>
@@ -421,9 +368,6 @@ const AddPosition = () => {
           >
             <option value="">{form.departmentId ? "Select" : "Select a Department first"}</option>
             {positionTitles.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-            {form.departmentId && !viewOnly && (
-              <option value={ADD_NEW_POSITION_VALUE}>+ Add new position</option>
-            )}
           </select>
           <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.positionTitleId || ""}</div>
         </div>
@@ -438,10 +382,13 @@ const AddPosition = () => {
           onChange={(e) => setField("locationId", e.target.value)}
         >
           <option value="">Select</option>
-          {locations.map((l) => <option key={l.id} value={l.id}>{l.name}{l.code ? ` (${l.code})` : ""}</option>)}
+          {filteredLocations.map((l) => <option key={l.id} value={l.id}>{l.name}{l.code ? ` (${l.code})` : ""}</option>)}
         </select>
         {locationLocked && (
           <small className="text-muted">Fixed by this requisition.</small>
+        )}
+        {!locationLocked && form.departmentId && (
+          <small className="text-muted">Locations filtered by this department&apos;s HRMS business units.</small>
         )}
         <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{errors.locationId || ""}</div>
       </div>
@@ -647,70 +594,6 @@ const AddPosition = () => {
           onConfirm={applyAutofill}
           onCancel={() => setAutofillPrompt(null)}
         />
-      )}
-
-      {showAddPositionModal && (
-        <div className="modal show d-block" style={{ background: "rgba(0, 0, 0, 0.45)" }}>
-          <div className="modal-dialog modal-dialog-centered modal-lg">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Add Position Title</h5>
-                <button type="button" className="btn-close" onClick={closeAddPositionModal} disabled={savingNewPosition} />
-              </div>
-              <div className="modal-body">
-                <div className="row">
-                  <div className="col-md-6 mb-3">
-                    <label className="form-label">Department <span className="text-danger">*</span></label>
-                    <select className="form-select" value={form.departmentId} disabled>
-                      <option value="">Select</option>
-                      {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-                    </select>
-                    <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{newPositionErrors.departmentId || ""}</div>
-                  </div>
-                  <div className="col-md-6 mb-3">
-                    <label className="form-label">Position Title <span className="text-danger">*</span></label>
-                    <input
-                      className={`form-control ${newPositionErrors.name ? "is-invalid" : ""}`}
-                      value={newPositionForm.name}
-                      onChange={(e) => setNewPositionField("name", e.target.value)}
-                      autoFocus
-                    />
-                    <div className="text-danger fs-13 mt-1" style={{ minHeight: "18px" }}>{newPositionErrors.name || ""}</div>
-                  </div>
-                </div>
-
-                <div className="mb-3">
-                  <label className="form-label">Minimum Experience (years)</label>
-                  <select
-                    className="form-select"
-                    value={newPositionForm.minimumExperienceYears}
-                    onChange={(e) => setNewPositionField("minimumExperienceYears", e.target.value)}
-                  >
-                    {EXPERIENCE_YEARS.map((y) => <option key={y} value={y}>{y} {y === 1 ? "year" : "years"}</option>)}
-                  </select>
-                </div>
-
-                <div className="mb-3">
-                  <label className="form-label">Roles &amp; Responsibilities</label>
-                  <textarea
-                    className="form-control"
-                    rows={3}
-                    value={newPositionForm.jobDescription}
-                    onChange={(e) => setNewPositionField("jobDescription", e.target.value)}
-                  />
-                </div>
-              </div>
-              <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={closeAddPositionModal} disabled={savingNewPosition}>
-                  Cancel
-                </button>
-                <button type="button" className="btn btn-primary" disabled={savingNewPosition} onClick={handleSaveNewPosition}>
-                  {savingNewPosition ? "Saving..." : "Save"}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
       )}
 
       <PdfViewerModal

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import recruiterApiService from "../../../core/recruiterApiService";
+import { formatDate } from "../../../shared/dateFormat";
 import { canShortlistDecide, getStatusLabel } from "./CandidatePoolTab";
 
 const CandidateProfileModal = ({ candidate, onClose, onDecide, onViewFile }) => {
@@ -47,7 +48,12 @@ const CandidateProfileModal = ({ candidate, onClose, onDecide, onViewFile }) => 
 
             <table className="table table-borderless mb-0">
               <tbody>
-                <tr><td className="fw-bold" style={{ width: 140 }}>Phone</td><td>{candidate.phone}</td></tr>
+                <tr><td className="fw-bold" style={{ width: 140 }}>First Name</td><td>{candidate.firstName || "-"}</td></tr>
+                <tr><td className="fw-bold">Middle Name</td><td>{candidate.middleName || "-"}</td></tr>
+                <tr><td className="fw-bold">Last Name</td><td>{candidate.lastName || "-"}</td></tr>
+                <tr><td className="fw-bold">Gender</td><td>{candidate.genderName || "-"}</td></tr>
+                <tr><td className="fw-bold">Date of Birth</td><td>{formatDate(candidate.dateOfBirth)}</td></tr>
+                <tr><td className="fw-bold">Phone</td><td>{candidate.phone}</td></tr>
                 <tr><td className="fw-bold">Email</td><td>{candidate.email}</td></tr>
                 <tr>
                   <td className="fw-bold">Resume</td>

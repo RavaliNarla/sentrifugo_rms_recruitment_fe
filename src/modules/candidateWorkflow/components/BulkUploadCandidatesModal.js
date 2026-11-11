@@ -3,8 +3,8 @@ import { toast } from "react-toastify";
 import recruiterApiService from "../../../core/recruiterApiService";
 
 /**
- * BOB-style bulk import: download XLSX template → fill Name/Phone/Email → upload → Import.
- * Files (resume/photo/ID) are not part of bulk upload.
+ * Bulk import: download XLSX template → fill First/Middle/Last Name, Phone, Email → upload → Import.
+ * Files (resume/photo/ID) and gender are not part of bulk upload (set later via Edit).
  */
 const BulkUploadCandidatesModal = ({ positionId, onClose, onImported }) => {
   const [file, setFile] = useState(null);
@@ -99,7 +99,7 @@ const BulkUploadCandidatesModal = ({ positionId, onClose, onImported }) => {
             >
               <i className="bi bi-cloud-arrow-up" style={{ fontSize: "2rem", color: "var(--brand-primary)" }} />
               <div className="fw-bold mt-2">Upload File</div>
-              <div className="text-muted fs-13 mb-3">Support for XLSX formats (Name, Phone, Email)</div>
+              <div className="text-muted fs-13 mb-3">Support for XLSX formats (First Name, Middle Name, Last Name, Phone, Email)</div>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -127,7 +127,8 @@ const BulkUploadCandidatesModal = ({ positionId, onClose, onImported }) => {
               </div>
             </div>
             <div className="text-muted fs-13">
-              Fill Name, Phone (10 digits) and Email. Resumes / photos / ID proofs can be added later from Edit Candidate.
+              Fill First Name, Last Name (required), Middle Name (optional), Phone (10 digits) and Email.
+              Gender, resumes, photos and ID proofs can be added later from Edit Candidate.
             </div>
             {errors.length > 0 && (
               <div className="alert alert-warning mt-3 mb-0 py-2 fs-13" style={{ maxHeight: 160, overflowY: "auto" }}>
