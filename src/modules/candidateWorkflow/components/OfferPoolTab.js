@@ -18,6 +18,7 @@ const OFFER_STATUS_PILL = {
   L2_REJECTED: "status-pill-danger",
   SENT: "status-pill-info",
   ACCEPTED: "status-pill-success",
+  SENT_TO_ONBOARDING: "status-pill-info",
   REJECTED: "status-pill-danger",
   EXPIRED: "status-pill-secondary",
 };
@@ -30,6 +31,7 @@ const OFFER_STATUS_LABELS = {
   L2_REJECTED: "L2 REJECTED",
   SENT: "OFFER LETTER SENT",
   ACCEPTED: "OFFER ACCEPTED",
+  SENT_TO_ONBOARDING: "SENT TO ONBOARDING",
   REJECTED: "OFFER REJECTED",
   EXPIRED: "EXPIRED",
 };
@@ -37,7 +39,7 @@ const OFFER_STATUS_LABELS = {
 // Offer Pool status filter: offer status, plus candidates with no offer generated yet.
 const OFFER_FILTER_OPTIONS = [
   { value: "NOT_GENERATED", label: "Not Generated" },
-  ...["GENERATED", "L1_PENDING", "L2_PENDING", "L1_REJECTED", "L2_REJECTED", "SENT", "ACCEPTED", "REJECTED", "EXPIRED"]
+  ...["GENERATED", "L1_PENDING", "L2_PENDING", "L1_REJECTED", "L2_REJECTED", "SENT", "ACCEPTED", "SENT_TO_ONBOARDING", "REJECTED", "EXPIRED"]
     .map((s) => ({ value: s, label: OFFER_STATUS_LABELS[s] || s.replace(/_/g, " ") })),
 ];
 
@@ -64,7 +66,8 @@ const dayAfter = (dateStr) => {
 // SCL_41: selectable until candidate accepts or rejects (SENT can be regenerated/resent).
 // L1_PENDING/L2_PENDING are also locked - an offer already submitted for approval can't be
 // silently regenerated out from under the approver; it must be decided (or rejected) first.
-const LOCKED_OFFER_STATUSES = ["ACCEPTED", "REJECTED", "L1_PENDING", "L2_PENDING"];
+// SENT_TO_ONBOARDING is terminal for generate; ACCEPTED is selectable only for Send to Onboarding.
+const LOCKED_OFFER_STATUSES = ["ACCEPTED", "SENT_TO_ONBOARDING", "REJECTED", "L1_PENDING", "L2_PENDING"];
 
 const OfferPoolTab = ({ positionId, isActive }) => {
   const [candidates, setCandidates] = useState([]);

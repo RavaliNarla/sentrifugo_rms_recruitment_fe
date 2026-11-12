@@ -50,6 +50,7 @@ const OFFER_LIVE_LABELS = {
   L2_REJECTED: "L2 REJECTED",
   SENT: "OFFER LETTER SENT",
   ACCEPTED: "OFFER ACCEPTED",
+  SENT_TO_ONBOARDING: "SENT TO ONBOARDING",
   REJECTED: "OFFER REJECTED",
   EXPIRED: "EXPIRED",
 };
@@ -62,6 +63,7 @@ const OFFER_LIVE_PILL = {
   L2_REJECTED: "status-pill-danger",
   SENT: "status-pill-info",
   ACCEPTED: "status-pill-success",
+  SENT_TO_ONBOARDING: "status-pill-info",
   REJECTED: "status-pill-danger",
   EXPIRED: "status-pill-secondary",
 };
